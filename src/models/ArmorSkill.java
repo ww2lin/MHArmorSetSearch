@@ -1,22 +1,33 @@
 package models;
 
-/**
- * Created by AlexLin on 3/28/17.
- */
 public class ArmorSkill {
-    String name;
-    int points;
+    // Note this is NOT the name of the skill, rather its the 'kind' of the skill
+    // E.g its NOT AuS, AuM, or negate stun,
+    // it is Attack, Poison, Stun, Hearing
+    public String kind;
+    public int points;
 
-    public ArmorSkill(String name, int points) {
-        this.name = name;
+    private ArmorSkill(String kind, int points) {
+        this.kind = kind;
         this.points = points;
+    }
+
+    public static ArmorSkill createArmorSkill(String kind, int points) {
+        if (kind == null || kind.isEmpty()) {
+            return null;
+        }
+        return new ArmorSkill(kind.trim(), points);
     }
 
     @Override
     public String toString() {
         return "ArmorSkill{" +
-            "name='" + name + '\'' +
+            "kind='" + kind + '\'' +
             ", points=" + points +
             '}';
+    }
+
+    public boolean isKind(String kind){
+        return this.kind.equalsIgnoreCase(kind);
     }
 }

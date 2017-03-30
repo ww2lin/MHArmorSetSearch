@@ -9,11 +9,9 @@ import models.Gender;
 import models.MonsterPart;
 import models.Resistance;
 import models.ResistanceType;
+import models.skillactivation.SkillActivationRequirement;
 
-/**
- * Created by AlexLin on 3/28/17.
- */
-public class CsvToModel {
+class CsvToModel {
 
     public static Equipment csvEquipmentRowToModel(String[] row) {
         String name = row[0];
@@ -33,21 +31,23 @@ public class CsvToModel {
         resistances.add(new Resistance(ResistanceType.THUNDER, tryParseInt(row[12])));
         resistances.add(new Resistance(ResistanceType.ICE, tryParseInt(row[13])));
         resistances.add(new Resistance(ResistanceType.DRAGON, tryParseInt(row[14])));
-
+        removeEmptyValues(resistances);
 
         // TODO filter out empty values
         Set<ArmorSkill> armorSkills = new HashSet<>();
-        armorSkills.add(new ArmorSkill(row[15], tryParseInt(row[16])));
-        armorSkills.add(new ArmorSkill(row[17], tryParseInt(row[18])));
-        armorSkills.add(new ArmorSkill(row[19], tryParseInt(row[20])));
-        armorSkills.add(new ArmorSkill(row[21], tryParseInt(row[22])));
-        armorSkills.add(new ArmorSkill(row[23], tryParseInt(row[24])));
+        armorSkills.add(ArmorSkill.createArmorSkill(row[15], tryParseInt(row[16])));
+        armorSkills.add(ArmorSkill.createArmorSkill(row[17], tryParseInt(row[18])));
+        armorSkills.add(ArmorSkill.createArmorSkill(row[19], tryParseInt(row[20])));
+        armorSkills.add(ArmorSkill.createArmorSkill(row[21], tryParseInt(row[22])));
+        armorSkills.add(ArmorSkill.createArmorSkill(row[23], tryParseInt(row[24])));
+        removeEmptyValues(armorSkills);
 
         Set<MonsterPart> monsterParts = new HashSet<>();
-        monsterParts.add(new MonsterPart(row[25], tryParseInt(row[26])));
-        monsterParts.add(new MonsterPart(row[27], tryParseInt(row[28])));
-        monsterParts.add(new MonsterPart(row[29], tryParseInt(row[30])));
-        monsterParts.add(new MonsterPart(row[31], tryParseInt(row[32])));
+        monsterParts.add(MonsterPart.createMonsterPart(row[25], tryParseInt(row[26])));
+        monsterParts.add(MonsterPart.createMonsterPart(row[27], tryParseInt(row[28])));
+        monsterParts.add(MonsterPart.createMonsterPart(row[29], tryParseInt(row[30])));
+        monsterParts.add(MonsterPart.createMonsterPart(row[31], tryParseInt(row[32])));
+        removeEmptyValues(monsterParts);
 
 
         return Equipment.Builder()
@@ -66,6 +66,19 @@ public class CsvToModel {
             .setMonsterParts(monsterParts);
     }
 
+    public static SkillActivationRequirement csvSkillActivationRequirementRowToModel(String[] row) {
+        String name = row[0];
+        String kind = row[1];
+        Integer pointsToActivate = tryParseInt(row[2]);
+        ClassType classType = ClassType.values()[tryParseInt(row[3])];
+        return SkillActivationRequirement.Builder()
+            .setName(name)
+            .setKind(kind)
+            .setPointsNeededToActivate(pointsToActivate)
+            .setClassType(classType)
+            .setIsNegativeSkill(pointsToActivate <= 0);
+    }
+
     private static int tryParseInt(String value) {
         try {
             return Integer.parseInt(value);
@@ -73,5 +86,11 @@ public class CsvToModel {
             // Log exception.
             return 0;
         }
+    }
+
+    private static <T> Set<T> removeEmptyValues(Set<T> set) {
+        set.remove("");
+        set.remove(null);
+        return set;
     }
 }

@@ -1,66 +1,55 @@
-import au.com.bytecode.opencsv.CSVReader;
-import java.io.FileReader;
 import java.io.IOException;
-import java.util.LinkedList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import models.ClassType;
 import models.Equipment;
-import utils.CsvToModel;
+import models.Gender;
+import models.GeneratedArmorSet;
+import models.skillactivation.ActivatedSkill;
+import models.skillactivation.SkillActivationChart;
+import models.skillactivation.SkillActivationRequirement;
+import utils.CsvReader;
 
-/**
- * Created by AlexLin on 3/28/17.
- */
 public class Main {
 
-    private static String FILE_PATH_HEAD_EQUIPMENT = "data/MHXX_EQUIP_HEAD.csv";
-    private static String FILE_PATH_BODY_EQUIPMENT = "data/MHXX_EQUIP_BODY.csv";
-    private static String FILE_PATH_ARM_EQUIPMENT = "data/MHXX_EQUIP_ARM.csv";
-    private static String FILE_PATH_WST_EQUIPMENT = "data/MHXX_EQUIP_WST.csv";
-    private static String FILE_PATH_LEG_EQUIPMENT = "data/MHXX_EQUIP_LEG.csv";
+    private static final String FILE_PATH_HEAD_EQUIPMENT = "data/MHXX_EQUIP_HEAD.csv";
+    private static final String FILE_PATH_BODY_EQUIPMENT = "data/MHXX_EQUIP_BODY.csv";
+    private static final String FILE_PATH_ARM_EQUIPMENT = "data/MHXX_EQUIP_ARM.csv";
+    private static final String FILE_PATH_WST_EQUIPMENT = "data/MHXX_EQUIP_WST.csv";
+    private static final String FILE_PATH_LEG_EQUIPMENT = "data/MHXX_EQUIP_LEG.csv";
+    private static final String FILE_PATH_SKILL_ACTIVATION = "data/MHXX_SKILL.csv";
 
     public static void main(String args[]) throws IOException {
-        List<Equipment> headEquipments = getEquipmentFromCsvFile(FILE_PATH_HEAD_EQUIPMENT);
-        List<Equipment> bodyEquipments = getEquipmentFromCsvFile(FILE_PATH_BODY_EQUIPMENT);
-        List<Equipment> armEquipments = getEquipmentFromCsvFile(FILE_PATH_ARM_EQUIPMENT);
-        List<Equipment> wstEquipments = getEquipmentFromCsvFile(FILE_PATH_WST_EQUIPMENT);
-        List<Equipment> legEquipments = getEquipmentFromCsvFile(FILE_PATH_LEG_EQUIPMENT);
+        List<Equipment> headEquipments = CsvReader.getEquipmentFromCsvFile(FILE_PATH_HEAD_EQUIPMENT);
+        List<Equipment> bodyEquipments = CsvReader.getEquipmentFromCsvFile(FILE_PATH_BODY_EQUIPMENT);
+        List<Equipment> armEquipments = CsvReader.getEquipmentFromCsvFile(FILE_PATH_ARM_EQUIPMENT);
+        List<Equipment> wstEquipments = CsvReader.getEquipmentFromCsvFile(FILE_PATH_WST_EQUIPMENT);
+        List<Equipment> legEquipments = CsvReader.getEquipmentFromCsvFile(FILE_PATH_LEG_EQUIPMENT);
+
+        Map<String, List<SkillActivationRequirement>> skillActivationChartMap = CsvReader.getSkillActivationRequirementFromCsvFile(FILE_PATH_SKILL_ACTIVATION);
+        SkillActivationChart skillActivationChart = new SkillActivationChart(skillActivationChartMap);
+
+        ArmorSearch armorSearch = new ArmorSearch(headEquipments, bodyEquipments, armEquipments, wstEquipments, legEquipments, skillActivationChart, ClassType.BLADEMASTER, Gender.MALE);
+
+        ActivatedSkill[] lookupSkills1 = {new ActivatedSkill("攻撃力UP【小】", "攻撃", 10)};
+        ActivatedSkill[] lookupSkills2 = {new ActivatedSkill("攻撃力UP【小】", "攻撃", 10), new ActivatedSkill("ガード性能+1","ガード性能", 10)};
+        List<GeneratedArmorSet> matchedSets = armorSearch.findArmorSetWith(Arrays.asList(lookupSkills2));
 
 
-        //for (int i = 0; i < armEquipments.size(); ++i){
-        //    if (armEquipments.get(i).getName().equalsIgnoreCase("レザーグラブ")){
-                System.out.println(armEquipments.get(0) + "  レザーグラブ" );
-            //}
-        //}
-    }
-
-    public static List<Equipment> getEquipmentFromCsvFile(String path) {
-        CSVReader reader = null;
-        try {
-            List<Equipment> lst = new LinkedList<>();
-            reader = new CSVReader(new FileReader(path));
-            String[] nextLine;
-
-            // skip over the header
-            reader.readNext();
-
-            // go over the CSV file line by line.
-            while ((nextLine = reader.readNext()) != null) {
-                // nextLine[] is an array of values from the line
-                Equipment equipment = CsvToModel.csvEquipmentRowToModel(nextLine);
-                lst.add(equipment);
-            }
-            return lst;
-        } catch (IOException e) {
-            return null;
-        } finally {
-
-            // Messy steps to clean up the file reader
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
+        // Testing purposes.
+        System.out.println(matchedSets.size());
+        Collections.reverseOrder(new GeneratedArmorSet.MostSkillComparator());
+        //System.out.println(matchedSets.get(0));
+        for (GeneratedArmorSet generatedArmorSet : matchedSets) {
+            for (ActivatedSkill activatedSkill : generatedArmorSet.getActivatedSkills()){
+                if (activatedSkill.getAccumulatedPoints() > 14) {
+                    System.out.println(generatedArmorSet);
                 }
             }
         }
     }
+
+
 }

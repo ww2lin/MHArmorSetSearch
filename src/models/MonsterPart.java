@@ -1,21 +1,25 @@
 package models;
 
-/**
- * Created by AlexLin on 3/28/17.
- */
 public class MonsterPart {
     String name;
     int amount;
 
-    public MonsterPart(String name, int amount) {
+    private MonsterPart(String name, int amount) {
         this.name = name;
         this.amount = amount;
+    }
+
+    public static MonsterPart createMonsterPart(String name, int amount) {
+        if (name == null || name.isEmpty()) {
+            return null;
+        }
+        return new MonsterPart(name, amount);
     }
 
     @Override
     public String toString() {
         return "MonsterPart{" +
-            "name='" + name + '\'' +
+            "kind='" + name + '\'' +
             ", amount=" + amount +
             '}';
     }
