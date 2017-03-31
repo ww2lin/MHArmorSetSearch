@@ -102,7 +102,6 @@ public class CsvReader {
             while ((nextLine = reader.readNext()) != null) {
                 // nextLine[] is an array of values from the line
                 Decoration decoration = CsvToModel.csvDecorationRowToModel(nextLine);
-
                 decoration.getArmorSkills().forEach(armorSkill -> {
                     List<Decoration> decorationList = decorationMap.get(armorSkill.kind);
                     if (decorationList == null) {

@@ -2,13 +2,14 @@ package armorsearch;
 
 import armorsearch.armorcache.ArmorSkillCacheTable;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import models.Decoration;
 import models.Equipment;
 import models.GeneratedArmorSet;
 import models.skillactivation.ActivatedSkill;
+import models.skillactivation.ActivatedSkillWithDecoration;
 import models.skillactivation.SkillActivationChart;
-import models.skillactivation.SkillUtil;
 
 public class ArmorSearch {
 
@@ -17,7 +18,11 @@ public class ArmorSearch {
      * @param desiredSkills that the user wants to generate
      * @return list of equipment that matches what the user wants
      */
-    public List<GeneratedArmorSet> findArmorSetWith(SkillActivationChart skillActivationChart, List<ActivatedSkill> desiredSkills, ArmorSkillCacheTable armorSkillCacheTable) {
+    public List<GeneratedArmorSet> findArmorSetWith(Map<String, List<Decoration>> decorationLookupTable,
+                                                    final int searchLimit,
+                                                    SkillActivationChart skillActivationChart,
+                                                    List<ActivatedSkill> desiredSkills,
+                                                    ArmorSkillCacheTable armorSkillCacheTable) {
         // construct the node structure to use for dfs search
         EquipmentNode leg = new EquipmentNode(null);
         EquipmentNode wst = new EquipmentNode(leg);
@@ -25,40 +30,61 @@ public class ArmorSearch {
         EquipmentNode body = new EquipmentNode(arm);
         EquipmentNode head = new EquipmentNode(body);
 
-        // get the armor table to search through
+        // get all the potential armor to search through
         head.updateEquipmentListWithDesiredSkills(armorSkillCacheTable.getHeadEquipmentCache(), desiredSkills);
         body.updateEquipmentListWithDesiredSkills(armorSkillCacheTable.getBodyEquipmentCache(), desiredSkills);
         arm.updateEquipmentListWithDesiredSkills(armorSkillCacheTable.getArmEquipmentCache(), desiredSkills);
         wst.updateEquipmentListWithDesiredSkills(armorSkillCacheTable.getWstEquipmentCache(), desiredSkills);
         leg.updateEquipmentListWithDesiredSkills(armorSkillCacheTable.getLegEquipmentCache(), desiredSkills);
 
-
         List<GeneratedArmorSet> matchedSets = new ArrayList<>();
-        findArmorRecursively(skillActivationChart, new LinkedList<>(), head, matchedSets, desiredSkills);
+        findArmorRecursively(decorationLookupTable,
+                             searchLimit,
+                             skillActivationChart,
+                             new ArrayList<>(5),
+                             head,
+                             matchedSets,
+                             desiredSkills);
         return matchedSets;
     }
 
-    private void findArmorRecursively(SkillActivationChart skillActivationChart, List<Equipment> currentSet, EquipmentNode equipmentNode, List<GeneratedArmorSet> matchedSet, List<ActivatedSkill> desiredSkills) {
-        if (equipmentNode != null) {
+    private void findArmorRecursively(Map<String, List<Decoration>> decorationLookupTable,
+                                      final int searchLimit,
+                                      SkillActivationChart skillActivationChart,
+                                      List<Equipment> currentSet,
+                                      EquipmentNode equipmentNode,
+                                      List<GeneratedArmorSet> matchedSet,
+                                      List<ActivatedSkill> desiredSkills) {
+        // check to see if we hit the limit of armor search
+        if (matchedSet.size() >= searchLimit) {
+            return;
+        } else if (equipmentNode != null) {
             List<Equipment> equipments = equipmentNode.armorWithDesiredSkills;
             for (Equipment equipment : equipments) {
                 currentSet.add(equipment);
-                findArmorRecursively(skillActivationChart, currentSet, equipmentNode.next, matchedSet, desiredSkills);
+                findArmorRecursively(decorationLookupTable, searchLimit, skillActivationChart, currentSet, equipmentNode.next, matchedSet, desiredSkills);
 
                 // back tracking.
                 currentSet.remove(equipment);
             }
-
         } else {
-            // we found a potential a full set...
 
-            // check if this set contains the skill desired.
-            List<ActivatedSkill> activatedSkills = skillActivationChart.getActiavtedSkill(currentSet);
+            // we found a potential full set...
+            List<ActivatedSkillWithDecoration> activatedSkillWithDecoration = new ArrayList<>();
+            DecoratoinSearch.findArmorWithJewelRecursively(decorationLookupTable,
+                                                           skillActivationChart,
+                                                           currentSet,
+                                                           0,
+                                                           activatedSkillWithDecoration,
+                                                           desiredSkills,
+                                                           new ArrayList<>());
 
-            if (SkillUtil.containsDesiredSkills(desiredSkills, activatedSkills)) {
-                // create a new array reference, so that when back tracking the sets is not modified
-                matchedSet.add(new GeneratedArmorSet(activatedSkills, new ArrayList<>(currentSet)));
+            if (!activatedSkillWithDecoration.isEmpty()) {
+                // create a new array reference for current set, so that when back tracking the list is not modified
+                matchedSet.add(new GeneratedArmorSet(activatedSkillWithDecoration, new ArrayList<>(currentSet)));
             }
         }
     }
+
+
 }

@@ -1,8 +1,5 @@
 package models.skillactivation;
 
-/**
- * Created by AlexLin on 3/29/17.
- */
 public class ActivatedSkill {
     String name;
     String kind;

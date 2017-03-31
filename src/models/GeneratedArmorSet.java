@@ -3,12 +3,13 @@ package models;
 import java.util.Comparator;
 import java.util.List;
 import models.skillactivation.ActivatedSkill;
+import models.skillactivation.ActivatedSkillWithDecoration;
 
 public class GeneratedArmorSet {
-    List<ActivatedSkill> activatedSkills;
+    List<ActivatedSkillWithDecoration> activatedSkills;
     List<Equipment> equipments;
 
-    public GeneratedArmorSet(List<ActivatedSkill> activatedSkills, List<Equipment> equipments) {
+    public GeneratedArmorSet(List<ActivatedSkillWithDecoration> activatedSkills, List<Equipment> equipments) {
         this.activatedSkills = activatedSkills;
         this.equipments = equipments;
     }
@@ -21,15 +22,14 @@ public class GeneratedArmorSet {
         }
     }
 
-    @Override
-    public String toString() {
+    @Override public String toString() {
         return "GeneratedArmorSet{" +
             "activatedSkills=" + activatedSkills +
             ", equipments=" + equipments +
             '}';
     }
 
-    public List<ActivatedSkill> getActivatedSkills() {
+    public List<ActivatedSkillWithDecoration> getActivatedSkills() {
         return activatedSkills;
     }
 

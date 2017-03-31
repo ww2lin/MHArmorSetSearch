@@ -4,11 +4,13 @@ import java.util.List;
 import java.util.Set;
 
 public class Decoration {
+    private static final int NOT_AVAILABLE = 99;
+
     String name;
     int rarity;
     int slotsNeeded;
 
-    // 99 means you cant get it...yet?
+    // 99 means you cant get it
     private int onlineMonsterAvailableAtQuestLevel;
     private int villageMonsterAvailableAtQuestLevel;
 
@@ -20,6 +22,10 @@ public class Decoration {
 
 
     private Decoration(){}
+
+    public boolean isAvailable(){
+        return onlineMonsterAvailableAtQuestLevel != NOT_AVAILABLE || villageMonsterAvailableAtQuestLevel != NOT_AVAILABLE;
+    }
 
     public static Decoration Builder(){
         return new Decoration();
@@ -108,5 +114,52 @@ public class Decoration {
             ", armorSkills=" + armorSkills +
             ", itemParts=" + itemParts +
             '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof Decoration)) {
+            return false;
+        }
+
+        Decoration that = (Decoration) o;
+
+        if (rarity != that.rarity) {
+            return false;
+        }
+        if (slotsNeeded != that.slotsNeeded) {
+            return false;
+        }
+        if (onlineMonsterAvailableAtQuestLevel != that.onlineMonsterAvailableAtQuestLevel) {
+            return false;
+        }
+        if (villageMonsterAvailableAtQuestLevel != that.villageMonsterAvailableAtQuestLevel) {
+            return false;
+        }
+        if (needBothOnlineAndOffLineQuest != that.needBothOnlineAndOffLineQuest) {
+            return false;
+        }
+        if (!name.equals(that.name)) {
+            return false;
+        }
+        if (!armorSkills.equals(that.armorSkills)) {
+            return false;
+        }
+        return itemParts.equals(that.itemParts);
+    }
+
+    @Override public int hashCode() {
+        int result = name.hashCode();
+        result = 31 * result + rarity;
+        result = 31 * result + slotsNeeded;
+        result = 31 * result + onlineMonsterAvailableAtQuestLevel;
+        result = 31 * result + villageMonsterAvailableAtQuestLevel;
+        result = 31 * result + (needBothOnlineAndOffLineQuest ? 1 : 0);
+        result = 31 * result + armorSkills.hashCode();
+        result = 31 * result + itemParts.hashCode();
+        return result;
     }
 }

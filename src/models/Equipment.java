@@ -25,6 +25,9 @@ public class Equipment {
     private Set<ArmorSkill> armorSkills;
     private Set<ItemPart> itemParts;
 
+    // State variable, not from the CSV
+    private int slotsUsed;
+
     private Equipment(){}
 
     public static Equipment Builder(){
@@ -166,9 +169,20 @@ public class Equipment {
         return itemParts;
     }
 
-    public boolean isArmorAvailable(){
-        // TODO fix this or gate into and Gate
+    public boolean isAvailable(){
         return onlineMonsterAvailableAtQuestLevel != NOT_AVAILABLE || villageMonsterAvailableAtQuestLevel != NOT_AVAILABLE;
+    }
+
+    public int getSlotsUsed() {
+        return slotsUsed;
+    }
+
+    public void useSlots(int numberOfSlots) {
+        slotsUsed+=numberOfSlots;
+    }
+
+    public int getFreeSlots() {
+        return slots - slotsUsed;
     }
 
     @Override

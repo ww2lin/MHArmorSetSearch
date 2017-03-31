@@ -16,6 +16,7 @@ import models.Equipment;
 import models.Gender;
 import models.GeneratedArmorSet;
 import models.skillactivation.ActivatedSkill;
+import models.skillactivation.ActivatedSkillWithDecoration;
 import models.skillactivation.SkillActivationChart;
 import models.skillactivation.SkillActivationRequirement;
 import utils.CsvReader;
@@ -41,6 +42,7 @@ public class Main {
         Map<String, List<Decoration>> decorationLookupTable = CsvReader.getDecorationFromCsvFile(FILE_PATH_DECORATION);
 
         // init objects
+        final int searchLimit = 5;
         Gender gender = Gender.MALE;
         ClassType classType = ClassType.BLADEMASTER;
 
@@ -53,16 +55,17 @@ public class Main {
 
         ActivatedSkill[] lookupSkills1 = {new ActivatedSkill("攻撃力UP【小】", "攻撃", 10)};
         ActivatedSkill[] lookupSkills2 = {new ActivatedSkill("攻撃力UP【小】", "攻撃", 10), new ActivatedSkill("ガード性能+1","ガード性能", 10)};
-        List<GeneratedArmorSet> matchedSets = new ArmorSearch().findArmorSetWith(skillActivationChart, Arrays.asList(lookupSkills2), armorSkillCacheTable);
+        List<GeneratedArmorSet> matchedSets = new ArmorSearch().findArmorSetWith(decorationLookupTable, searchLimit, skillActivationChart, Arrays.asList(lookupSkills2), armorSkillCacheTable);
 
         // Testing purposes.
-        System.out.println(matchedSets.size());
+        //System.out.println(matchedSets.size());
         Collections.reverseOrder(new GeneratedArmorSet.MostSkillComparator());
-        System.out.println(matchedSets.get(0));
         for (GeneratedArmorSet generatedArmorSet : matchedSets) {
-            for (ActivatedSkill activatedSkill : generatedArmorSet.getActivatedSkills()){
-                if (activatedSkill.getAccumulatedPoints() > 14) {
-                    System.out.println(generatedArmorSet);
+            for (ActivatedSkillWithDecoration activatedSkillWithDecoration : generatedArmorSet.getActivatedSkills()){
+                for (ActivatedSkill activatedSkill : activatedSkillWithDecoration.getActivatedSkills()) {
+                    if (activatedSkill.getAccumulatedPoints() > 18) {
+                        System.out.println(generatedArmorSet);
+                    }
                 }
             }
         }

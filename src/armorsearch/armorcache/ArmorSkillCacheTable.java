@@ -17,7 +17,6 @@ import models.skillactivation.SkillActivationChart;
 
 public class ArmorSkillCacheTable {
     // Build a table from kind -> All equipment has that kind of skill
-    // TODO this logic can be moved into the CsvReader when generating the list of equipments
     private Map<String, List<Equipment>> headEquipmentCache = new HashMap<>();
     private Map<String, List<Equipment>> bodyEquipmentCache = new HashMap<>();
     private Map<String, List<Equipment>> armEquipmentCache = new HashMap<>();
@@ -73,7 +72,7 @@ public class ArmorSkillCacheTable {
     private List<Equipment> getEquipmentBySkillKind(List<Equipment> equipments, String skillkind) {
         return equipments.stream().filter(
             (equipment) -> {
-                boolean isArmorAvailable = equipment.isArmorAvailable();
+                boolean isArmorAvailable = equipment.isAvailable();
                 boolean validGender = (equipment.getGender() == Gender.BOTH || equipment.getGender() == gender);
                 boolean validClassType = (equipment.getClassType() == ClassType.ALL || equipment.getClassType() == classType);
                 if (validGender && validClassType && isArmorAvailable) {

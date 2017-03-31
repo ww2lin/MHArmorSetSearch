@@ -8,14 +8,17 @@ import models.Equipment;
 /**
  * This Filter will be applied internally.
  *
- * Since this try to select the Max skill point from a list of equipment
- * If must be the last filter that is going to be applied
- * For example if this filter is applied before Rarity(3)
- * there is a chance such that after this filter is done, there is no rare 3 armors.
+ * This will select the equipments with MAX skill point from a list of equipments
+ * OR
+ * It will also select equipments that has MORE SLOTS than the equipment with the max skill points
  *
- * Why am I making it so much more complicated by doing this?
+ * This Filter must be the last filter that is going to be applied, because
+ * for example if this filter is applied before Rarity(3)
+ * then after this filter is done, some of rare 3 armors might be dropped.
+ *
+ * So... why am I doing this?
  * Because without a way to cut down the number of armor set possibilities it will take
- * forever to try all the combination of armor sets.
+ * 'forever' to try and find all the combination of armor sets for a set of skills.
  */
 public class MaxArmorSkillPointsFilter implements ArmorFilter{
 
@@ -31,7 +34,7 @@ public class MaxArmorSkillPointsFilter implements ArmorFilter{
             return equipmentList;
         }
 
-        // Return the armor with the max points in skillkind or has more slots
+        // Return the armor with the max points in skillkind or has more slots than the maxed skill point equipment
         List<Equipment> maxPointOrSlotsEquipments = new ArrayList<>();
 
         // Find the equipment with the max skill points first, and use it as a template
