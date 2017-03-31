@@ -1,9 +1,17 @@
+import armorsearch.ArmorSearch;
+import armorsearch.armorcache.ArmorSkillCacheTable;
+import armorsearch.filter.ArmorFilter;
+import armorsearch.filter.MaxArmorSkillPointsFilter;
+import armorsearch.model.AllEquipments;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import models.ClassType;
+import models.Decoration;
 import models.Equipment;
 import models.Gender;
 import models.GeneratedArmorSet;
@@ -23,30 +31,34 @@ public class Main {
     private static final String FILE_PATH_DECORATION = "data/MHXX_DECO.csv";
 
     public static void main(String args[]) throws IOException {
+        // Parse CSV
         List<Equipment> headEquipments = CsvReader.getEquipmentFromCsvFile(FILE_PATH_HEAD_EQUIPMENT);
         List<Equipment> bodyEquipments = CsvReader.getEquipmentFromCsvFile(FILE_PATH_BODY_EQUIPMENT);
         List<Equipment> armEquipments = CsvReader.getEquipmentFromCsvFile(FILE_PATH_ARM_EQUIPMENT);
         List<Equipment> wstEquipments = CsvReader.getEquipmentFromCsvFile(FILE_PATH_WST_EQUIPMENT);
         List<Equipment> legEquipments = CsvReader.getEquipmentFromCsvFile(FILE_PATH_LEG_EQUIPMENT);
-
         Map<String, List<SkillActivationRequirement>> skillActivationChartMap = CsvReader.getSkillActivationRequirementFromCsvFile(FILE_PATH_SKILL_ACTIVATION);
-        SkillActivationChart skillActivationChart = new SkillActivationChart(skillActivationChartMap);
+        Map<String, List<Decoration>> decorationLookupTable = CsvReader.getDecorationFromCsvFile(FILE_PATH_DECORATION);
 
-        //Map<String, List<Decoration>> decorationLookupTable = CsvReader.getDecorationFromCsvFile(FILE_PATH_DECORATION);
+        // init objects
+        Gender gender = Gender.MALE;
+        ClassType classType = ClassType.BLADEMASTER;
 
-        //System.out.println(decorationLookupTable);
+        SkillActivationChart skillActivationChart = new SkillActivationChart(skillActivationChartMap, classType);
+        AllEquipments allEquipments = new AllEquipments(headEquipments, bodyEquipments, armEquipments, wstEquipments, legEquipments);
 
-        ArmorSearch armorSearch = new ArmorSearch(headEquipments, bodyEquipments, armEquipments, wstEquipments, legEquipments, skillActivationChart, ClassType.BLADEMASTER, Gender.MALE);
+        // individual filters.
+        List<ArmorFilter> armorFilters = new LinkedList<>();
+        ArmorSkillCacheTable armorSkillCacheTable = new ArmorSkillCacheTable(skillActivationChart, allEquipments, armorFilters, classType, gender);
 
         ActivatedSkill[] lookupSkills1 = {new ActivatedSkill("攻撃力UP【小】", "攻撃", 10)};
         ActivatedSkill[] lookupSkills2 = {new ActivatedSkill("攻撃力UP【小】", "攻撃", 10), new ActivatedSkill("ガード性能+1","ガード性能", 10)};
-        List<GeneratedArmorSet> matchedSets = armorSearch.findArmorSetWith(Arrays.asList(lookupSkills2));
-
+        List<GeneratedArmorSet> matchedSets = new ArmorSearch().findArmorSetWith(skillActivationChart, Arrays.asList(lookupSkills2), armorSkillCacheTable);
 
         // Testing purposes.
         System.out.println(matchedSets.size());
         Collections.reverseOrder(new GeneratedArmorSet.MostSkillComparator());
-        //System.out.println(matchedSets.get(0));
+        System.out.println(matchedSets.get(0));
         for (GeneratedArmorSet generatedArmorSet : matchedSets) {
             for (ActivatedSkill activatedSkill : generatedArmorSet.getActivatedSkills()){
                 if (activatedSkill.getAccumulatedPoints() > 14) {

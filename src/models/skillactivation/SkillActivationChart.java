@@ -10,14 +10,17 @@ import models.ClassType;
 import models.Equipment;
 
 public class SkillActivationChart {
+
+    private ClassType classType;
     private Map<String, List<SkillActivationRequirement>> skillActivationLookupTable;
 
     /**
      * Mapping from the skill kind -> actual skill
      * e.g Attack -> Attack Up Small, Attack Up Mid, Attack Up Large.
      */
-    public SkillActivationChart(Map<String, List<SkillActivationRequirement>> skillChart) {
+    public SkillActivationChart(Map<String, List<SkillActivationRequirement>> skillChart, ClassType classType) {
         skillActivationLookupTable = skillChart;
+        this.classType = classType;
     }
 
     public Set<String> getSkillKind(){
@@ -28,7 +31,7 @@ public class SkillActivationChart {
      * Given a list of equipments and a @{models.ClassType}, return what skills has been activated.
      * This can return negative skill.
      */
-    public List<ActivatedSkill> getActiavtedSkill(List<Equipment> equipmentList, ClassType classType){
+    public List<ActivatedSkill> getActiavtedSkill(List<Equipment> equipmentList){
         Map<String, Integer> currentEquipmentSkillChart = new HashMap<>();
         List<ActivatedSkill> activatedSkills = new LinkedList<>();
 
@@ -75,5 +78,9 @@ public class SkillActivationChart {
             }
         }
         return activatedSkills;
+    }
+
+    public void setClassType(ClassType classType) {
+        this.classType = classType;
     }
 }

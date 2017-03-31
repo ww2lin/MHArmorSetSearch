@@ -3,6 +3,7 @@ package utils;
 import au.com.bytecode.opencsv.CSVReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -16,7 +17,7 @@ public class CsvReader {
     public static List<Equipment> getEquipmentFromCsvFile(String path) {
         CSVReader reader = null;
         try {
-            List<Equipment> lst = new LinkedList<>();
+            List<Equipment> lst = new ArrayList<>();
             reader = new CSVReader(new FileReader(path));
             String[] nextLine;
 
@@ -102,7 +103,7 @@ public class CsvReader {
                 // nextLine[] is an array of values from the line
                 Decoration decoration = CsvToModel.csvDecorationRowToModel(nextLine);
 
-                decoration.getArmorSkills().stream().forEach(armorSkill -> {
+                decoration.getArmorSkills().forEach(armorSkill -> {
                     List<Decoration> decorationList = decorationMap.get(armorSkill.kind);
                     if (decorationList == null) {
                         decorationList = new LinkedList<>();

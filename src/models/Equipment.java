@@ -168,7 +168,7 @@ public class Equipment {
 
     public boolean isArmorAvailable(){
         // TODO fix this or gate into and Gate
-        return onlineMonsterAvailableAtQuestLevel != NOT_AVAILABLE && villageMonsterAvailableAtQuestLevel != NOT_AVAILABLE;
+        return onlineMonsterAvailableAtQuestLevel != NOT_AVAILABLE || villageMonsterAvailableAtQuestLevel != NOT_AVAILABLE;
     }
 
     @Override
