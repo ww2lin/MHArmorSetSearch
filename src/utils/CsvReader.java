@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import models.Decoration;
 import models.Equipment;
 import models.skillactivation.SkillActivationRequirement;
 
@@ -72,6 +73,45 @@ public class CsvReader {
 
             }
             return skillActivationChart;
+        } catch (IOException e) {
+            return Collections.emptyMap();
+        } finally {
+            // Messy steps to clean up the file reader
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public static Map<String, List<Decoration>> getDecorationFromCsvFile(String path) {
+        CSVReader reader = null;
+        try {
+            Map<String, List<Decoration>> decorationMap = new HashMap<>();
+            reader = new CSVReader(new FileReader(path));
+            String[] nextLine;
+
+            // skip over the header
+            reader.readNext();
+
+            // go over the CSV file line by line.
+            while ((nextLine = reader.readNext()) != null) {
+                // nextLine[] is an array of values from the line
+                Decoration decoration = CsvToModel.csvDecorationRowToModel(nextLine);
+
+                decoration.getArmorSkills().stream().forEach(armorSkill -> {
+                    List<Decoration> decorationList = decorationMap.get(armorSkill.kind);
+                    if (decorationList == null) {
+                        decorationList = new LinkedList<>();
+                    }
+                    decorationList.add(decoration);
+                    decorationMap.put(armorSkill.kind, decorationList);
+                });
+            }
+            return decorationMap;
         } catch (IOException e) {
             return Collections.emptyMap();
         } finally {

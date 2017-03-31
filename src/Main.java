@@ -20,6 +20,7 @@ public class Main {
     private static final String FILE_PATH_WST_EQUIPMENT = "data/MHXX_EQUIP_WST.csv";
     private static final String FILE_PATH_LEG_EQUIPMENT = "data/MHXX_EQUIP_LEG.csv";
     private static final String FILE_PATH_SKILL_ACTIVATION = "data/MHXX_SKILL.csv";
+    private static final String FILE_PATH_DECORATION = "data/MHXX_DECO.csv";
 
     public static void main(String args[]) throws IOException {
         List<Equipment> headEquipments = CsvReader.getEquipmentFromCsvFile(FILE_PATH_HEAD_EQUIPMENT);
@@ -30,6 +31,10 @@ public class Main {
 
         Map<String, List<SkillActivationRequirement>> skillActivationChartMap = CsvReader.getSkillActivationRequirementFromCsvFile(FILE_PATH_SKILL_ACTIVATION);
         SkillActivationChart skillActivationChart = new SkillActivationChart(skillActivationChartMap);
+
+        //Map<String, List<Decoration>> decorationLookupTable = CsvReader.getDecorationFromCsvFile(FILE_PATH_DECORATION);
+
+        //System.out.println(decorationLookupTable);
 
         ArmorSearch armorSearch = new ArmorSearch(headEquipments, bodyEquipments, armEquipments, wstEquipments, legEquipments, skillActivationChart, ClassType.BLADEMASTER, Gender.MALE);
 

@@ -1,12 +1,17 @@
 package utils;
 
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import models.ArmorSkill;
 import models.ClassType;
+import models.Decoration;
 import models.Equipment;
 import models.Gender;
-import models.MonsterPart;
+import models.ItemPart;
 import models.Resistance;
 import models.ResistanceType;
 import models.skillactivation.SkillActivationRequirement;
@@ -31,7 +36,6 @@ class CsvToModel {
         resistances.add(new Resistance(ResistanceType.THUNDER, tryParseInt(row[12])));
         resistances.add(new Resistance(ResistanceType.ICE, tryParseInt(row[13])));
         resistances.add(new Resistance(ResistanceType.DRAGON, tryParseInt(row[14])));
-        removeEmptyValues(resistances);
 
         // TODO filter out empty values
         Set<ArmorSkill> armorSkills = new HashSet<>();
@@ -40,14 +44,14 @@ class CsvToModel {
         armorSkills.add(ArmorSkill.createArmorSkill(row[19], tryParseInt(row[20])));
         armorSkills.add(ArmorSkill.createArmorSkill(row[21], tryParseInt(row[22])));
         armorSkills.add(ArmorSkill.createArmorSkill(row[23], tryParseInt(row[24])));
-        removeEmptyValues(armorSkills);
+        armorSkills = removeEmptyArmorValues(armorSkills);
 
-        Set<MonsterPart> monsterParts = new HashSet<>();
-        monsterParts.add(MonsterPart.createMonsterPart(row[25], tryParseInt(row[26])));
-        monsterParts.add(MonsterPart.createMonsterPart(row[27], tryParseInt(row[28])));
-        monsterParts.add(MonsterPart.createMonsterPart(row[29], tryParseInt(row[30])));
-        monsterParts.add(MonsterPart.createMonsterPart(row[31], tryParseInt(row[32])));
-        removeEmptyValues(monsterParts);
+        Set<ItemPart> itemParts = new HashSet<>();
+        itemParts.add(ItemPart.createMonsterPart(row[25], tryParseInt(row[26])));
+        itemParts.add(ItemPart.createMonsterPart(row[27], tryParseInt(row[28])));
+        itemParts.add(ItemPart.createMonsterPart(row[29], tryParseInt(row[30])));
+        itemParts.add(ItemPart.createMonsterPart(row[31], tryParseInt(row[32])));
+        itemParts = new HashSet<>(removeEmptyItemValues(itemParts));
 
 
         return Equipment.Builder()
@@ -63,7 +67,7 @@ class CsvToModel {
             .setMaxDefense(maxDefense)
             .setResistances(resistances)
             .setArmorSkills(armorSkills)
-            .setMonsterParts(monsterParts);
+            .setItemParts(itemParts);
     }
 
     public static SkillActivationRequirement csvSkillActivationRequirementRowToModel(String[] row) {
@@ -79,6 +83,55 @@ class CsvToModel {
             .setIsNegativeSkill(pointsToActivate <= 0);
     }
 
+    public static Decoration csvDecorationRowToModel(String[] row) {
+        String name = row[0];
+        int rarity = tryParseInt(row[1]);
+        int slotsNeeded = tryParseInt(row[2]);
+        int onlineQuestLevelRequirement = tryParseInt(row[3]);
+        int villageQuestLevelRequirement = tryParseInt(row[4]);
+        boolean needBothOnlineAndOffLineQuest = tryParseInt(row[5]) == 1;
+
+        Set<ArmorSkill> armorSkills = new HashSet<>();
+        armorSkills.add(ArmorSkill.createArmorSkill(row[6], tryParseInt(row[7])));
+        armorSkills.add(ArmorSkill.createArmorSkill(row[8], tryParseInt(row[9])));
+        armorSkills = removeEmptyArmorValues(armorSkills);
+
+        List<List<ItemPart>> itemParts = new LinkedList<>();
+        List<ItemPart> itemParts1 = new LinkedList<>();
+        List<ItemPart> itemParts2 = new LinkedList<>();
+
+        itemParts1.add(ItemPart.createMonsterPart(row[10], tryParseInt(row[11])));
+        itemParts1.add(ItemPart.createMonsterPart(row[12], tryParseInt(row[13])));
+        itemParts1.add(ItemPart.createMonsterPart(row[14], tryParseInt(row[15])));
+        itemParts1.add(ItemPart.createMonsterPart(row[16], tryParseInt(row[17])));
+        itemParts1 = removeEmptyItemValues(itemParts1);
+
+        itemParts2.add(ItemPart.createMonsterPart(row[18], tryParseInt(row[19])));
+        itemParts2.add(ItemPart.createMonsterPart(row[20], tryParseInt(row[21])));
+        itemParts2.add(ItemPart.createMonsterPart(row[22], tryParseInt(row[23])));
+        itemParts2.add(ItemPart.createMonsterPart(row[24], tryParseInt(row[25])));
+        itemParts2 = removeEmptyItemValues(itemParts2);
+
+        if (!itemParts1.isEmpty()){
+            itemParts.add(itemParts1);
+        }
+
+        if (!itemParts2.isEmpty()){
+            itemParts.add(itemParts2);
+        }
+
+        return Decoration.Builder()
+            .setName(name)
+            .setRarity(rarity)
+            .setSlotsNeeded(slotsNeeded)
+            .setOnlineMonsterAvailableAtQuestLevel(onlineQuestLevelRequirement)
+            .setVillageMonsterAvailableAtQuestLevel(villageQuestLevelRequirement)
+            .setNeedBothOnlineAndOffLineQuest(needBothOnlineAndOffLineQuest)
+            .setArmorSkills(armorSkills)
+            .setItemParts(itemParts);
+
+    }
+
     private static int tryParseInt(String value) {
         try {
             return Integer.parseInt(value);
@@ -88,9 +141,12 @@ class CsvToModel {
         }
     }
 
-    private static <T> Set<T> removeEmptyValues(Set<T> set) {
-        set.remove("");
-        set.remove(null);
-        return set;
+
+    private static Set<ArmorSkill> removeEmptyArmorValues(Collection<ArmorSkill> collection) {
+        return collection.stream().filter(armorSkill -> armorSkill != null && !armorSkill.isNull()).collect(Collectors.toSet());
+    }
+
+    private static List<ItemPart> removeEmptyItemValues(Collection<ItemPart> collection) {
+        return collection.stream().filter(itemPart -> itemPart != null && !itemPart.isNull()).collect(Collectors.toList());
     }
 }

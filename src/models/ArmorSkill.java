@@ -1,6 +1,8 @@
 package models;
 
-public class ArmorSkill {
+import interfaces.Nullable;
+
+public class ArmorSkill implements Nullable {
     // Note this is NOT the name of the skill, rather its the 'kind' of the skill
     // E.g its NOT AuS, AuM, or negate stun,
     // it is Attack, Poison, Stun, Hearing
@@ -29,5 +31,33 @@ public class ArmorSkill {
 
     public boolean isKind(String kind){
         return this.kind.equalsIgnoreCase(kind);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof ArmorSkill)) {
+            return false;
+        }
+
+        ArmorSkill that = (ArmorSkill) o;
+
+        if (points != that.points) {
+            return false;
+        }
+        return kind.equals(that.kind);
+    }
+
+    @Override public int hashCode() {
+        int result = kind.hashCode();
+        result = 31 * result + points;
+        return result;
+    }
+
+    @Override
+    public boolean isNull() {
+        return kind == null || kind.trim().length() == 0;
     }
 }

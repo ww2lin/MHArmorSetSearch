@@ -23,7 +23,7 @@ public class Equipment {
     private Set<Resistance> resistances;
 
     private Set<ArmorSkill> armorSkills;
-    private Set<MonsterPart> monsterParts;
+    private Set<ItemPart> itemParts;
 
     private Equipment(){}
 
@@ -45,7 +45,7 @@ public class Equipment {
             ", maxDefense=" + maxDefense +
             ", resistances=" + resistances +
             ", armorSkills=" + armorSkills +
-            ", monsterParts=" + monsterParts +
+            ", itemParts=" + itemParts +
             '}';
     }
 
@@ -153,8 +153,8 @@ public class Equipment {
         return this;
     }
 
-    public Equipment setMonsterParts(Set<MonsterPart> monsterParts) {
-        this.monsterParts = monsterParts;
+    public Equipment setItemParts(Set<ItemPart> itemParts) {
+        this.itemParts = itemParts;
         return this;
     }
 
@@ -162,11 +162,12 @@ public class Equipment {
         return armorSkills;
     }
 
-    public Set<MonsterPart> getMonsterParts() {
-        return monsterParts;
+    public Set<ItemPart> getItemParts() {
+        return itemParts;
     }
 
     public boolean isArmorAvailable(){
+        // TODO fix this or gate into and Gate
         return onlineMonsterAvailableAtQuestLevel != NOT_AVAILABLE && villageMonsterAvailableAtQuestLevel != NOT_AVAILABLE;
     }
 
@@ -217,7 +218,7 @@ public class Equipment {
         if (!armorSkills.equals(equipment.armorSkills)) {
             return false;
         }
-        return monsterParts.equals(equipment.monsterParts);
+        return itemParts.equals(equipment.itemParts);
     }
 
     @Override public int hashCode() {
@@ -233,7 +234,7 @@ public class Equipment {
         result = 31 * result + maxDefense;
         result = 31 * result + resistances.hashCode();
         result = 31 * result + armorSkills.hashCode();
-        result = 31 * result + monsterParts.hashCode();
+        result = 31 * result + itemParts.hashCode();
         return result;
     }
 }
