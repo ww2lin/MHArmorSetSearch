@@ -1,7 +1,6 @@
 import armorsearch.ArmorSearch;
 import armorsearch.armorcache.ArmorSkillCacheTable;
 import armorsearch.filter.ArmorFilter;
-import armorsearch.filter.MaxArmorSkillPointsFilter;
 import armorsearch.model.AllEquipments;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -42,7 +41,7 @@ public class Main {
         Map<String, List<Decoration>> decorationLookupTable = CsvReader.getDecorationFromCsvFile(FILE_PATH_DECORATION);
 
         // init objects
-        final int searchLimit = 5;
+        final int searchLimit = 200;
         Gender gender = Gender.MALE;
         ClassType classType = ClassType.BLADEMASTER;
 
@@ -55,7 +54,11 @@ public class Main {
 
         ActivatedSkill[] lookupSkills1 = {new ActivatedSkill("攻撃力UP【小】", "攻撃", 10)};
         ActivatedSkill[] lookupSkills2 = {new ActivatedSkill("攻撃力UP【小】", "攻撃", 10), new ActivatedSkill("ガード性能+1","ガード性能", 10)};
-        List<GeneratedArmorSet> matchedSets = new ArmorSearch().findArmorSetWith(decorationLookupTable, searchLimit, skillActivationChart, Arrays.asList(lookupSkills2), armorSkillCacheTable);
+        List<ActivatedSkill> desiredSkills = new ArrayList<>();
+
+        desiredSkills.addAll(Arrays.asList(lookupSkills2));
+
+        List<GeneratedArmorSet> matchedSets = new ArmorSearch().findArmorSetWith(decorationLookupTable, searchLimit, skillActivationChart, desiredSkills, armorSkillCacheTable);
 
         // Testing purposes.
         //System.out.println(matchedSets.size());

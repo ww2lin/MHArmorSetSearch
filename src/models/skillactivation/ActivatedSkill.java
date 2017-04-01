@@ -40,4 +40,24 @@ public class ActivatedSkill {
             ", accumulatedPoints=" + accumulatedPoints +
             '}';
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof ActivatedSkill)) {
+            return false;
+        }
+
+        ActivatedSkill that = (ActivatedSkill) o;
+        return kind.equals(that.kind);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = name.hashCode();
+        result = 31 * result + kind.hashCode();
+        return result;
+    }
 }

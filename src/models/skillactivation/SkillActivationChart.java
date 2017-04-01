@@ -29,6 +29,19 @@ public class SkillActivationChart {
         return skillActivationLookupTable.keySet();
     }
 
+    public ActivatedSkill getMaxedActivatedSkill(String kind) {
+        List<SkillActivationRequirement> skillActivationRequirements = skillActivationLookupTable.get(kind);
+
+        // There has to be a skill with the type kind, or we will never obtain kind from the CSV sheets.
+        SkillActivationRequirement maxSkillActivationRequirement = skillActivationRequirements.get(0);
+        for (SkillActivationRequirement skillActivationRequirement : skillActivationRequirements) {
+            if (skillActivationRequirement.getPointsNeededToActivate() > maxSkillActivationRequirement.getPointsNeededToActivate()){
+                maxSkillActivationRequirement = skillActivationRequirement;
+            }
+        }
+        return new ActivatedSkill(maxSkillActivationRequirement, 0);
+    }
+
     /**
      * Given a list of equipments and a @{models.ClassType}, return what skills has been activated.
      * This can return negative skill.
