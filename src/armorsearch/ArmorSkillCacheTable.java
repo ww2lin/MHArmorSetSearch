@@ -1,4 +1,4 @@
-package armorsearch.armorcache;
+package armorsearch;
 
 import armorsearch.filter.ArmorFilter;
 import armorsearch.filter.MaxArmorSkillPointsFilter;
@@ -31,6 +31,7 @@ public class ArmorSkillCacheTable {
      * headEquipmentCache: skillKind -> All head armor that has this skill.
      * This construction should be moved into the csv while generating the List of equipments
      */
+    //TODO fix torso up armors, and 3 slotted armors
     public ArmorSkillCacheTable(SkillActivationChart skillActivationChart, AllEquipments allEquipments, List<ArmorFilter> armorFilters, ClassType classType, Gender gender) {
         this.armorFilters = armorFilters;
         this.classType = classType;
@@ -39,7 +40,6 @@ public class ArmorSkillCacheTable {
         Set<String> skillKinds = skillActivationChart.getSkillKind();
 
         for (String skillkind : skillKinds) {
-            // TODO add 3 slotted no skill armor to all caches
             updateCacheBySkillKind(allEquipments.getHeadEquipments(), headEquipmentCache, skillkind);
             updateCacheBySkillKind(allEquipments.getBodyEquipments(), bodyEquipmentCache, skillkind);
             updateCacheBySkillKind(allEquipments.getArmEquipments(), armEquipmentCache, skillkind);

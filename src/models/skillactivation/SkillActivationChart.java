@@ -1,6 +1,5 @@
 package models.skillactivation;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -46,7 +45,7 @@ public class SkillActivationChart {
      * Given a list of equipments and a @{models.ClassType}, return what skills has been activated.
      * This can return negative skill.
      */
-    public ActivatedSkillWithDecoration getActivatedSkill(List<Equipment> equipmentList, List<Decoration> decorations){
+    public List<ActivatedSkill> getActivatedSkill(List<Equipment> equipmentList){
         Map<String, Integer> currentEquipmentSkillChart = new HashMap<>();
         List<ActivatedSkill> activatedSkills = new LinkedList<>();
 
@@ -64,19 +63,19 @@ public class SkillActivationChart {
                 sum += armorSkill.points;
                 currentEquipmentSkillChart.put(armorSkill.kind, sum);
             }
-        }
 
-        // loop over the decorations
-        for (Decoration decoration: decorations) {
-            for (ArmorSkill armorSkill : decoration.getArmorSkills()){
-                Integer sum = currentEquipmentSkillChart.get(armorSkill.kind);
-                if (sum == null){
-                    // if the current skill kind don't exist, assign it to 0
-                    sum = 0;
+            // loop over the decorations
+            for (Decoration decoration: equipment.getDecorationList()) {
+                for (ArmorSkill armorSkill : decoration.getArmorSkills()){
+                    Integer sum = currentEquipmentSkillChart.get(armorSkill.kind);
+                    if (sum == null){
+                        // if the current skill kind don't exist, assign it to 0
+                        sum = 0;
+                    }
+
+                    sum += armorSkill.points;
+                    currentEquipmentSkillChart.put(armorSkill.kind, sum);
                 }
-
-                sum += armorSkill.points;
-                currentEquipmentSkillChart.put(armorSkill.kind, sum);
             }
         }
 
@@ -107,7 +106,7 @@ public class SkillActivationChart {
             }
         }
         // Deep copy the arraylist for decorations
-        return new ActivatedSkillWithDecoration(activatedSkills, new ArrayList<>(decorations));
+        return activatedSkills;
     }
 
     public void setClassType(ClassType classType) {

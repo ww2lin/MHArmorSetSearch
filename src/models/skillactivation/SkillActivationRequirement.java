@@ -70,4 +70,39 @@ public class SkillActivationRequirement {
             ", isNegativeSkill=" + isNegativeSkill +
             '}';
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof SkillActivationRequirement)) {
+            return false;
+        }
+
+        SkillActivationRequirement that = (SkillActivationRequirement) o;
+
+        if (pointsNeededToActivate != that.pointsNeededToActivate) {
+            return false;
+        }
+        if (isNegativeSkill != that.isNegativeSkill) {
+            return false;
+        }
+        if (!name.equals(that.name)) {
+            return false;
+        }
+        if (!kind.equals(that.kind)) {
+            return false;
+        }
+        return classType == that.classType;
+    }
+
+    @Override public int hashCode() {
+        int result = name.hashCode();
+        result = 31 * result + kind.hashCode();
+        result = 31 * result + pointsNeededToActivate;
+        result = 31 * result + classType.hashCode();
+        result = 31 * result + (isNegativeSkill ? 1 : 0);
+        return result;
+    }
 }

@@ -3,13 +3,12 @@ package models;
 import java.util.Comparator;
 import java.util.List;
 import models.skillactivation.ActivatedSkill;
-import models.skillactivation.ActivatedSkillWithDecoration;
 
 public class GeneratedArmorSet {
-    List<ActivatedSkillWithDecoration> activatedSkills;
+    List<ActivatedSkill> activatedSkills;
     List<Equipment> equipments;
 
-    public GeneratedArmorSet(List<ActivatedSkillWithDecoration> activatedSkills, List<Equipment> equipments) {
+    public GeneratedArmorSet(List<ActivatedSkill> activatedSkills, List<Equipment> equipments) {
         this.activatedSkills = activatedSkills;
         this.equipments = equipments;
     }
@@ -29,7 +28,7 @@ public class GeneratedArmorSet {
             '}';
     }
 
-    public List<ActivatedSkillWithDecoration> getActivatedSkills() {
+    public List<ActivatedSkill> getActivatedSkills() {
         return activatedSkills;
     }
 

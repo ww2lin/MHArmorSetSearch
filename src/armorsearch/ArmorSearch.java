@@ -1,25 +1,25 @@
 package armorsearch;
 
-import armorsearch.armorcache.ArmorSkillCacheTable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import models.Decoration;
 import models.Equipment;
 import models.GeneratedArmorSet;
+import models.UniquelyGeneratedArmorSet;
 import models.skillactivation.ActivatedSkill;
-import models.skillactivation.ActivatedSkillWithDecoration;
 import models.skillactivation.SkillActivationChart;
 
-public class ArmorSearch {
+class ArmorSearch {
 
     /**
      * run a dfs search for the skill search
      * @param desiredSkills that the user wants to generate
      * @return list of equipment that matches what the user wants
      */
-    public List<GeneratedArmorSet> findArmorSetWith(Map<String, List<Decoration>> decorationLookupTable,
-                                                    final int searchLimit,
+    public List<UniquelyGeneratedArmorSet> findArmorSetWith(Map<String, List<Decoration>> decorationLookupTable,
+                                                    final int uniqueSetSearchLimit,
+                                                    final int decorationSearchLimit,
                                                     SkillActivationChart skillActivationChart,
                                                     List<ActivatedSkill> desiredSkills,
                                                     ArmorSkillCacheTable armorSkillCacheTable) {
@@ -37,9 +37,10 @@ public class ArmorSearch {
         wst.updateEquipmentListWithDesiredSkills(armorSkillCacheTable.getWstEquipmentCache(), desiredSkills);
         leg.updateEquipmentListWithDesiredSkills(armorSkillCacheTable.getLegEquipmentCache(), desiredSkills);
 
-        List<GeneratedArmorSet> matchedSets = new ArrayList<>();
+        List<UniquelyGeneratedArmorSet> matchedSets = new ArrayList<>();
         findArmorRecursively(decorationLookupTable,
-                             searchLimit,
+                             uniqueSetSearchLimit,
+                             decorationSearchLimit,
                              skillActivationChart,
                              new ArrayList<>(5),
                              head,
@@ -49,39 +50,40 @@ public class ArmorSearch {
     }
 
     private void findArmorRecursively(Map<String, List<Decoration>> decorationLookupTable,
-                                      final int searchLimit,
+                                      final int uniqueSetSearchLimit,
+                                      final int decorationSearchLimit,
                                       SkillActivationChart skillActivationChart,
                                       List<Equipment> currentSet,
                                       EquipmentNode equipmentNode,
-                                      List<GeneratedArmorSet> matchedSet,
+                                      List<UniquelyGeneratedArmorSet> matchedSet,
                                       List<ActivatedSkill> desiredSkills) {
         // check to see if we hit the limit of armor search
-        if (matchedSet.size() >= searchLimit) {
+        if (matchedSet.size() >= uniqueSetSearchLimit) {
             return;
         } else if (equipmentNode != null) {
             List<Equipment> equipments = equipmentNode.armorWithDesiredSkills;
             for (Equipment equipment : equipments) {
                 currentSet.add(equipment);
-                findArmorRecursively(decorationLookupTable, searchLimit, skillActivationChart, currentSet, equipmentNode.next, matchedSet, desiredSkills);
+                findArmorRecursively(decorationLookupTable, uniqueSetSearchLimit, decorationSearchLimit, skillActivationChart, currentSet, equipmentNode.next, matchedSet, desiredSkills);
 
                 // back tracking.
                 currentSet.remove(equipment);
             }
         } else {
-
             // we found a potential full set...
-            List<ActivatedSkillWithDecoration> activatedSkillWithDecoration = new ArrayList<>();
-            DecoratoinSearch.findArmorWithJewelRecursively(decorationLookupTable,
+            List<GeneratedArmorSet> sameArmorDifferentDecoration = new ArrayList<>();
+            DecorationSearch.findArmorWithJewelRecursively(decorationSearchLimit,
+                                                           decorationLookupTable,
                                                            skillActivationChart,
                                                            currentSet,
                                                            0,
-                                                           activatedSkillWithDecoration,
+                                                           sameArmorDifferentDecoration,
                                                            desiredSkills,
                                                            new ArrayList<>());
 
-            if (!activatedSkillWithDecoration.isEmpty()) {
+            if (!sameArmorDifferentDecoration.isEmpty()) {
                 // create a new array reference for current set, so that when back tracking the list is not modified
-                matchedSet.add(new GeneratedArmorSet(activatedSkillWithDecoration, new ArrayList<>(currentSet)));
+                matchedSet.add(new UniquelyGeneratedArmorSet(sameArmorDifferentDecoration));
             }
         }
     }

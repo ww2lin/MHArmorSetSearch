@@ -5,30 +5,32 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import models.Decoration;
 import models.Equipment;
+import models.GeneratedArmorSet;
 import models.skillactivation.ActivatedSkill;
-import models.skillactivation.ActivatedSkillWithDecoration;
 import models.skillactivation.SkillActivationChart;
 import models.skillactivation.SkillUtil;
 
-class DecoratoinSearch {
+class DecorationSearch {
     /**
      * DFS - try to see if the desire skills are obtainable given a list of equipments
      * can have multiple decoration list with the same outcome.
      */
-    static void findArmorWithJewelRecursively(Map<String, List<Decoration>> decorationLookupTable,
-                                                     SkillActivationChart skillActivationChart,
-                                                     List<Equipment> currentSet,
-                                                     int equipmentIndex,
-                                                     List<ActivatedSkillWithDecoration> activatedSkillWithDecoration,
-                                                     List<ActivatedSkill> desiredSkills,
-                                                     List<Decoration> decorationsNeeded){
+    static void findArmorWithJewelRecursively(final int decorationSearchLimit,
+                                              Map<String, List<Decoration>> decorationLookupTable,
+                                              SkillActivationChart skillActivationChart,
+                                              List<Equipment> currentSet,
+                                              int equipmentIndex,
+                                              List<GeneratedArmorSet> generatedArmorSets,
+                                              List<ActivatedSkill> desiredSkills,
+                                              List<Decoration> decorationsNeeded) {
 
-        if (equipmentIndex == currentSet.size()){
-            ActivatedSkillWithDecoration activatedSkill = skillActivationChart.getActivatedSkill(currentSet, decorationsNeeded);
+        if (generatedArmorSets.size() >= decorationSearchLimit || equipmentIndex == currentSet.size()){
+            List<ActivatedSkill> activatedSkill = skillActivationChart.getActivatedSkill(currentSet);
 
-            if (SkillUtil.containsDesiredSkills(desiredSkills, activatedSkill.getActivatedSkills())) {
-                // create an new array reference for current set, so that when back tracking the list is not modified
-                activatedSkillWithDecoration.add(activatedSkill);
+            if (SkillUtil.containsDesiredSkills(desiredSkills, activatedSkill)) {
+                // Deep copy the equipment so the slots, and decorations usage dont get reseted.
+                List<Equipment> deepCopyCurrentSet = currentSet.stream().map(Equipment::new).collect(Collectors.toList());
+                generatedArmorSets.add(new GeneratedArmorSet(activatedSkill, deepCopyCurrentSet));
             }
             return;
         }
@@ -42,27 +44,32 @@ class DecoratoinSearch {
                 // TODO if current set contains one of desire skills,
                 // then remove it and back the rest of the desire skill to remove useless search
                 if (equipment.getFreeSlots() >= decoration.getSlotsNeeded()) {
+                    // Try a decoration
                     decorationsNeeded.add(decoration);
                     equipment.useSlots(decoration.getSlotsNeeded());
+                    equipment.addDecoration(decoration);
 
-                    ActivatedSkillWithDecoration skillsToFilterOut = skillActivationChart.getActivatedSkill(currentSet, decorationsNeeded);
+                    // Check to see if there is any skill that we can cut out, E.g if we have AuL we do not need anymore attack jewels.
+                    List<ActivatedSkill> skillsToFilterOut = skillActivationChart.getActivatedSkill(currentSet);
                     // Find the skill that has been maxed out
-                    List<ActivatedSkill> activatedSkillsFilter = skillsToFilterOut.getActivatedSkills().stream().filter(filterOut ->
+                    List<ActivatedSkill> activatedSkillsFilter = skillsToFilterOut.stream().filter(filterOut ->
                         filterOut.getPointsNeededToActivate() >= skillActivationChart.getMaxedActivatedSkill(filterOut.getKind()).getAccumulatedPoints()
                     ).collect(Collectors.toList());
 
                     List<ActivatedSkill> filteredDesiredSkills = desiredSkills.stream().collect(Collectors.toList());
                     filteredDesiredSkills.removeAll(activatedSkillsFilter);
 
-                    findArmorWithJewelRecursively(decorationLookupTable,
+                    findArmorWithJewelRecursively(decorationSearchLimit,
+                                                  decorationLookupTable,
                                                   skillActivationChart,
                                                   currentSet,
                                                   equipmentIndex + 1,
-                                                  activatedSkillWithDecoration,
+                                                  generatedArmorSets,
                                                   filteredDesiredSkills,
                                                   decorationsNeeded);
                     //back-tracking.
                     equipment.useSlots(-decoration.getSlotsNeeded());
+                    equipment.removeDecoration(decoration);
                     decorationsNeeded.remove(decoration);
                 }
             }

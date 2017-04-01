@@ -1,5 +1,8 @@
 package models;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class Equipment {
@@ -27,16 +30,36 @@ public class Equipment {
 
     // State variable, not from the CSV
     private int slotsUsed;
+    private List<Decoration> decorationList = new ArrayList<>();
 
     private Equipment(){}
+
+    public Equipment(Equipment other) {
+        this.name = other.name;
+        this.gender = other.gender;
+        this.classType = other.classType;
+        this.rarity = other.rarity;
+        this.slots = other.slots;
+        this.onlineMonsterAvailableAtQuestLevel = other.onlineMonsterAvailableAtQuestLevel;
+        this.villageMonsterAvailableAtQuestLevel = other.villageMonsterAvailableAtQuestLevel;
+        this.needBothOnlineAndOffLineQuest = other.needBothOnlineAndOffLineQuest;
+        this.baseDefense = other.baseDefense;
+        this.maxDefense = other.maxDefense;
+        this.resistances = other.resistances;
+        this.armorSkills = other.armorSkills;
+        this.itemParts = other.itemParts;
+        this.slotsUsed = other.slotsUsed;
+        this.decorationList = other.decorationList;
+    }
 
     public static Equipment Builder(){
         return new Equipment();
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
         return "Equipment{" +
-            "kind='" + name + '\'' +
+            "name='" + name + '\'' +
             ", gender=" + gender +
             ", classType=" + classType +
             ", rarity=" + rarity +
@@ -49,6 +72,8 @@ public class Equipment {
             ", resistances=" + resistances +
             ", armorSkills=" + armorSkills +
             ", itemParts=" + itemParts +
+            ", slotsUsed=" + slotsUsed +
+            ", decorationList=" + decorationList +
             '}';
     }
 
@@ -185,8 +210,19 @@ public class Equipment {
         return slots - slotsUsed;
     }
 
-    @Override
-    public boolean equals(Object o) {
+    public List<Decoration> getDecorationList() {
+        return decorationList;
+    }
+
+    public void addDecoration(Decoration decoration){
+        decorationList.add(decoration);
+    }
+
+    public void removeDecoration(Decoration decoration){
+        decorationList.remove(decoration);
+    }
+
+    @Override public boolean equals(Object o) {
         if (this == o) {
             return true;
         }
@@ -251,4 +287,5 @@ public class Equipment {
         result = 31 * result + itemParts.hashCode();
         return result;
     }
+
 }
