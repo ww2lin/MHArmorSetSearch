@@ -15,6 +15,7 @@ import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.WindowConstants;
 import language.StringConstants;
 import models.ClassType;
@@ -36,6 +37,7 @@ public class MonsterHunterArmorSearcher extends JFrame {
     /**
      * Ui components
      */
+    private JProgressBar progressBar = new JProgressBar(0, uniqueSetSearchLimit);
     private JButton addDesireSkillButton = new JButton(StringConstants.ADD_SKILL);
     private JButton removeDesireSkillButton = new JButton(StringConstants.REMOVE_SKILL);
     private JButton clearAllDesireSkills = new JButton(StringConstants.CLEAR_ALL_SKILL);
@@ -71,11 +73,18 @@ public class MonsterHunterArmorSearcher extends JFrame {
         // skill section
         container.add(buildSkillSection());
 
+        // progress bar
+        container.add(progressBar);
+
         // search Result
-        add(buldArmorSearchResultSection(), BorderLayout.CENTER);
+        add(buildArmorSearchResultSection(), BorderLayout.CENTER);
 
         add(container, BorderLayout.WEST);
+
+
         pack();
+
+        setIdleState();
 
         setupListeners();
 
@@ -140,7 +149,7 @@ public class MonsterHunterArmorSearcher extends JFrame {
 
     }
 
-    private JPanel buldArmorSearchResultSection(){
+    private JPanel buildArmorSearchResultSection(){
         JPanel container = new JPanel();
         searchResultPanel = new SearchResultPanel();
         container.add(searchResultPanel);
@@ -196,19 +205,23 @@ public class MonsterHunterArmorSearcher extends JFrame {
     private void setIdleState() {
         search.setEnabled(true);
         stop.setEnabled(false);
+        progressBar.setValue(0);
+        progressBar.setStringPainted(false);
     }
 
     private void setInSearchState() {
         searchResultPanel.clear();
         search.setEnabled(false);
         stop.setEnabled(true);
+        progressBar.setStringPainted(true);
     }
 
     private class OnSearchResultProgressImpl implements OnSearchResultProgress {
         @Override
         public void onProgress(UniquelyGeneratedArmorSet uniquelyGeneratedArmorSet, int current, int max) {
             //searchResultPanel.update(uniquelyGeneratedArmorSet);
-            System.out.println(current+"  "+max);
+            progressBar.setValue(current);
+            //System.out.println(current+"  "+max);
         }
 
         @Override

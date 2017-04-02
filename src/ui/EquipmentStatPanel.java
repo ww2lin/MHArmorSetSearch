@@ -1,6 +1,5 @@
 package ui;
 
-import java.awt.FlowLayout;
 import java.util.Map;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
