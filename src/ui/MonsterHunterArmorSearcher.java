@@ -24,7 +24,9 @@ import utils.WorkerThread;
 
 public class MonsterHunterArmorSearcher extends JFrame {
 
-    private int uniqueSetSearchLimit = 20;
+    private static final int UPDATE_BATCH = 20;
+
+    private int uniqueSetSearchLimit = 200;
     private int decorationSearchLimit = 5;
     private Gender gender = Gender.MALE;
     private ClassType classType = ClassType.BLADEMASTER;
@@ -43,14 +45,14 @@ public class MonsterHunterArmorSearcher extends JFrame {
     private JComboBox<Gender> genderJComboBox = new JComboBox<>(new Gender[]{Gender.MALE, Gender.FEMALE});
     private JComboBox<ClassType> classTypeJComboBox = new JComboBox<>(new ClassType[]{ClassType.BLADEMASTER, ClassType.GUNNER});
 
-    private SkillList searchSkillList;
-    private SkillList desiredSkillList;
-    private SearchResultList searchResultList;
+    private ArmorSkillPanel searchArmorSkillPanel;
+    private ArmorSkillPanel desiredArmorSkillPanel;
+    private SearchResultPanel searchResultPanel;
 
     private WorkerThread workerThread;
 
     public void init() throws IOException {
-        setSize(new Dimension(760, 600));
+        setSize(new Dimension(800, 800));
         setTitle(StringConstants.TITLE);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
@@ -70,9 +72,9 @@ public class MonsterHunterArmorSearcher extends JFrame {
         container.add(buildSkillSection());
 
         // search Result
-        add(buldArmorSearchResultSection(), BorderLayout.EAST);
+        add(buldArmorSearchResultSection(), BorderLayout.CENTER);
 
-        add(container, BorderLayout.CENTER);
+        add(container, BorderLayout.WEST);
         pack();
 
         setupListeners();
@@ -83,15 +85,15 @@ public class MonsterHunterArmorSearcher extends JFrame {
 
     private void setupListeners() {
         addDesireSkillButton.addActionListener(e -> {
-            desiredSkillList.add(searchSkillList.getSelectedValues());
+            desiredArmorSkillPanel.add(searchArmorSkillPanel.getSelectedValues());
         });
 
         removeDesireSkillButton.addActionListener(e -> {
-            desiredSkillList.remove();
+            desiredArmorSkillPanel.remove();
         });
 
         clearAllDesireSkills.addActionListener(e -> {
-            desiredSkillList.removeAll();
+            desiredArmorSkillPanel.removeAll();
         });
 
         classTypeJComboBox.addActionListener(e -> {
@@ -100,8 +102,8 @@ public class MonsterHunterArmorSearcher extends JFrame {
                 classType = tempClassType;
                 armorSearchWrapper.setClassType(classType);
                 armorSearchWrapper.refreshSkillList();
-                searchSkillList.reset(armorSearchWrapper.getSkillList());
-                desiredSkillList.removeAll();
+                searchArmorSkillPanel.reset(armorSearchWrapper.getSkillList());
+                desiredArmorSkillPanel.removeAll();
             }
 
         });
@@ -112,8 +114,8 @@ public class MonsterHunterArmorSearcher extends JFrame {
                 gender = tempGender;
                 armorSearchWrapper.setGender(gender);
                 armorSearchWrapper.refreshSkillList();
-                searchSkillList.reset(armorSearchWrapper.getSkillList());
-                desiredSkillList.removeAll();
+                searchArmorSkillPanel.reset(armorSearchWrapper.getSkillList());
+                desiredArmorSkillPanel.removeAll();
             }
         });
 
@@ -128,7 +130,7 @@ public class MonsterHunterArmorSearcher extends JFrame {
 
             workerThread = new WorkerThread(new OnSearchResultProgressImpl(),
                                             armorSearchWrapper,
-                                            desiredSkillList.getAll(),
+                                            desiredArmorSkillPanel.getAll(),
                                             uniqueSetSearchLimit,
                                             decorationSearchLimit,
                                             Collections.emptyList());
@@ -140,8 +142,8 @@ public class MonsterHunterArmorSearcher extends JFrame {
 
     private JPanel buldArmorSearchResultSection(){
         JPanel container = new JPanel();
-        searchResultList = new SearchResultList();
-        container.add(searchResultList);
+        searchResultPanel = new SearchResultPanel();
+        container.add(searchResultPanel);
         return container;
     }
 
@@ -176,14 +178,14 @@ public class MonsterHunterArmorSearcher extends JFrame {
         JLabel skillToSearch = new JLabel(StringConstants.SKILL_TO_SEARCH);
 
         // adding components.
-        searchSkillList = new SkillList(armorSearchWrapper.getPositiveSkillList());
+        searchArmorSkillPanel = new ArmorSkillPanel(armorSearchWrapper.getPositiveSkillList());
         leftPanel.add(allSkills, BorderLayout.NORTH);
-        leftPanel.add(searchSkillList, BorderLayout.CENTER);
+        leftPanel.add(searchArmorSkillPanel, BorderLayout.CENTER);
         leftPanel.add(addDesireSkillButton, BorderLayout.SOUTH);
 
-        desiredSkillList = new SkillList(new ArrayList<>());
+        desiredArmorSkillPanel = new ArmorSkillPanel(new ArrayList<>());
         rightPanel.add(skillToSearch, BorderLayout.NORTH);
-        rightPanel.add(desiredSkillList, BorderLayout.CENTER);
+        rightPanel.add(desiredArmorSkillPanel, BorderLayout.CENTER);
         rightPanel.add(rightPanelBottomHorizontalMenu, BorderLayout.SOUTH);
         rightPanelBottomHorizontalMenu.add(removeDesireSkillButton);
         rightPanelBottomHorizontalMenu.add(clearAllDesireSkills);
@@ -197,7 +199,7 @@ public class MonsterHunterArmorSearcher extends JFrame {
     }
 
     private void setInSearchState() {
-        searchResultList.clear();
+        searchResultPanel.clear();
         search.setEnabled(false);
         stop.setEnabled(true);
     }
@@ -205,13 +207,14 @@ public class MonsterHunterArmorSearcher extends JFrame {
     private class OnSearchResultProgressImpl implements OnSearchResultProgress {
         @Override
         public void onProgress(UniquelyGeneratedArmorSet uniquelyGeneratedArmorSet, int current, int max) {
-            searchResultList.update(uniquelyGeneratedArmorSet);
+            //searchResultPanel.update(uniquelyGeneratedArmorSet);
             System.out.println(current+"  "+max);
         }
 
         @Override
         public void onComplete(List<UniquelyGeneratedArmorSet> uniquelyGeneratedArmorSets) {
             setIdleState();
+            searchResultPanel.update(uniquelyGeneratedArmorSets);
             System.out.println(uniquelyGeneratedArmorSets.size());
         }
     }

@@ -14,6 +14,9 @@ import models.Equipment;
 import models.EquipmentType;
 import models.skillactivation.SkillActivationRequirement;
 
+/**
+ * This is a mess, have to clean this up at some point.
+ */
 public class CsvReader {
     public static List<Equipment> getEquipmentFromCsvFile(String path, EquipmentType equipmentType) {
         CSVReader reader = null;

@@ -7,12 +7,10 @@ import language.StringConstants;
 import models.Equipment;
 
 public class EquipmentPanel extends JPanel{
-    Equipment equipment;
 
     JLabel nameLabel;
 
     public EquipmentPanel(Equipment equipment) {
-        this.equipment = equipment;
 
         JPanel container = new JPanel();
         container.setLayout(new BoxLayout(container, BoxLayout.X_AXIS));

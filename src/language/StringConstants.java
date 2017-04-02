@@ -20,6 +20,19 @@ public class StringConstants {
     public static final String SKILL_HEADER = "Skill";
     public static final String SEARCH_HEADER = "Search";
 
+    // sub headers inside the search result -- equipment stat table
+    public static final String ARMOR_SKILL = "Armor Skill";
+    public static final String DECORATIONS = "Decorations";
+    public static final String RARITY = "Rarity";
+    public static final String DEFENSE = "Defense";
+    public static final String MISC = "Misc.";
+    public static final String RESISTANCE = "Resistance";
+    public static final String RES_FIRE = "Fire";
+    public static final String RES_WATER = "Water";
+    public static final String RES_Thunder = "Thunder";
+    public static final String RES_ICE = "Ice";
+    public static final String RES_DRAGON = "Dragon";
+
 
     // HardCoded values
     public static final String ARMOR_SKILL_TORSO_UP = "胴系統倍加";

@@ -16,13 +16,13 @@ import models.Equipment;
 import models.GeneratedArmorSet;
 import models.UniquelyGeneratedArmorSet;
 
-public class SearchResultList extends JPanel{
+public class SearchResultPanel extends JPanel{
 
     private static final int LIST_SIZE = 400;
     private JList<UniquelyGeneratedArmorSet> uniquelyGeneratedArmorSetJList;
     private List<UniquelyGeneratedArmorSet> modelList = new ArrayList<>();
 
-    public SearchResultList() {
+    public SearchResultPanel() {
         super();
         uniquelyGeneratedArmorSetJList = new JList<>(new Vector<>(modelList));
         uniquelyGeneratedArmorSetJList.setCellRenderer(new ArmorResultRenderer());
@@ -36,6 +36,7 @@ public class SearchResultList extends JPanel{
         JSeparator separator;
         JPanel container = new JPanel();
         List<EquipmentPanel> equipmentPanels = new ArrayList<>(5);
+        EquipmentStatPanel equipmentStatPanel;
 
         public ArmorResultRenderer() {
             container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
@@ -64,6 +65,14 @@ public class SearchResultList extends JPanel{
                 }
 
             }
+            if (equipmentStatPanel == null){
+                equipmentStatPanel = new EquipmentStatPanel(generatedArmorSet);
+            } else {
+                equipmentStatPanel.setData(generatedArmorSet);
+            }
+
+            container.add(separator);
+            container.add(equipmentStatPanel);
             container.add(separator);
             add(container);
             return this;

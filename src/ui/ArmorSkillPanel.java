@@ -12,13 +12,13 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import models.skillactivation.SkillActivationRequirement;
 
-public class SkillList extends JPanel{
+public class ArmorSkillPanel extends JPanel{
 
     private static final int LIST_SIZE = 250;
     private JList<SkillActivationRequirement> skillActivationRequirementJList;
     private List<SkillActivationRequirement> modelList;
 
-    public SkillList(List<SkillActivationRequirement> listData) {
+    public ArmorSkillPanel(List<SkillActivationRequirement> listData) {
         super();
         modelList = listData;
         skillActivationRequirementJList = new JList<>(new Vector<>(modelList));

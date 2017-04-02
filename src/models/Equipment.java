@@ -53,7 +53,11 @@ public class Equipment {
         this.armorSkills = other.armorSkills;
         this.itemParts = other.itemParts;
         this.slotsUsed = other.slotsUsed;
-        this.decorations = other.decorations;
+
+        for (Map.Entry<Decoration, Integer> decorationSet : other.getDecorations().entrySet()) {
+            getDecorations().put(decorationSet.getKey(), decorationSet.getValue());
+        }
+
         this.isTorsoUp = other.isTorsoUp;
         this.equipmentType = other.equipmentType;
         this.canBeSubstitutedForAnyOtherEquipment = other.canBeSubstitutedForAnyOtherEquipment;
@@ -244,7 +248,11 @@ public class Equipment {
             return;
         }
         --frequency;
-        decorations.put(decoration, frequency);
+        if (frequency == 0){
+            decorations.remove(decoration);
+        } else {
+            decorations.put(decoration, frequency);
+        }
     }
 
     public boolean isTorsoUp() {

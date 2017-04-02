@@ -31,6 +31,10 @@ public class ActivatedSkill {
         return kind;
     }
 
+    public String getName() {
+        return name;
+    }
+
     public int getPointsNeededToActivate() {
         return pointsNeededToActivate;
     }

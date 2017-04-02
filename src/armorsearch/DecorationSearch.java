@@ -28,14 +28,14 @@ class DecorationSearch {
             List<ActivatedSkill> activatedSkill = skillActivationChart.getActivatedSkill(currentSet);
 
             if (SkillUtil.containsDesiredSkills(desiredSkills, activatedSkill)) {
-                if (desiredSkills.isEmpty() && equipmentIndex < currentSet.size()) {
+                //if (desiredSkills.isEmpty() && equipmentIndex < currentSet.size()) {
                     // The skill can be obtained with less than 5 armor pieces.
                     // TODO this is check is wrong, fix it later.
                     // Even if we do not use the slots, we might still need this armor's skills
                     //for (int i = 0; i < currentSet.size(); ++i){
                     //    currentSet.get(i).setCanBeSubstitutedForAnyOtherEquipment(true);
                     //}
-                }
+                //}
 
                 // Deep copy the equipment so the slots, and decorations usage dont get reseted.
                 List<Equipment> deepCopyCurrentSet = currentSet.stream().map(Equipment::new).collect(Collectors.toList());
@@ -68,7 +68,7 @@ class DecorationSearch {
                         List<ActivatedSkill> skillsToFilterOut = skillActivationChart.getActivatedSkill(currentSet);
                         // Find the skill that has been maxed out
                         List<ActivatedSkill> activatedSkillsFilter = skillsToFilterOut.stream().filter(filterOut ->
-                                                                                                           filterOut.getPointsNeededToActivate() >= skillActivationChart.getMaxedActivatedSkill(filterOut.getKind()).getAccumulatedPoints()
+                            filterOut.getPointsNeededToActivate() >= skillActivationChart.getMaxedActivatedSkill(filterOut.getKind()).getPointsNeededToActivate()
                         ).collect(Collectors.toList());
 
                         List<ActivatedSkill> filteredDesiredSkills = desiredSkills.stream().collect(Collectors.toList());

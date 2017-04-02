@@ -11,9 +11,23 @@ public class Resistance {
 
     @Override
     public String toString() {
-        return "Resistance{" +
+        return "RESISTANCE{" +
             "resistanceType=" + resistanceType +
             ", value=" + value +
             '}';
+    }
+
+    public void add(Resistance resistance){
+        if (resistance.resistanceType == resistanceType){
+            value+=resistance.value;
+        }
+    }
+
+    public ResistanceType getResistanceType() {
+        return resistanceType;
+    }
+
+    public int getValue() {
+        return value;
     }
 }
