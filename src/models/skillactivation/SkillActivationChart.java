@@ -10,6 +10,7 @@ import models.ArmorSkill;
 import models.ClassType;
 import models.Decoration;
 import models.Equipment;
+import models.EquipmentType;
 
 public class SkillActivationChart {
 
@@ -51,28 +52,38 @@ public class SkillActivationChart {
      * due to race condition, so instead a fresh copy of it, is made and passed in.
      * @return
      */
-    public List<ActivatedSkill> getActivatedSkill(List<Equipment> equipmentList, List<EquipmentSlots> decorationsForCurrentSet){
+    public List<ActivatedSkill> getActivatedSkill(Map<EquipmentType, Equipment> equipmentSetTable, Map<EquipmentType, EquipmentSlots> decorationsForCurrentSet){
         Map<String, Integer> currentEquipmentSkillChart = new HashMap<>();
+        int torsoUpCount = 0;
 
-        // loop over the equipment set, head, armor, body, leg, etc...
-        for (Equipment equipment : equipmentList){
-            // loop over the skills for a given equipment
-
-            updateSkillChartByArmorSkill(currentEquipmentSkillChart, equipment.getArmorSkills());
-            updateSkillChartByDecoration(currentEquipmentSkillChart, equipment.getDecorations());
-
+        // loop over once and find the number of torsoUp armors
+        for (Equipment equipment : equipmentSetTable.values()){
+            if (equipment.isTorsoUp()) {
+                ++torsoUpCount;
+            }
+        }
+        int skillMultiplier = torsoUpCount + 1;
+        // Calculate the skill point for decoration
+        for (Map.Entry<EquipmentType, EquipmentSlots> decorationSet : decorationsForCurrentSet.entrySet()){
+            if (decorationSet.getKey() == EquipmentType.BODY) {
+                updateSkillChartByDecoration(currentEquipmentSkillChart, decorationSet.getValue().getDecorations(), skillMultiplier);
+            } else {
+                updateSkillChartByDecoration(currentEquipmentSkillChart, decorationSet.getValue().getDecorations(), 1);
+            }
         }
 
-        // check the decorations...
-        for (EquipmentSlots decorationsSlots : decorationsForCurrentSet) {
-            updateSkillChartByDecoration(currentEquipmentSkillChart, decorationsSlots.getDecorations());
-        }
 
+        for (Map.Entry<EquipmentType, Equipment> equipmentSet : equipmentSetTable.entrySet()) {
+            if (equipmentSet.getKey() == EquipmentType.BODY) {
+                updateSkillChartByArmorSkill(currentEquipmentSkillChart, equipmentSet.getValue().getArmorSkills(), skillMultiplier);
+            } else {
+                updateSkillChartByArmorSkill(currentEquipmentSkillChart, equipmentSet.getValue().getArmorSkills(), 1);
+            }
+        }
         return getActivatedSkills(currentEquipmentSkillChart);
     }
 
-
-    public void updateSkillChartByArmorSkill(Map<String, Integer> currentEquipmentSkillChart, Set<ArmorSkill> armorSkills){
+    public void updateSkillChartByArmorSkill(Map<String, Integer> currentEquipmentSkillChart, Set<ArmorSkill> armorSkills, int skillMuliplier){
         for (ArmorSkill armorSkill : armorSkills){
             // accumulate the skill point by skill kind
             Integer sum = currentEquipmentSkillChart.get(armorSkill.kind);
@@ -82,11 +93,12 @@ public class SkillActivationChart {
             }
 
             sum += armorSkill.points;
+            sum *= skillMuliplier;
             currentEquipmentSkillChart.put(armorSkill.kind, sum);
         }
     }
 
-    public void updateSkillChartByDecoration(Map<String, Integer> currentEquipmentSkillChart, Map<Decoration, Integer> decorations){
+    public void updateSkillChartByDecoration(Map<String, Integer> currentEquipmentSkillChart, Map<Decoration, Integer> decorations, int skillMuliplier){
         // loop over the decorations
         for (Map.Entry<Decoration, Integer> decorationSet: decorations.entrySet()) {
             Decoration decoration = decorationSet.getKey();
@@ -101,6 +113,7 @@ public class SkillActivationChart {
 
                 // Times the armor skill by the number of the same jewels
                 sum += (armorSkill.points * frequencyCount);
+                sum *= skillMuliplier;
                 currentEquipmentSkillChart.put(armorSkill.kind, sum);
             }
         }

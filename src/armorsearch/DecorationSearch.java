@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import models.Decoration;
 import models.Equipment;
+import models.EquipmentType;
 import models.GeneratedArmorSet;
 import models.skillactivation.ActivatedSkill;
 import models.skillactivation.SkillActivationChart;
@@ -16,16 +17,16 @@ class DecorationSearch {
      * DFS - try to see if the desire skills are obtainable given a list of equipments
      * can have multiple decoration list with the same outcome.
      */
-    static void findArmorWithJewelRecursively(List<EquipmentSlots> decorationsForCurrentSet,
+    static void findArmorWithJewelRecursively(Map<EquipmentType, EquipmentSlots> decorationsForCurrentSet,
                                               final int decorationSearchLimit,
                                               Map<String, List<Decoration>> decorationLookupTable,
                                               SkillActivationChart skillActivationChart,
-                                              List<Equipment> currentSet,
+                                              Map<EquipmentType, Equipment> currentSet,
                                               int equipmentIndex,
                                               List<GeneratedArmorSet> generatedArmorSets,
                                               List<ActivatedSkill> desiredSkills,
                                               List<Decoration> decorationsNeeded) {
-
+        EquipmentType equipmentTypes[] = EquipmentType.values();
         if (desiredSkills.isEmpty() || generatedArmorSets.size() >= decorationSearchLimit || equipmentIndex == currentSet.size()){
             List<ActivatedSkill> activatedSkill = skillActivationChart.getActivatedSkill(currentSet, decorationsForCurrentSet);
             if (SkillUtil.containsDesiredSkills(desiredSkills, activatedSkill)) {
@@ -40,9 +41,9 @@ class DecorationSearch {
 
                 // Deep copy the equipment so the slots, and decorations usage dont get reseted.
                 List<Equipment> deepCopyCurrentSet = new ArrayList<>(5);
-                for (int i = 0; i < equipmentIndex; ++i) {
-                    Equipment currentEquipment = currentSet.get(i);
-                    Equipment newEquipment = new Equipment(currentEquipment, decorationsForCurrentSet.get(i));
+                for (EquipmentType equipmentType : equipmentTypes) {
+                    Equipment currentEquipment = currentSet.get(equipmentType);
+                    Equipment newEquipment = new Equipment(currentEquipment, decorationsForCurrentSet.get(equipmentType));
                     deepCopyCurrentSet.add(newEquipment);
                 }
                 generatedArmorSets.add(new GeneratedArmorSet(activatedSkill, deepCopyCurrentSet));
@@ -65,7 +66,7 @@ class DecorationSearch {
                         continue;
                     }
 
-                    EquipmentSlots equipmentSlots = decorationsForCurrentSet.get(equipmentIndex);
+                    EquipmentSlots equipmentSlots = decorationsForCurrentSet.get(equipmentTypes[equipmentIndex]);
                     // TODO if current set contains one of desire skills,
                     // then remove it and back the rest of the desire skill to remove useless search
                     if (equipmentSlots.getFreeSlots() >= decoration.getSlotsNeeded()) {

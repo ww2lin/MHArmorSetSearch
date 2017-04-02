@@ -80,6 +80,15 @@ public class ArmorSkillCacheTable {
                         if (armorSkill.isKind(skillkind) && armorSkill.points > 0) {
                             return true;
                         }
+                        // keep TorsoUp Pieces, or armor with no skills but 3 slots
+                        if (equipment.isTorsoUp()) {
+                            return true;
+                        }
+
+                        if (equipment.getArmorSkills().size() == 0 && equipment.getSlots() == 3 ){
+                            return true;
+                        }
+
                     }
                 }
                 return false;

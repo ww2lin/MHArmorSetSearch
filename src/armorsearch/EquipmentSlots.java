@@ -6,7 +6,7 @@ import models.Decoration;
 
 public class EquipmentSlots {
     final Map<Decoration, Integer> decorations = new HashMap<>();
-    final int slots;
+    int slots;
     int slotsUsed;
 
     public EquipmentSlots(int slots) {
@@ -50,5 +50,9 @@ public class EquipmentSlots {
         }
         ++frequency;
         decorations.put(decoration, frequency);
+    }
+
+    public void setSlots(int slots) {
+        this.slots = slots;
     }
 }

@@ -3,10 +3,12 @@ package armorsearch;
 import armorsearch.filter.ArmorSetFilter;
 import interfaces.ArmorSearchWorkerProgress;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import models.Decoration;
 import models.Equipment;
+import models.EquipmentType;
 import models.GeneratedArmorSet;
 import models.UniquelyGeneratedArmorSet;
 import models.skillactivation.ActivatedSkill;
@@ -26,6 +28,8 @@ public class ArmorSearchWorkerThread extends Thread {
     private int armorSetsTried = 0;
     private int maxArmorSets = 0;
 
+    private Map<EquipmentType, EquipmentSlots> decorationsForCurrentSet;
+
     public ArmorSearchWorkerThread(int id, EquipmentNode equipmentNode, ArmorSearchWorkerProgress armorSearchWorkerProgress, Map<String, List<Decoration>> decorationLookupTable, List<ArmorSetFilter> armorSetFilters, int decorationSearchLimit, SkillActivationChart skillActivationChart, List<ActivatedSkill> desiredSkills) {
         this.id = id;
         this.equipmentNode = equipmentNode;
@@ -37,12 +41,17 @@ public class ArmorSearchWorkerThread extends Thread {
         this.desiredSkills = desiredSkills;
 
         maxArmorSets = equipmentNode.getTotalCombinations();
+
+        decorationsForCurrentSet = new HashMap<>();
+        for (EquipmentType equipmentType : EquipmentType.values()) {
+            decorationsForCurrentSet.put(equipmentType, new EquipmentSlots(0));
+        }
     }
 
     @Override
     public void run() {
         List<UniquelyGeneratedArmorSet> uniquelyGeneratedArmorSets = new ArrayList<>();
-        findArmorRecursively(new ArrayList<>(),
+        findArmorRecursively(new HashMap<>(),
                              equipmentNode,
                              uniquelyGeneratedArmorSets,
                              desiredSkills);
@@ -51,7 +60,7 @@ public class ArmorSearchWorkerThread extends Thread {
         }
     }
 
-    private void findArmorRecursively(List<Equipment> currentSet,
+    private void findArmorRecursively(Map<EquipmentType, Equipment> currentSet,
                                       EquipmentNode equipmentNode,
                                       List<UniquelyGeneratedArmorSet> matchedSet,
                                       List<ActivatedSkill> desiredSkills) {
@@ -61,13 +70,13 @@ public class ArmorSearchWorkerThread extends Thread {
         } else if (equipmentNode != null) {
             List<Equipment> equipments = equipmentNode.armorWithDesiredSkills;
             for (Equipment equipment : equipments) {
-                currentSet.add(equipment);
+                currentSet.put(equipment.getEquipmentType(), equipment);
                 findArmorRecursively(currentSet,
                                      equipmentNode.next,
                                      matchedSet,
                                      desiredSkills);
                 // back tracking.
-                currentSet.remove(equipment);
+                currentSet.remove(equipment.getEquipmentType());
 
                 if (!armorSearchWorkerProgress.shouldContinueSearching()){
                     return;
@@ -90,9 +99,8 @@ public class ArmorSearchWorkerThread extends Thread {
 
             // we found a potential full set...
             List<GeneratedArmorSet> sameArmorDifferentDecoration = new ArrayList<>();
-            List<EquipmentSlots> decorationsForCurrentSet = new ArrayList<>();
-            for (int i = 0; i < currentSet.size(); ++i){
-                decorationsForCurrentSet.add(new EquipmentSlots(currentSet.get(i).getSlots()));
+            for (Map.Entry<EquipmentType, Equipment> currentEquip : currentSet.entrySet()) {
+                decorationsForCurrentSet.get(currentEquip.getKey()).setSlots(currentEquip.getValue().getSlots());
             }
             DecorationSearch.findArmorWithJewelRecursively(decorationsForCurrentSet,
                                                            decorationSearchLimit,
