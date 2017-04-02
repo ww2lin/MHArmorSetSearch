@@ -1,5 +1,7 @@
 package armorsearch;
 
+import armorsearch.filter.ArmorSetFilter;
+import interfaces.OnSearchResultProgress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -12,17 +14,32 @@ import models.skillactivation.SkillActivationChart;
 
 class ArmorSearch {
 
+    private ArmorSkillCacheTable armorSkillCacheTable;
+    private Map<String, List<Decoration>>decorationLookupTable;
+    private List<ArmorSetFilter> armorSetFilters;
+    private final int uniqueSetSearchLimit;
+    private final int decorationSearchLimit;
+    private OnSearchResultProgress onSearchResultProgress;
+    private SkillActivationChart skillActivationChart;
+
+    private int currentProgress = 0;
+
+    public ArmorSearch(ArmorSkillCacheTable armorSkillCacheTable, Map<String, List<Decoration>> decorationLookupTable, List<ArmorSetFilter> armorSetFilters, int uniqueSetSearchLimit, int decorationSearchLimit, SkillActivationChart skillActivationChart, OnSearchResultProgress onSearchResultProgress) {
+        this.armorSkillCacheTable = armorSkillCacheTable;
+        this.decorationLookupTable = decorationLookupTable;
+        this.armorSetFilters = armorSetFilters;
+        this.uniqueSetSearchLimit = uniqueSetSearchLimit;
+        this.decorationSearchLimit = decorationSearchLimit;
+        this.skillActivationChart = skillActivationChart;
+        this.onSearchResultProgress = onSearchResultProgress;
+    }
+
     /**
      * run a dfs search for the skill search
      * @param desiredSkills that the user wants to generate
      * @return list of equipment that matches what the user wants
      */
-    public List<UniquelyGeneratedArmorSet> findArmorSetWith(Map<String, List<Decoration>> decorationLookupTable,
-                                                    final int uniqueSetSearchLimit,
-                                                    final int decorationSearchLimit,
-                                                    SkillActivationChart skillActivationChart,
-                                                    List<ActivatedSkill> desiredSkills,
-                                                    ArmorSkillCacheTable armorSkillCacheTable) {
+    public List<UniquelyGeneratedArmorSet> findArmorSetWith(List<ActivatedSkill> desiredSkills) {
         // construct the node structure to use for dfs search
         EquipmentNode leg = new EquipmentNode(null);
         EquipmentNode wst = new EquipmentNode(leg);
@@ -37,11 +54,10 @@ class ArmorSearch {
         wst.updateEquipmentListWithDesiredSkills(armorSkillCacheTable.getWstEquipmentCache(), desiredSkills);
         leg.updateEquipmentListWithDesiredSkills(armorSkillCacheTable.getLegEquipmentCache(), desiredSkills);
 
+        int totalSetsCombinations = head.getTotalCombinations();
+
         List<UniquelyGeneratedArmorSet> matchedSets = new ArrayList<>();
-        findArmorRecursively(decorationLookupTable,
-                             uniqueSetSearchLimit,
-                             decorationSearchLimit,
-                             skillActivationChart,
+        findArmorRecursively(totalSetsCombinations,
                              new ArrayList<>(5),
                              head,
                              matchedSets,
@@ -49,10 +65,7 @@ class ArmorSearch {
         return matchedSets;
     }
 
-    private void findArmorRecursively(Map<String, List<Decoration>> decorationLookupTable,
-                                      final int uniqueSetSearchLimit,
-                                      final int decorationSearchLimit,
-                                      SkillActivationChart skillActivationChart,
+    private void findArmorRecursively(final int totalSetsCombinations,
                                       List<Equipment> currentSet,
                                       EquipmentNode equipmentNode,
                                       List<UniquelyGeneratedArmorSet> matchedSet,
@@ -64,12 +77,24 @@ class ArmorSearch {
             List<Equipment> equipments = equipmentNode.armorWithDesiredSkills;
             for (Equipment equipment : equipments) {
                 currentSet.add(equipment);
-                findArmorRecursively(decorationLookupTable, uniqueSetSearchLimit, decorationSearchLimit, skillActivationChart, currentSet, equipmentNode.next, matchedSet, desiredSkills);
+                findArmorRecursively(totalSetsCombinations,
+                                     currentSet,
+                                     equipmentNode.next,
+                                     matchedSet,
+                                     desiredSkills);
 
                 // back tracking.
                 currentSet.remove(equipment);
             }
         } else {
+
+            // apply filters.
+            for (ArmorSetFilter armorSetFilter : armorSetFilters) {
+                if (!armorSetFilter.isArmorValid(currentSet)){
+                    return;
+                }
+            }
+
             // we found a potential full set...
             List<GeneratedArmorSet> sameArmorDifferentDecoration = new ArrayList<>();
             DecorationSearch.findArmorWithJewelRecursively(decorationSearchLimit,
@@ -83,7 +108,11 @@ class ArmorSearch {
 
             if (!sameArmorDifferentDecoration.isEmpty()) {
                 // create a new array reference for current set, so that when back tracking the list is not modified
-                matchedSet.add(new UniquelyGeneratedArmorSet(sameArmorDifferentDecoration));
+                UniquelyGeneratedArmorSet uniquelyGeneratedArmorSet = new UniquelyGeneratedArmorSet(sameArmorDifferentDecoration);
+                matchedSet.add(uniquelyGeneratedArmorSet);
+                if (onSearchResultProgress != null) {
+                    onSearchResultProgress.onProgress(uniquelyGeneratedArmorSet, ++currentProgress, Math.min(totalSetsCombinations, uniqueSetSearchLimit));
+                }
             }
         }
     }

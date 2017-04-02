@@ -19,14 +19,7 @@ public class RarityFilter implements ArmorFilter, ArmorSetFilter {
     }
 
     @Override
-    public List<GeneratedArmorSet> filterArmorSet(List<GeneratedArmorSet> equipmentList) {
-        return equipmentList.stream().filter(generatedArmorSet -> {
-            for (Equipment equipment : generatedArmorSet.getEquipments()) {
-                if (equipment.getRarity() < rarity) {
-                    return false;
-                }
-            }
-            return true;
-        }).collect(Collectors.toList());
+    public boolean isArmorValid(List<Equipment> currentSet) {
+        return filter(currentSet).size() > 0;
     }
 }

@@ -1,6 +1,7 @@
 package models;
 
 import interfaces.Nullable;
+import language.StringConstants;
 
 public class ArmorSkill implements Nullable {
     // Note this is NOT the name of the skill, rather its the 'kind' of the skill
@@ -59,5 +60,9 @@ public class ArmorSkill implements Nullable {
     @Override
     public boolean isNull() {
         return kind == null || kind.trim().length() == 0;
+    }
+
+    public boolean isTorsoUp(){
+       return (points == 0 && !isNull()) || kind.equalsIgnoreCase(StringConstants.ARMOR_SKILL_TORSO_UP) ;
     }
 }

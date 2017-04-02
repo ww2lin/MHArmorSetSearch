@@ -2,7 +2,6 @@ package armorsearch;
 
 import armorsearch.filter.ArmorFilter;
 import armorsearch.filter.MaxArmorSkillPointsFilter;
-import armorsearch.model.AllEquipments;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;

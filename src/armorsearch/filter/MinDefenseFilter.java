@@ -24,7 +24,7 @@ public class MinDefenseFilter implements ArmorSetFilter, ArmorFilter {
     }
 
     @Override
-    public List<GeneratedArmorSet> filterArmorSet(List<GeneratedArmorSet> equipmentList) {
-        return equipmentList.stream().filter(generatedArmorSet -> filter(generatedArmorSet.getEquipments()).size() > 0).collect(Collectors.toList());
+    public boolean isArmorValid(List<Equipment> currentSet) {
+        return currentSet.stream().mapToInt(Equipment::getMaxDefense).sum() >= minDefense;
     }
 }

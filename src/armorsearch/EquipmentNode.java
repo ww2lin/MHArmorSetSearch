@@ -7,11 +7,10 @@ import models.Equipment;
 import models.skillactivation.ActivatedSkill;
 
 class EquipmentNode {
-    List<Equipment> armorWithDesiredSkills;
+    List<Equipment> armorWithDesiredSkills = new ArrayList<>();
     EquipmentNode next;
 
     public EquipmentNode(EquipmentNode next) {
-        this.armorWithDesiredSkills = new ArrayList<>();
         this.next = next;
     }
 
@@ -22,5 +21,15 @@ class EquipmentNode {
                 armorWithDesiredSkills.addAll(equipments);
             }
         }
+    }
+
+    public int getTotalCombinations() {
+        int total = armorWithDesiredSkills.size();
+        EquipmentNode runner = next;
+        while (runner != null) {
+            total = total * runner.armorWithDesiredSkills.size();
+            runner = runner.next;
+        }
+        return total;
     }
 }

@@ -24,10 +24,19 @@ class DecorationSearch {
                                               List<ActivatedSkill> desiredSkills,
                                               List<Decoration> decorationsNeeded) {
 
-        if (generatedArmorSets.size() >= decorationSearchLimit || equipmentIndex == currentSet.size()){
+        if (desiredSkills.isEmpty() || generatedArmorSets.size() >= decorationSearchLimit || equipmentIndex == currentSet.size()){
             List<ActivatedSkill> activatedSkill = skillActivationChart.getActivatedSkill(currentSet);
 
             if (SkillUtil.containsDesiredSkills(desiredSkills, activatedSkill)) {
+                if (desiredSkills.isEmpty() && equipmentIndex < currentSet.size()) {
+                    // The skill can be obtained with less than 5 armor pieces.
+                    // TODO this is check is wrong, fix it later.
+                    // Even if we do not use the slots, we might still need this armor's skills
+                    //for (int i = 0; i < currentSet.size(); ++i){
+                    //    currentSet.get(i).setCanBeSubstitutedForAnyOtherEquipment(true);
+                    //}
+                }
+
                 // Deep copy the equipment so the slots, and decorations usage dont get reseted.
                 List<Equipment> deepCopyCurrentSet = currentSet.stream().map(Equipment::new).collect(Collectors.toList());
                 generatedArmorSets.add(new GeneratedArmorSet(activatedSkill, deepCopyCurrentSet));
@@ -39,38 +48,45 @@ class DecorationSearch {
 
         for (ActivatedSkill activatedSkill : desiredSkills) {
             List<Decoration> decorationsToTry = decorationLookupTable.get(activatedSkill.getKind());
-            for (Decoration decoration : decorationsToTry) {
 
-                // TODO if current set contains one of desire skills,
-                // then remove it and back the rest of the desire skill to remove useless search
-                if (equipment.getFreeSlots() >= decoration.getSlotsNeeded()) {
-                    // Try a decoration
-                    decorationsNeeded.add(decoration);
-                    equipment.useSlots(decoration.getSlotsNeeded());
-                    equipment.addDecoration(decoration);
+            if (decorationsToTry != null) {
+                for (Decoration decoration : decorationsToTry) {
+                    if (!decoration.isAvailable() || !decoration.isPositive(activatedSkill.getKind())){
+                        // skip negative or not available jewels.
+                        continue;
+                    }
 
-                    // Check to see if there is any skill that we can cut out, E.g if we have AuL we do not need anymore attack jewels.
-                    List<ActivatedSkill> skillsToFilterOut = skillActivationChart.getActivatedSkill(currentSet);
-                    // Find the skill that has been maxed out
-                    List<ActivatedSkill> activatedSkillsFilter = skillsToFilterOut.stream().filter(filterOut ->
-                        filterOut.getPointsNeededToActivate() >= skillActivationChart.getMaxedActivatedSkill(filterOut.getKind()).getAccumulatedPoints()
-                    ).collect(Collectors.toList());
+                    // TODO if current set contains one of desire skills,
+                    // then remove it and back the rest of the desire skill to remove useless search
+                    if (equipment.getFreeSlots() >= decoration.getSlotsNeeded()) {
+                        // Try a decoration
+                        decorationsNeeded.add(decoration);
+                        equipment.useSlots(decoration.getSlotsNeeded());
+                        equipment.addDecoration(decoration);
 
-                    List<ActivatedSkill> filteredDesiredSkills = desiredSkills.stream().collect(Collectors.toList());
-                    filteredDesiredSkills.removeAll(activatedSkillsFilter);
+                        // Check to see if there is any skill that we can cut out, E.g if we have AuL we do not need anymore attack jewels.
+                        List<ActivatedSkill> skillsToFilterOut = skillActivationChart.getActivatedSkill(currentSet);
+                        // Find the skill that has been maxed out
+                        List<ActivatedSkill> activatedSkillsFilter = skillsToFilterOut.stream().filter(filterOut ->
+                                                                                                           filterOut.getPointsNeededToActivate() >= skillActivationChart.getMaxedActivatedSkill(filterOut.getKind()).getAccumulatedPoints()
+                        ).collect(Collectors.toList());
 
-                    findArmorWithJewelRecursively(decorationSearchLimit,
-                                                  decorationLookupTable,
-                                                  skillActivationChart,
-                                                  currentSet,
-                                                  equipmentIndex + 1,
-                                                  generatedArmorSets,
-                                                  filteredDesiredSkills,
-                                                  decorationsNeeded);
-                    //back-tracking.
-                    equipment.useSlots(-decoration.getSlotsNeeded());
-                    equipment.removeDecoration(decoration);
-                    decorationsNeeded.remove(decoration);
+                        List<ActivatedSkill> filteredDesiredSkills = desiredSkills.stream().collect(Collectors.toList());
+                        filteredDesiredSkills.removeAll(activatedSkillsFilter);
+
+                        findArmorWithJewelRecursively(decorationSearchLimit,
+                                                      decorationLookupTable,
+                                                      skillActivationChart,
+                                                      currentSet,
+                                                      equipmentIndex + 1,
+                                                      generatedArmorSets,
+                                                      filteredDesiredSkills,
+                                                      decorationsNeeded);
+                        //back-tracking.
+                        equipment.useSlots(-decoration.getSlotsNeeded());
+                        equipment.removeDecoration(decoration);
+                        decorationsNeeded.remove(decoration);
+                    }
                 }
             }
 

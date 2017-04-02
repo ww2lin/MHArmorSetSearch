@@ -162,4 +162,13 @@ public class Decoration {
         result = 31 * result + itemParts.hashCode();
         return result;
     }
+
+    public boolean isPositive(String kind){
+        for(ArmorSkill armorSkill : armorSkills) {
+            if (armorSkill.isKind(kind) && armorSkill.points < 0) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

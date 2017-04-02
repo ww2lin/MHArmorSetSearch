@@ -1,8 +1,8 @@
 package models;
 
-import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class Equipment {
@@ -13,7 +13,7 @@ public class Equipment {
     private ClassType classType;
     private int rarity;
     private int slots;
-    // 99 means you cant get it...yet?
+    // 99 means you cant get it.
     private int onlineMonsterAvailableAtQuestLevel;
     private int villageMonsterAvailableAtQuestLevel;
 
@@ -23,14 +23,18 @@ public class Equipment {
     private int baseDefense;
     private int maxDefense;
 
-    private Set<Resistance> resistances;
+    private List<Resistance> resistances;
 
     private Set<ArmorSkill> armorSkills;
     private Set<ItemPart> itemParts;
 
     // State variable, not from the CSV
     private int slotsUsed;
-    private List<Decoration> decorationList = new ArrayList<>();
+    // Maps: Decoration -> frequency/Count of this jewel
+    private Map<Decoration, Integer> decorations = new HashMap<>();
+    private boolean isTorsoUp;
+    private EquipmentType equipmentType;
+    private boolean canBeSubstitutedForAnyOtherEquipment;
 
     private Equipment(){}
 
@@ -49,7 +53,10 @@ public class Equipment {
         this.armorSkills = other.armorSkills;
         this.itemParts = other.itemParts;
         this.slotsUsed = other.slotsUsed;
-        this.decorationList = other.decorationList;
+        this.decorations = other.decorations;
+        this.isTorsoUp = other.isTorsoUp;
+        this.equipmentType = other.equipmentType;
+        this.canBeSubstitutedForAnyOtherEquipment = other.canBeSubstitutedForAnyOtherEquipment;
     }
 
     public static Equipment Builder(){
@@ -73,7 +80,10 @@ public class Equipment {
             ", armorSkills=" + armorSkills +
             ", itemParts=" + itemParts +
             ", slotsUsed=" + slotsUsed +
-            ", decorationList=" + decorationList +
+            ", decorations=" + decorations +
+            ", isTorsoUp=" + isTorsoUp +
+            ", equipmentType=" + equipmentType +
+            ", canBeSubstitutedForAnyOtherEquipment=" + canBeSubstitutedForAnyOtherEquipment +
             '}';
     }
 
@@ -167,11 +177,11 @@ public class Equipment {
         return this;
     }
 
-    public Set<Resistance> getResistance() {
+    public List<Resistance> getResistances() {
         return resistances;
     }
 
-    public Equipment setResistances(Set<Resistance> resistances) {
+    public Equipment setResistances(List<Resistance> resistances) {
         this.resistances = resistances;
         return this;
     }
@@ -183,6 +193,11 @@ public class Equipment {
 
     public Equipment setItemParts(Set<ItemPart> itemParts) {
         this.itemParts = itemParts;
+        return this;
+    }
+
+    public Equipment setTorsoUp(boolean torsoUp) {
+        isTorsoUp = torsoUp;
         return this;
     }
 
@@ -210,16 +225,47 @@ public class Equipment {
         return slots - slotsUsed;
     }
 
-    public List<Decoration> getDecorationList() {
-        return decorationList;
+    public Map<Decoration, Integer> getDecorations() {
+        return decorations;
     }
 
     public void addDecoration(Decoration decoration){
-        decorationList.add(decoration);
+        Integer frequency = decorations.get(decoration);
+        if (frequency == null){
+            frequency = 0;
+        }
+        ++frequency;
+        decorations.put(decoration, frequency);
     }
 
     public void removeDecoration(Decoration decoration){
-        decorationList.remove(decoration);
+        Integer frequency = decorations.get(decoration);
+        if (frequency == null || frequency <= 0){
+            return;
+        }
+        --frequency;
+        decorations.put(decoration, frequency);
+    }
+
+    public boolean isTorsoUp() {
+        return isTorsoUp;
+    }
+
+    public EquipmentType getEquipmentType() {
+        return equipmentType;
+    }
+
+    public Equipment setEquipmentType(EquipmentType equipmentType) {
+        this.equipmentType = equipmentType;
+        return this;
+    }
+
+    public boolean isCanBeSubstitutedForAnyOtherEquipment() {
+        return canBeSubstitutedForAnyOtherEquipment;
+    }
+
+    public void setCanBeSubstitutedForAnyOtherEquipment(boolean canBeSubstitutedForAnyOtherEquipment) {
+        this.canBeSubstitutedForAnyOtherEquipment = canBeSubstitutedForAnyOtherEquipment;
     }
 
     @Override public boolean equals(Object o) {

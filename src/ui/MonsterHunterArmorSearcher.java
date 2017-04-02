@@ -1,16 +1,17 @@
 package ui;
 
 import armorsearch.ArmorSearchWrapper;
+import interfaces.OnSearchResultProgress;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.GridLayout;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -18,17 +19,17 @@ import javax.swing.WindowConstants;
 import language.StringConstants;
 import models.ClassType;
 import models.Gender;
-import models.skillactivation.SkillActivationRequirement;
+import models.UniquelyGeneratedArmorSet;
+import utils.WorkerThread;
 
 public class MonsterHunterArmorSearcher extends JFrame {
 
-    private int uniqueSetSearchLimit = 200;
+    private int uniqueSetSearchLimit = 20;
     private int decorationSearchLimit = 5;
     private Gender gender = Gender.MALE;
     private ClassType classType = ClassType.BLADEMASTER;
 
     private ArmorSearchWrapper armorSearchWrapper;
-    private List<SkillActivationRequirement> desireSkills = new ArrayList<>();
 
     /**
      * Ui components
@@ -37,34 +38,46 @@ public class MonsterHunterArmorSearcher extends JFrame {
     private JButton removeDesireSkillButton = new JButton(StringConstants.REMOVE_SKILL);
     private JButton clearAllDesireSkills = new JButton(StringConstants.CLEAR_ALL_SKILL);
     private JButton search = new JButton(StringConstants.SEARCH_SKILL);
+    private JButton stop = new JButton(StringConstants.STOP_SKILL_SEARCH);
+
+    private JComboBox<Gender> genderJComboBox = new JComboBox<>(new Gender[]{Gender.MALE, Gender.FEMALE});
+    private JComboBox<ClassType> classTypeJComboBox = new JComboBox<>(new ClassType[]{ClassType.BLADEMASTER, ClassType.GUNNER});
 
     private SkillList searchSkillList;
     private SkillList desiredSkillList;
+    private SearchResultList searchResultList;
+
+    private WorkerThread workerThread;
 
     public void init() throws IOException {
         setSize(new Dimension(760, 600));
         setTitle(StringConstants.TITLE);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        setLayout(new FlowLayout());
+        setLayout(new BorderLayout());
 
         gender = Gender.MALE;
         classType = ClassType.BLADEMASTER;
         armorSearchWrapper = new ArmorSearchWrapper(classType, gender, Collections.emptyList());
+
         // Main container
         JPanel container = new JPanel();
         container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
 
+        // search section
+        container.add(buildSearchSection());
+
         // skill section
-        JPanel skillContainer = new JPanel(new FlowLayout());
-        skillContainer.add(renderSkillSection());
-        container.add(skillContainer);
+        container.add(buildSkillSection());
 
+        // search Result
+        add(buldArmorSearchResultSection(), BorderLayout.EAST);
 
-
-        add(container);
+        add(container, BorderLayout.CENTER);
         pack();
-        setVisible(true);
+
         setupListeners();
+
+        setVisible(true);
 
     }
 
@@ -81,32 +94,80 @@ public class MonsterHunterArmorSearcher extends JFrame {
             desiredSkillList.removeAll();
         });
 
-        search.addActionListener(e -> {
+        classTypeJComboBox.addActionListener(e -> {
+            ClassType tempClassType = (ClassType) classTypeJComboBox.getSelectedItem();
+            if (classType != tempClassType) {
+                classType = tempClassType;
+                armorSearchWrapper.setClassType(classType);
+                armorSearchWrapper.refreshSkillList();
+                searchSkillList.reset(armorSearchWrapper.getSkillList());
+                desiredSkillList.removeAll();
+            }
 
         });
+
+        genderJComboBox.addActionListener(e -> {
+            Gender tempGender = (Gender) genderJComboBox.getSelectedItem();
+            if (gender != tempGender) {
+                gender = tempGender;
+                armorSearchWrapper.setGender(gender);
+                armorSearchWrapper.refreshSkillList();
+                searchSkillList.reset(armorSearchWrapper.getSkillList());
+                desiredSkillList.removeAll();
+            }
+        });
+
+        stop.addActionListener(e -> {
+            workerThread.stop();
+            setIdleState();
+        });
+
+        search.addActionListener(e -> {
+            //ActivatedSkill[] lookupSkills1 = {new ActivatedSkill("攻撃力UP【小】", "攻撃", 10)};
+            //ActivatedSkill[] lookupSkills2 = {new ActivatedSkill("攻撃力UP【小】", "攻撃", 10), new ActivatedSkill("ガード性能+1","ガード性能", 10)};
+
+            workerThread = new WorkerThread(new OnSearchResultProgressImpl(),
+                                            armorSearchWrapper,
+                                            desiredSkillList.getAll(),
+                                            uniqueSetSearchLimit,
+                                            decorationSearchLimit,
+                                            Collections.emptyList());
+            setInSearchState();
+            workerThread.start();
+        });
+
     }
 
+    private JPanel buldArmorSearchResultSection(){
+        JPanel container = new JPanel();
+        searchResultList = new SearchResultList();
+        container.add(searchResultList);
+        return container;
+    }
 
-    private JPanel renderSkillSection(){
+    private JPanel buildSearchSection(){
+        JPanel container = new JPanel();
+        container.setBorder(BorderFactory.createTitledBorder(StringConstants.SEARCH_HEADER));
+
+        container.add(classTypeJComboBox);
+        container.add(genderJComboBox);
+        container.add(stop);
+        container.add(search);
+
+        return container;
+    }
+
+    private JPanel buildSkillSection(){
         // Set up layout
         JPanel container = new JPanel();
+        container.setBorder(BorderFactory.createTitledBorder(StringConstants.SKILL_HEADER));
         container.setLayout(new BoxLayout(container, BoxLayout.X_AXIS));
 
-        JPanel leftPanel = new JPanel();
-        leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
-
-        //JPanel middlePanel = new JPanel();
-        //middlePanel.setLayout(new BoxLayout(middlePanel, BoxLayout.Y_AXIS));
-
-        JPanel rightPanel = new JPanel();
-        rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
+        JPanel leftPanel = new JPanel(new BorderLayout());
+        JPanel rightPanel = new JPanel(new BorderLayout());
 
         container.add(leftPanel);
-        //container.add(middlePanel);
         container.add(rightPanel);
-
-        JPanel leftPanelBottomHorizontalMenu = new JPanel();
-        leftPanelBottomHorizontalMenu.setLayout(new BoxLayout(leftPanelBottomHorizontalMenu, BoxLayout.X_AXIS));
 
         JPanel rightPanelBottomHorizontalMenu = new JPanel();
         rightPanelBottomHorizontalMenu.setLayout(new BoxLayout(rightPanelBottomHorizontalMenu, BoxLayout.X_AXIS));
@@ -115,22 +176,43 @@ public class MonsterHunterArmorSearcher extends JFrame {
         JLabel skillToSearch = new JLabel(StringConstants.SKILL_TO_SEARCH);
 
         // adding components.
-        searchSkillList = new SkillList(armorSearchWrapper.getSkillList());
-        leftPanel.add(allSkills);
-        leftPanel.add(searchSkillList);
-        leftPanel.add(leftPanelBottomHorizontalMenu);
-        leftPanelBottomHorizontalMenu.add(addDesireSkillButton);
-        leftPanelBottomHorizontalMenu.add(search);
+        searchSkillList = new SkillList(armorSearchWrapper.getPositiveSkillList());
+        leftPanel.add(allSkills, BorderLayout.NORTH);
+        leftPanel.add(searchSkillList, BorderLayout.CENTER);
+        leftPanel.add(addDesireSkillButton, BorderLayout.SOUTH);
 
-        desiredSkillList = new SkillList(desireSkills);
-        rightPanel.add(skillToSearch);
-        rightPanel.add(desiredSkillList);
-        rightPanel.add(rightPanelBottomHorizontalMenu);
+        desiredSkillList = new SkillList(new ArrayList<>());
+        rightPanel.add(skillToSearch, BorderLayout.NORTH);
+        rightPanel.add(desiredSkillList, BorderLayout.CENTER);
+        rightPanel.add(rightPanelBottomHorizontalMenu, BorderLayout.SOUTH);
         rightPanelBottomHorizontalMenu.add(removeDesireSkillButton);
         rightPanelBottomHorizontalMenu.add(clearAllDesireSkills);
 
         return container;
     }
 
+    private void setIdleState() {
+        search.setEnabled(true);
+        stop.setEnabled(false);
+    }
 
+    private void setInSearchState() {
+        searchResultList.clear();
+        search.setEnabled(false);
+        stop.setEnabled(true);
+    }
+
+    private class OnSearchResultProgressImpl implements OnSearchResultProgress {
+        @Override
+        public void onProgress(UniquelyGeneratedArmorSet uniquelyGeneratedArmorSet, int current, int max) {
+            searchResultList.update(uniquelyGeneratedArmorSet);
+            System.out.println(current+"  "+max);
+        }
+
+        @Override
+        public void onComplete(List<UniquelyGeneratedArmorSet> uniquelyGeneratedArmorSets) {
+            setIdleState();
+            System.out.println(uniquelyGeneratedArmorSets.size());
+        }
+    }
 }

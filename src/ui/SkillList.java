@@ -2,7 +2,6 @@ package ui;
 
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.event.ActionEvent;
 import java.util.List;
 import java.util.Vector;
 import java.util.stream.Collectors;
@@ -43,6 +42,15 @@ public class SkillList extends JPanel{
 
     public List<SkillActivationRequirement> getSelectedValues(){
         return skillActivationRequirementJList.getSelectedValuesList();
+    }
+
+    public List<SkillActivationRequirement> getAll(){
+        return modelList;
+    }
+
+    public void reset(List<SkillActivationRequirement> skillActivationRequirements){
+        modelList = skillActivationRequirements;
+        skillActivationRequirementJList.setListData(new Vector<>(modelList));
     }
 
     public void add(List<SkillActivationRequirement> skillActivationRequirements){

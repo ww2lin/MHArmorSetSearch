@@ -10,6 +10,7 @@ import models.ArmorSkill;
 import models.ClassType;
 import models.Decoration;
 import models.Equipment;
+import models.EquipmentType;
 import models.Gender;
 import models.ItemPart;
 import models.Resistance;
@@ -18,7 +19,13 @@ import models.skillactivation.SkillActivationRequirement;
 
 class CsvToModel {
 
-    public static Equipment csvEquipmentRowToModel(String[] row) {
+    /**
+     * TODO: extract special armors that will be placed in all cache.
+     * Such as torso up armors, or 3 slots gears.
+     * @param row
+     * @return
+     */
+    public static Equipment csvEquipmentRowToModel(String[] row, EquipmentType equipmentType) {
         String name = row[0];
         Gender gender = Gender.values()[tryParseInt(row[1])];
         ClassType classType = ClassType.values()[tryParseInt(row[2])];
@@ -30,15 +37,15 @@ class CsvToModel {
         int baseDefense = tryParseInt(row[8]);
         int maxDefense = tryParseInt(row[9]);
 
-        Set<Resistance> resistances = new HashSet<>();
+        List<Resistance> resistances = new LinkedList<>();
         resistances.add(new Resistance(ResistanceType.FIRE, tryParseInt(row[10])));
         resistances.add(new Resistance(ResistanceType.WATER, tryParseInt(row[11])));
         resistances.add(new Resistance(ResistanceType.THUNDER, tryParseInt(row[12])));
         resistances.add(new Resistance(ResistanceType.ICE, tryParseInt(row[13])));
         resistances.add(new Resistance(ResistanceType.DRAGON, tryParseInt(row[14])));
 
-        // TODO filter out empty values
         Set<ArmorSkill> armorSkills = new HashSet<>();
+        boolean isTorsoUp = false;
         armorSkills.add(ArmorSkill.createArmorSkill(row[15], tryParseInt(row[16])));
         armorSkills.add(ArmorSkill.createArmorSkill(row[17], tryParseInt(row[18])));
         armorSkills.add(ArmorSkill.createArmorSkill(row[19], tryParseInt(row[20])));
@@ -46,13 +53,19 @@ class CsvToModel {
         armorSkills.add(ArmorSkill.createArmorSkill(row[23], tryParseInt(row[24])));
         armorSkills = removeEmptyArmorValues(armorSkills);
 
+        for (ArmorSkill armorSkill : armorSkills) {
+            if (armorSkill.isTorsoUp()) {
+                isTorsoUp = true;
+                break;
+            }
+        }
+
         Set<ItemPart> itemParts = new HashSet<>();
         itemParts.add(ItemPart.createMonsterPart(row[25], tryParseInt(row[26])));
         itemParts.add(ItemPart.createMonsterPart(row[27], tryParseInt(row[28])));
         itemParts.add(ItemPart.createMonsterPart(row[29], tryParseInt(row[30])));
         itemParts.add(ItemPart.createMonsterPart(row[31], tryParseInt(row[32])));
         itemParts = new HashSet<>(removeEmptyItemValues(itemParts));
-
 
         return Equipment.Builder()
             .setName(name)
@@ -67,7 +80,9 @@ class CsvToModel {
             .setMaxDefense(maxDefense)
             .setResistances(resistances)
             .setArmorSkills(armorSkills)
-            .setItemParts(itemParts);
+            .setItemParts(itemParts)
+            .setTorsoUp(isTorsoUp)
+            .setEquipmentType(equipmentType);
     }
 
     public static SkillActivationRequirement csvSkillActivationRequirementRowToModel(String[] row) {

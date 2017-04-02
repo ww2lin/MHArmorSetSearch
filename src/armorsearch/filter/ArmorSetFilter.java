@@ -1,11 +1,11 @@
 package armorsearch.filter;
 
 import java.util.List;
-import models.GeneratedArmorSet;
+import models.Equipment;
 
 /**
  * filter for a generated armor set
  */
 public interface ArmorSetFilter {
-    List<GeneratedArmorSet> filterArmorSet(List<GeneratedArmorSet> equipmentList);
+    boolean isArmorValid(List<Equipment> currentSet);
 }

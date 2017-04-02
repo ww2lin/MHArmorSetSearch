@@ -1,4 +1,4 @@
-package armorsearch.model;
+package armorsearch;
 
 import java.util.List;
 import models.Equipment;

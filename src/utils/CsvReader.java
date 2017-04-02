@@ -11,10 +11,11 @@ import java.util.List;
 import java.util.Map;
 import models.Decoration;
 import models.Equipment;
+import models.EquipmentType;
 import models.skillactivation.SkillActivationRequirement;
 
 public class CsvReader {
-    public static List<Equipment> getEquipmentFromCsvFile(String path) {
+    public static List<Equipment> getEquipmentFromCsvFile(String path, EquipmentType equipmentType) {
         CSVReader reader = null;
         try {
             List<Equipment> lst = new ArrayList<>();
@@ -27,7 +28,7 @@ public class CsvReader {
             // go over the CSV file line by line.
             while ((nextLine = reader.readNext()) != null) {
                 // nextLine[] is an array of values from the line
-                Equipment equipment = CsvToModel.csvEquipmentRowToModel(nextLine);
+                Equipment equipment = CsvToModel.csvEquipmentRowToModel(nextLine, equipmentType);
                 lst.add(equipment);
             }
             return lst;

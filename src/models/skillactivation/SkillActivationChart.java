@@ -65,7 +65,10 @@ public class SkillActivationChart {
             }
 
             // loop over the decorations
-            for (Decoration decoration: equipment.getDecorationList()) {
+            for (Map.Entry<Decoration, Integer> decorationSet: equipment.getDecorations().entrySet()) {
+                Decoration decoration = decorationSet.getKey();
+                Integer frequencyCount = decorationSet.getValue();
+
                 for (ArmorSkill armorSkill : decoration.getArmorSkills()){
                     Integer sum = currentEquipmentSkillChart.get(armorSkill.kind);
                     if (sum == null){
@@ -73,7 +76,8 @@ public class SkillActivationChart {
                         sum = 0;
                     }
 
-                    sum += armorSkill.points;
+                    // Times the armor skill by the number of the same jewels
+                    sum += (armorSkill.points * frequencyCount);
                     currentEquipmentSkillChart.put(armorSkill.kind, sum);
                 }
             }

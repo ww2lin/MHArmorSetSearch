@@ -14,6 +14,13 @@ public class ActivatedSkill {
         this.accumulatedPoints = accumulatedPoints;
     }
 
+    public ActivatedSkill(SkillActivationRequirement skillActivationRequirement) {
+        this.name = skillActivationRequirement.getName();
+        this.kind = skillActivationRequirement.getKind();
+        this.pointsNeededToActivate = skillActivationRequirement.getPointsNeededToActivate();
+        this.accumulatedPoints =  0;
+    }
+
     public ActivatedSkill(String name, String kind, int pointsNeededToActivate) {
         this.name = name;
         this.kind = kind;
