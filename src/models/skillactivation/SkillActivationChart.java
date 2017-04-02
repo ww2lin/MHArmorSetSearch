@@ -1,5 +1,6 @@
 package models.skillactivation;
 
+import armorsearch.EquipmentSlots;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -44,46 +45,74 @@ public class SkillActivationChart {
     /**
      * Given a list of equipments and a @{models.ClassType}, return what skills has been activated.
      * This can return negative skill.
+     * @param equipmentList the equipment set to check
+     * @param decorationsForCurrentSet since the program is run in multiple threads,
+     * editing the decorations in the equipment list will result in a crash
+     * due to race condition, so instead a fresh copy of it, is made and passed in.
+     * @return
      */
-    public List<ActivatedSkill> getActivatedSkill(List<Equipment> equipmentList){
+    public List<ActivatedSkill> getActivatedSkill(List<Equipment> equipmentList, List<EquipmentSlots> decorationsForCurrentSet){
         Map<String, Integer> currentEquipmentSkillChart = new HashMap<>();
-        List<ActivatedSkill> activatedSkills = new LinkedList<>();
 
         // loop over the equipment set, head, armor, body, leg, etc...
         for (Equipment equipment : equipmentList){
             // loop over the skills for a given equipment
-            for (ArmorSkill armorSkill : equipment.getArmorSkills()){
-                // accumulate the skill point by skill kind
+
+            updateSkillChartByArmorSkill(currentEquipmentSkillChart, equipment.getArmorSkills());
+            updateSkillChartByDecoration(currentEquipmentSkillChart, equipment.getDecorations());
+
+        }
+
+        // check the decorations...
+        for (EquipmentSlots decorationsSlots : decorationsForCurrentSet) {
+            updateSkillChartByDecoration(currentEquipmentSkillChart, decorationsSlots.getDecorations());
+        }
+
+        return getActivatedSkills(currentEquipmentSkillChart);
+    }
+
+
+    public void updateSkillChartByArmorSkill(Map<String, Integer> currentEquipmentSkillChart, Set<ArmorSkill> armorSkills){
+        for (ArmorSkill armorSkill : armorSkills){
+            // accumulate the skill point by skill kind
+            Integer sum = currentEquipmentSkillChart.get(armorSkill.kind);
+            if (sum == null){
+                // if the current skill kind don't exist, assign it to 0
+                sum = 0;
+            }
+
+            sum += armorSkill.points;
+            currentEquipmentSkillChart.put(armorSkill.kind, sum);
+        }
+    }
+
+    public void updateSkillChartByDecoration(Map<String, Integer> currentEquipmentSkillChart, Map<Decoration, Integer> decorations){
+        // loop over the decorations
+        for (Map.Entry<Decoration, Integer> decorationSet: decorations.entrySet()) {
+            Decoration decoration = decorationSet.getKey();
+            Integer frequencyCount = decorationSet.getValue();
+
+            for (ArmorSkill armorSkill : decoration.getArmorSkills()){
                 Integer sum = currentEquipmentSkillChart.get(armorSkill.kind);
                 if (sum == null){
                     // if the current skill kind don't exist, assign it to 0
                     sum = 0;
                 }
 
-                sum += armorSkill.points;
+                // Times the armor skill by the number of the same jewels
+                sum += (armorSkill.points * frequencyCount);
                 currentEquipmentSkillChart.put(armorSkill.kind, sum);
             }
-
-            // loop over the decorations
-            for (Map.Entry<Decoration, Integer> decorationSet: equipment.getDecorations().entrySet()) {
-                Decoration decoration = decorationSet.getKey();
-                Integer frequencyCount = decorationSet.getValue();
-
-                for (ArmorSkill armorSkill : decoration.getArmorSkills()){
-                    Integer sum = currentEquipmentSkillChart.get(armorSkill.kind);
-                    if (sum == null){
-                        // if the current skill kind don't exist, assign it to 0
-                        sum = 0;
-                    }
-
-                    // Times the armor skill by the number of the same jewels
-                    sum += (armorSkill.points * frequencyCount);
-                    currentEquipmentSkillChart.put(armorSkill.kind, sum);
-                }
-            }
         }
+    }
 
-        // check to see which skill is activated.
+    /**
+     * check to see which skill is activated.
+     * @param currentEquipmentSkillChart
+     * @return
+     */
+    public List<ActivatedSkill> getActivatedSkills(Map<String, Integer> currentEquipmentSkillChart){
+        List<ActivatedSkill> activatedSkills = new LinkedList<>();
         for (Map.Entry<String, Integer> skill : currentEquipmentSkillChart.entrySet()) {
             String kind = skill.getKey();
             Integer skillPoints = skill.getValue();
@@ -109,7 +138,6 @@ public class SkillActivationChart {
                 activatedSkills.add(new ActivatedSkill(maxSkillActivation, skillPoints));
             }
         }
-        // Deep copy the arraylist for decorations
         return activatedSkills;
     }
 

@@ -10,17 +10,9 @@ class EquipmentNode {
     List<Equipment> armorWithDesiredSkills = new ArrayList<>();
     EquipmentNode next;
 
-    public EquipmentNode(EquipmentNode next) {
+    public EquipmentNode(List<Equipment> armorWithDesiredSkills, EquipmentNode next) {
+        this.armorWithDesiredSkills = armorWithDesiredSkills;
         this.next = next;
-    }
-
-    public void updateEquipmentListWithDesiredSkills(Map<String, List<Equipment>> cache, List<ActivatedSkill> desiredSkills) {
-        for (ActivatedSkill activatedSkill : desiredSkills) {
-            List<Equipment> equipments = cache.get(activatedSkill.getKind());
-            if (equipments != null && !equipments.isEmpty()) {
-                armorWithDesiredSkills.addAll(equipments);
-            }
-        }
     }
 
     public int getTotalCombinations() {

@@ -25,10 +25,8 @@ import utils.WorkerThread;
 
 public class MonsterHunterArmorSearcher extends JFrame {
 
-    private static final int UPDATE_BATCH = 20;
-
     private int uniqueSetSearchLimit = 200;
-    private int decorationSearchLimit = 5;
+    private int decorationSearchLimit = 1;
     private Gender gender = Gender.MALE;
     private ClassType classType = ClassType.BLADEMASTER;
 
@@ -129,7 +127,7 @@ public class MonsterHunterArmorSearcher extends JFrame {
         });
 
         stop.addActionListener(e -> {
-            workerThread.stop();
+            armorSearchWrapper.stopSearching();
             setIdleState();
         });
 
@@ -221,7 +219,7 @@ public class MonsterHunterArmorSearcher extends JFrame {
         public void onProgress(UniquelyGeneratedArmorSet uniquelyGeneratedArmorSet, int current, int max) {
             //searchResultPanel.update(uniquelyGeneratedArmorSet);
             progressBar.setValue(current);
-            //System.out.println(current+"  "+max);
+            System.out.println(current+"  "+max);
         }
 
         @Override

@@ -1,5 +1,6 @@
 package models;
 
+import armorsearch.EquipmentSlots;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,7 +39,7 @@ public class Equipment {
 
     private Equipment(){}
 
-    public Equipment(Equipment other) {
+    public Equipment(Equipment other, EquipmentSlots decorations) {
         this.name = other.name;
         this.gender = other.gender;
         this.classType = other.classType;
@@ -52,9 +53,9 @@ public class Equipment {
         this.resistances = other.resistances;
         this.armorSkills = other.armorSkills;
         this.itemParts = other.itemParts;
-        this.slotsUsed = other.slotsUsed;
+        this.slotsUsed = decorations.getSlotsUsed();
 
-        for (Map.Entry<Decoration, Integer> decorationSet : other.getDecorations().entrySet()) {
+        for (Map.Entry<Decoration, Integer> decorationSet : decorations.getDecorations().entrySet()) {
             getDecorations().put(decorationSet.getKey(), decorationSet.getValue());
         }
 
@@ -217,42 +218,8 @@ public class Equipment {
         return onlineMonsterAvailableAtQuestLevel != NOT_AVAILABLE || villageMonsterAvailableAtQuestLevel != NOT_AVAILABLE;
     }
 
-    public int getSlotsUsed() {
-        return slotsUsed;
-    }
-
-    public void useSlots(int numberOfSlots) {
-        slotsUsed+=numberOfSlots;
-    }
-
-    public int getFreeSlots() {
-        return slots - slotsUsed;
-    }
-
     public Map<Decoration, Integer> getDecorations() {
         return decorations;
-    }
-
-    public void addDecoration(Decoration decoration){
-        Integer frequency = decorations.get(decoration);
-        if (frequency == null){
-            frequency = 0;
-        }
-        ++frequency;
-        decorations.put(decoration, frequency);
-    }
-
-    public void removeDecoration(Decoration decoration){
-        Integer frequency = decorations.get(decoration);
-        if (frequency == null || frequency <= 0){
-            return;
-        }
-        --frequency;
-        if (frequency == 0){
-            decorations.remove(decoration);
-        } else {
-            decorations.put(decoration, frequency);
-        }
     }
 
     public boolean isTorsoUp() {

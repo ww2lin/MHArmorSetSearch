@@ -1,5 +1,6 @@
 package armorsearch;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -15,7 +16,8 @@ class DecorationSearch {
      * DFS - try to see if the desire skills are obtainable given a list of equipments
      * can have multiple decoration list with the same outcome.
      */
-    static void findArmorWithJewelRecursively(final int decorationSearchLimit,
+    static void findArmorWithJewelRecursively(List<EquipmentSlots> decorationsForCurrentSet,
+                                              final int decorationSearchLimit,
                                               Map<String, List<Decoration>> decorationLookupTable,
                                               SkillActivationChart skillActivationChart,
                                               List<Equipment> currentSet,
@@ -25,12 +27,11 @@ class DecorationSearch {
                                               List<Decoration> decorationsNeeded) {
 
         if (desiredSkills.isEmpty() || generatedArmorSets.size() >= decorationSearchLimit || equipmentIndex == currentSet.size()){
-            List<ActivatedSkill> activatedSkill = skillActivationChart.getActivatedSkill(currentSet);
-
+            List<ActivatedSkill> activatedSkill = skillActivationChart.getActivatedSkill(currentSet, decorationsForCurrentSet);
             if (SkillUtil.containsDesiredSkills(desiredSkills, activatedSkill)) {
                 //if (desiredSkills.isEmpty() && equipmentIndex < currentSet.size()) {
                     // The skill can be obtained with less than 5 armor pieces.
-                    // TODO this is check is wrong, fix it later.
+                    // TODO this check is wrong, fix it later.
                     // Even if we do not use the slots, we might still need this armor's skills
                     //for (int i = 0; i < currentSet.size(); ++i){
                     //    currentSet.get(i).setCanBeSubstitutedForAnyOtherEquipment(true);
@@ -38,34 +39,44 @@ class DecorationSearch {
                 //}
 
                 // Deep copy the equipment so the slots, and decorations usage dont get reseted.
-                List<Equipment> deepCopyCurrentSet = currentSet.stream().map(Equipment::new).collect(Collectors.toList());
+                List<Equipment> deepCopyCurrentSet = new ArrayList<>(5);
+                for (int i = 0; i < equipmentIndex; ++i) {
+                    Equipment currentEquipment = currentSet.get(i);
+                    Equipment newEquipment = new Equipment(currentEquipment, decorationsForCurrentSet.get(i));
+                    deepCopyCurrentSet.add(newEquipment);
+                }
                 generatedArmorSets.add(new GeneratedArmorSet(activatedSkill, deepCopyCurrentSet));
             }
             return;
         }
-
-        Equipment equipment = currentSet.get(equipmentIndex);
 
         for (ActivatedSkill activatedSkill : desiredSkills) {
             List<Decoration> decorationsToTry = decorationLookupTable.get(activatedSkill.getKind());
 
             if (decorationsToTry != null) {
                 for (Decoration decoration : decorationsToTry) {
+
+                    if (generatedArmorSets.size() >= decorationSearchLimit) {
+                        return;
+                    }
+
                     if (!decoration.isAvailable() || !decoration.isPositive(activatedSkill.getKind())){
                         // skip negative or not available jewels.
                         continue;
                     }
 
+                    EquipmentSlots equipmentSlots = decorationsForCurrentSet.get(equipmentIndex);
                     // TODO if current set contains one of desire skills,
                     // then remove it and back the rest of the desire skill to remove useless search
-                    if (equipment.getFreeSlots() >= decoration.getSlotsNeeded()) {
+                    if (equipmentSlots.getFreeSlots() >= decoration.getSlotsNeeded()) {
                         // Try a decoration
                         decorationsNeeded.add(decoration);
-                        equipment.useSlots(decoration.getSlotsNeeded());
-                        equipment.addDecoration(decoration);
+                        // TODO fix the race condition here!
+                        equipmentSlots.useSlots(decoration.getSlotsNeeded());
+                        equipmentSlots.addDecoration(decoration);
 
                         // Check to see if there is any skill that we can cut out, E.g if we have AuL we do not need anymore attack jewels.
-                        List<ActivatedSkill> skillsToFilterOut = skillActivationChart.getActivatedSkill(currentSet);
+                        List<ActivatedSkill> skillsToFilterOut = skillActivationChart.getActivatedSkill(currentSet, decorationsForCurrentSet);
                         // Find the skill that has been maxed out
                         List<ActivatedSkill> activatedSkillsFilter = skillsToFilterOut.stream().filter(filterOut ->
                             filterOut.getPointsNeededToActivate() >= skillActivationChart.getMaxedActivatedSkill(filterOut.getKind()).getPointsNeededToActivate()
@@ -74,7 +85,8 @@ class DecorationSearch {
                         List<ActivatedSkill> filteredDesiredSkills = desiredSkills.stream().collect(Collectors.toList());
                         filteredDesiredSkills.removeAll(activatedSkillsFilter);
 
-                        findArmorWithJewelRecursively(decorationSearchLimit,
+                        findArmorWithJewelRecursively(decorationsForCurrentSet,
+                                                      decorationSearchLimit,
                                                       decorationLookupTable,
                                                       skillActivationChart,
                                                       currentSet,
@@ -83,8 +95,8 @@ class DecorationSearch {
                                                       filteredDesiredSkills,
                                                       decorationsNeeded);
                         //back-tracking.
-                        equipment.useSlots(-decoration.getSlotsNeeded());
-                        equipment.removeDecoration(decoration);
+                        equipmentSlots.useSlots(-decoration.getSlotsNeeded());
+                        equipmentSlots.removeDecoration(decoration);
                         decorationsNeeded.remove(decoration);
                     }
                 }
@@ -92,4 +104,5 @@ class DecorationSearch {
 
         }
     }
+
 }
