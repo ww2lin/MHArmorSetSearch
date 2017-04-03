@@ -2,8 +2,10 @@ package armorsearch.filter;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import models.Equipment;
+import models.EquipmentType;
 import models.GeneratedArmorSet;
 
 public class MinDefenseFilter implements ArmorSetFilter, ArmorFilter {
@@ -24,7 +26,7 @@ public class MinDefenseFilter implements ArmorSetFilter, ArmorFilter {
     }
 
     @Override
-    public boolean isArmorValid(List<Equipment> currentSet) {
-        return currentSet.stream().mapToInt(Equipment::getMaxDefense).sum() >= minDefense;
+    public boolean isArmorValid(Map<EquipmentType, Equipment> currentSet) {
+        return currentSet.values().stream().mapToInt(Equipment::getMaxDefense).sum() >= minDefense;
     }
 }

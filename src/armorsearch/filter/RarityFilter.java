@@ -1,8 +1,11 @@
 package armorsearch.filter;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import models.Equipment;
+import models.EquipmentType;
 import models.GeneratedArmorSet;
 
 public class RarityFilter implements ArmorFilter, ArmorSetFilter {
@@ -19,7 +22,7 @@ public class RarityFilter implements ArmorFilter, ArmorSetFilter {
     }
 
     @Override
-    public boolean isArmorValid(List<Equipment> currentSet) {
-        return filter(currentSet).size() > 0;
+    public boolean isArmorValid(Map<EquipmentType, Equipment> currentSet) {
+        return filter(new ArrayList<>(currentSet.values())).size() > 0;
     }
 }

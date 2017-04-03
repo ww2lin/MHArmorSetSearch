@@ -8,6 +8,7 @@ import java.util.Set;
 public class Equipment {
     private static final int NOT_AVAILABLE = 99;
 
+    private int id;
     private String name;
     private Gender gender;
     private ClassType classType;
@@ -39,6 +40,7 @@ public class Equipment {
     private Equipment(){}
 
     public Equipment(Equipment other) {
+        this.id = other.id;
         this.name = other.name;
         this.gender = other.gender;
         this.classType = other.classType;
@@ -53,11 +55,7 @@ public class Equipment {
         this.armorSkills = other.armorSkills;
         this.itemParts = other.itemParts;
         this.slotsUsed = other.slotsUsed;
-
-        for (Map.Entry<Decoration, Integer> decorationSet : other.getDecorations().entrySet()) {
-            getDecorations().put(decorationSet.getKey(), decorationSet.getValue());
-        }
-
+        this.decorations.putAll(other.decorations);
         this.isTorsoUp = other.isTorsoUp;
         this.equipmentType = other.equipmentType;
         this.canBeSubstitutedForAnyOtherEquipment = other.canBeSubstitutedForAnyOtherEquipment;
@@ -67,10 +65,10 @@ public class Equipment {
         return new Equipment();
     }
 
-    @Override
-    public String toString() {
+    @Override public String toString() {
         return "Equipment{" +
-            "name='" + name + '\'' +
+            "id=" + id +
+            ", name='" + name + '\'' +
             ", gender=" + gender +
             ", classType=" + classType +
             ", rarity=" + rarity +
@@ -205,6 +203,31 @@ public class Equipment {
         return this;
     }
 
+    public boolean useSlots(Decoration decoration) {
+        if (decoration.getSlotsNeeded() + slotsUsed <= slots) {
+            slotsUsed += decoration.getSlotsNeeded();
+            addDecoration(decoration);
+            return true;
+        } return false;
+    }
+
+    public boolean freeSlots(Decoration decoration) {
+        if (slotsUsed - decoration.getSlotsNeeded() >= 0) {
+            slotsUsed -= decoration.getSlotsNeeded();
+            removeDecoration(decoration);
+            return true;
+        } else return false;
+    }
+
+
+    public int getFreeSlots() {
+        return slots - slotsUsed;
+    }
+
+    public boolean hasFreeSlots() {
+        return slots - slotsUsed > 0;
+    }
+
     public Set<ArmorSkill> getArmorSkills() {
         return armorSkills;
     }
@@ -217,42 +240,8 @@ public class Equipment {
         return onlineMonsterAvailableAtQuestLevel != NOT_AVAILABLE || villageMonsterAvailableAtQuestLevel != NOT_AVAILABLE;
     }
 
-    public int getSlotsUsed() {
-        return slotsUsed;
-    }
-
-    public void useSlots(int numberOfSlots) {
-        slotsUsed+=numberOfSlots;
-    }
-
-    public int getFreeSlots() {
-        return slots - slotsUsed;
-    }
-
     public Map<Decoration, Integer> getDecorations() {
         return decorations;
-    }
-
-    public void addDecoration(Decoration decoration){
-        Integer frequency = decorations.get(decoration);
-        if (frequency == null){
-            frequency = 0;
-        }
-        ++frequency;
-        decorations.put(decoration, frequency);
-    }
-
-    public void removeDecoration(Decoration decoration){
-        Integer frequency = decorations.get(decoration);
-        if (frequency == null || frequency <= 0){
-            return;
-        }
-        --frequency;
-        if (frequency == 0){
-            decorations.remove(decoration);
-        } else {
-            decorations.put(decoration, frequency);
-        }
     }
 
     public boolean isTorsoUp() {
@@ -268,12 +257,42 @@ public class Equipment {
         return this;
     }
 
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
     public boolean isCanBeSubstitutedForAnyOtherEquipment() {
         return canBeSubstitutedForAnyOtherEquipment;
     }
 
     public void setCanBeSubstitutedForAnyOtherEquipment(boolean canBeSubstitutedForAnyOtherEquipment) {
         this.canBeSubstitutedForAnyOtherEquipment = canBeSubstitutedForAnyOtherEquipment;
+    }
+
+    public void removeDecoration(Decoration decoration){
+        Integer frequency = decorations.get(decoration);
+        if (frequency == null || frequency <= 0){
+            return;
+        }
+        --frequency;
+        if (frequency == 0){
+            decorations.remove(decoration);
+        } else {
+            decorations.put(decoration, frequency);
+        }
+    }
+
+    public void addDecoration(Decoration decoration){
+        Integer frequency = decorations.get(decoration);
+        if (frequency == null){
+            frequency = 0;
+        }
+        ++frequency;
+        decorations.put(decoration, frequency);
     }
 
     @Override public boolean equals(Object o) {
@@ -286,60 +305,19 @@ public class Equipment {
 
         Equipment equipment = (Equipment) o;
 
-        if (rarity != equipment.rarity) {
+        if (equipmentType != equipment.equipmentType) {
             return false;
         }
-        if (slots != equipment.slots) {
-            return false;
-        }
-        if (onlineMonsterAvailableAtQuestLevel != equipment.onlineMonsterAvailableAtQuestLevel) {
-            return false;
-        }
-        if (villageMonsterAvailableAtQuestLevel != equipment.villageMonsterAvailableAtQuestLevel) {
-            return false;
-        }
-        if (needBothOnlineAndOffLineQuest != equipment.needBothOnlineAndOffLineQuest) {
-            return false;
-        }
-        if (baseDefense != equipment.baseDefense) {
-            return false;
-        }
-        if (maxDefense != equipment.maxDefense) {
-            return false;
-        }
-        if (!name.equals(equipment.name)) {
-            return false;
-        }
-        if (gender != equipment.gender) {
-            return false;
-        }
-        if (classType != equipment.classType) {
-            return false;
-        }
-        if (!resistances.equals(equipment.resistances)) {
-            return false;
-        }
-        if (!armorSkills.equals(equipment.armorSkills)) {
-            return false;
-        }
-        return itemParts.equals(equipment.itemParts);
+        return id == equipment.id;
     }
 
-    @Override public int hashCode() {
-        int result = name.hashCode();
-        result = 31 * result + gender.hashCode();
-        result = 31 * result + classType.hashCode();
-        result = 31 * result + rarity;
-        result = 31 * result + slots;
-        result = 31 * result + onlineMonsterAvailableAtQuestLevel;
-        result = 31 * result + villageMonsterAvailableAtQuestLevel;
-        result = 31 * result + (needBothOnlineAndOffLineQuest ? 1 : 0);
-        result = 31 * result + baseDefense;
-        result = 31 * result + maxDefense;
-        result = 31 * result + resistances.hashCode();
-        result = 31 * result + armorSkills.hashCode();
-        result = 31 * result + itemParts.hashCode();
+    @Override
+    public int hashCode() {
+        int result = equipmentType.hashCode();
+        result = 31 * result + id;
         return result;
     }
+
+
 
 }

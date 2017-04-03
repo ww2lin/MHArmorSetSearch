@@ -62,13 +62,12 @@ public class ActivatedSkill {
         }
 
         ActivatedSkill that = (ActivatedSkill) o;
+
         return kind.equals(that.kind);
     }
 
     @Override
     public int hashCode() {
-        int result = name.hashCode();
-        result = 31 * result + kind.hashCode();
-        return result;
+        return kind.hashCode();
     }
 }

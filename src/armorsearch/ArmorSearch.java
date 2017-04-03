@@ -1,18 +1,24 @@
 package armorsearch;
 
 import armorsearch.filter.ArmorSetFilter;
+import armorsearch.thread.ArmorSearchWorkerThread;
+import interfaces.ArmorSearchWorkerProgress;
 import interfaces.OnSearchResultProgress;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import models.Decoration;
 import models.Equipment;
-import models.GeneratedArmorSet;
+import models.EquipmentType;
 import models.UniquelyGeneratedArmorSet;
 import models.skillactivation.ActivatedSkill;
 import models.skillactivation.SkillActivationChart;
+import utils.WorkerThread;
 
 class ArmorSearch {
+
+    private static final int THREAD_COUNT = 1;// Runtime.getRuntime().availableProcessors() / 2;
 
     private ArmorSkillCacheTable armorSkillCacheTable;
     private Map<String, List<Decoration>>decorationLookupTable;
@@ -22,7 +28,13 @@ class ArmorSearch {
     private OnSearchResultProgress onSearchResultProgress;
     private SkillActivationChart skillActivationChart;
 
-    private int currentProgress = 0;
+    private int armorSetsFound = 0;
+    private int armorSetsTried = 0;
+    private int maxArmorSetsToSearch = 0;
+
+    List<List<UniquelyGeneratedArmorSet>> matchedSet = new ArrayList<>();
+
+    private boolean shouldStop = false;
 
     public ArmorSearch(ArmorSkillCacheTable armorSkillCacheTable, Map<String, List<Decoration>> decorationLookupTable, List<ArmorSetFilter> armorSetFilters, int uniqueSetSearchLimit, int decorationSearchLimit, SkillActivationChart skillActivationChart, OnSearchResultProgress onSearchResultProgress) {
         this.armorSkillCacheTable = armorSkillCacheTable;
@@ -40,82 +52,106 @@ class ArmorSearch {
      * @return list of equipment that matches what the user wants
      */
     public List<UniquelyGeneratedArmorSet> findArmorSetWith(List<ActivatedSkill> desiredSkills) {
-        // construct the node structure to use for dfs search
-        EquipmentNode leg = new EquipmentNode(null);
-        EquipmentNode wst = new EquipmentNode(leg);
-        EquipmentNode arm = new EquipmentNode(wst);
-        EquipmentNode body = new EquipmentNode(arm);
-        EquipmentNode head = new EquipmentNode(body);
+        shouldStop = false;
 
-        // get all the potential armor to search through
-        head.updateEquipmentListWithDesiredSkills(armorSkillCacheTable.getHeadEquipmentCache(), desiredSkills);
-        body.updateEquipmentListWithDesiredSkills(armorSkillCacheTable.getBodyEquipmentCache(), desiredSkills);
-        arm.updateEquipmentListWithDesiredSkills(armorSkillCacheTable.getArmEquipmentCache(), desiredSkills);
-        wst.updateEquipmentListWithDesiredSkills(armorSkillCacheTable.getWstEquipmentCache(), desiredSkills);
-        leg.updateEquipmentListWithDesiredSkills(armorSkillCacheTable.getLegEquipmentCache(), desiredSkills);
+        List<List<Equipment>> equipmentsWithDesiredSkills = new ArrayList<>(5);
+        List<Equipment> headList = getEquipmentsWithDesiredSkills(armorSkillCacheTable.getHeadEquipmentCache(), desiredSkills);
+        List<Equipment> bodyList = getEquipmentsWithDesiredSkills(armorSkillCacheTable.getBodyEquipmentCache(), desiredSkills);
+        List<Equipment> armList = getEquipmentsWithDesiredSkills(armorSkillCacheTable.getArmEquipmentCache(), desiredSkills);
+        List<Equipment> wstList = getEquipmentsWithDesiredSkills(armorSkillCacheTable.getWstEquipmentCache(), desiredSkills);
+        List<Equipment> legList = getEquipmentsWithDesiredSkills(armorSkillCacheTable.getLegEquipmentCache(), desiredSkills);
 
-        int totalSetsCombinations = head.getTotalCombinations();
+        //equipmentsWithDesiredSkills.add(lst1);
+        //equipmentsWithDesiredSkills.add(lst2);
+        //equipmentsWithDesiredSkills.add(lst3);
+        //equipmentsWithDesiredSkills.add(lst4);
+        //equipmentsWithDesiredSkills.add(lst5);
+        //
+        //equipmentsWithDesiredSkills.sort((o1, o2) -> o2.size() - o1.size());
+        //
+        //// Split of the work base on the thread count available.
+        //List<Equipment> mostWorkLoadList = equipmentsWithDesiredSkills.get(0);
+        //int maxSize = mostWorkLoadList.size();
 
-        List<UniquelyGeneratedArmorSet> matchedSets = new ArrayList<>();
-        findArmorRecursively(totalSetsCombinations,
-                             new ArrayList<>(5),
-                             head,
-                             matchedSets,
-                             desiredSkills);
-        return matchedSets;
+        Map<EquipmentType, List<Equipment>> equipments = new HashMap<>();
+        equipments.put(EquipmentType.HEAD, headList);
+        equipments.put(EquipmentType.BODY, bodyList);
+        equipments.put(EquipmentType.ARM, armList);
+        equipments.put(EquipmentType.WST, wstList);
+        equipments.put(EquipmentType.LEG, legList);
+
+
+        for (int i = 0; i < THREAD_COUNT; ++i){
+            matchedSet.add(new ArrayList<>());
+        }
+
+        ArmorSearchWorkerThread[] workers = new ArmorSearchWorkerThread[THREAD_COUNT];
+
+        workers[0] = new ArmorSearchWorkerThread(0,
+                                                 equipments,
+                                                 new ArmorSearchWorkerProgressImpl(),
+                                                 decorationLookupTable,
+                                                 armorSetFilters,
+                                                 decorationSearchLimit,
+                                                 skillActivationChart,
+                                                 desiredSkills);
+        for (int i = 0; i < THREAD_COUNT; ++i){
+            workers[i].start();
+        }
+
+        for (int i = 0; i < THREAD_COUNT; ++i) {
+            try {
+                workers[i].join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        List<UniquelyGeneratedArmorSet> joinedResultSet = new ArrayList<>();
+        matchedSet.forEach(joinedResultSet::addAll);
+        return joinedResultSet;
     }
 
-    private void findArmorRecursively(final int totalSetsCombinations,
-                                      List<Equipment> currentSet,
-                                      EquipmentNode equipmentNode,
-                                      List<UniquelyGeneratedArmorSet> matchedSet,
-                                      List<ActivatedSkill> desiredSkills) {
-        // check to see if we hit the limit of armor search
-        if (matchedSet.size() >= uniqueSetSearchLimit) {
-            return;
-        } else if (equipmentNode != null) {
-            List<Equipment> equipments = equipmentNode.armorWithDesiredSkills;
-            for (Equipment equipment : equipments) {
-                currentSet.add(equipment);
-                findArmorRecursively(totalSetsCombinations,
-                                     currentSet,
-                                     equipmentNode.next,
-                                     matchedSet,
-                                     desiredSkills);
-
-                // back tracking.
-                currentSet.remove(equipment);
+    private List<Equipment> getEquipmentsWithDesiredSkills(Map<String, List<Equipment>> cache, List<ActivatedSkill> desiredSkills) {
+        List<Equipment> equipments = new ArrayList<>();
+        for (ActivatedSkill activatedSkill : desiredSkills) {
+            List<Equipment> equipmentsWithDesiredSkills = cache.get(activatedSkill.getKind());
+            if (equipmentsWithDesiredSkills != null && !equipmentsWithDesiredSkills.isEmpty()) {
+                equipments.addAll(equipmentsWithDesiredSkills);
             }
-        } else {
+            // TODO add in torso up/3 slots pieces
+        }
+        return equipments;
+    }
 
-            // apply filters.
-            for (ArmorSetFilter armorSetFilter : armorSetFilters) {
-                if (!armorSetFilter.isArmorValid(currentSet)){
-                    return;
-                }
+    private class ArmorSearchWorkerProgressImpl implements ArmorSearchWorkerProgress {
+
+        @Override
+        public boolean shouldContinueSearching() {
+            return armorSetsFound < uniqueSetSearchLimit && !shouldStop;
+        }
+
+        @Override
+        public void onProgress(int workerId, UniquelyGeneratedArmorSet uniquelyGeneratedArmorSet, int armorSetsTried) {
+            //matchedSet.set(workerId, uniquelyGeneratedArmorSet);
+            if (uniquelyGeneratedArmorSet != null) {
+                ++ArmorSearch.this.armorSetsFound;
+            } else {
+                ArmorSearch.this.armorSetsTried+=armorSetsTried;
             }
 
-            // we found a potential full set...
-            List<GeneratedArmorSet> sameArmorDifferentDecoration = new ArrayList<>();
-            DecorationSearch.findArmorWithJewelRecursively(decorationSearchLimit,
-                                                           decorationLookupTable,
-                                                           skillActivationChart,
-                                                           currentSet,
-                                                           0,
-                                                           sameArmorDifferentDecoration,
-                                                           desiredSkills,
-                                                           new ArrayList<>());
-
-            if (!sameArmorDifferentDecoration.isEmpty()) {
-                // create a new array reference for current set, so that when back tracking the list is not modified
-                UniquelyGeneratedArmorSet uniquelyGeneratedArmorSet = new UniquelyGeneratedArmorSet(sameArmorDifferentDecoration);
-                matchedSet.add(uniquelyGeneratedArmorSet);
-                if (onSearchResultProgress != null) {
-                    onSearchResultProgress.onProgress(uniquelyGeneratedArmorSet, ++currentProgress, Math.min(totalSetsCombinations, uniqueSetSearchLimit));
-                }
+            if (onSearchResultProgress != null){
+                onSearchResultProgress.onProgress(uniquelyGeneratedArmorSet, ArmorSearch.this.armorSetsTried, maxArmorSetsToSearch);
             }
+        }
+
+        @Override
+        public void onCompleted(int workerId, List<UniquelyGeneratedArmorSet> uniquelyGeneratedArmorSets) {
+            matchedSet.get(workerId).addAll(uniquelyGeneratedArmorSets);
         }
     }
 
-
+    public void stop() {
+        this.shouldStop = true;
+    }
 }

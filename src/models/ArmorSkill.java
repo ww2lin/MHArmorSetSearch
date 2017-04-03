@@ -4,6 +4,7 @@ import interfaces.Nullable;
 import language.StringConstants;
 
 public class ArmorSkill implements Nullable {
+
     // Note this is NOT the name of the skill, rather its the 'kind' of the skill
     // E.g its NOT AuS, AuM, or negate stun,
     // it is Attack, Poison, Stun, Hearing

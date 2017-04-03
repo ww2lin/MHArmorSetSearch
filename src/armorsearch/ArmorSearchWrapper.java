@@ -40,6 +40,7 @@ public class ArmorSearchWrapper {
     private Gender gender;
     private ClassType classType;
     private List<ArmorFilter> armorFilters;
+    private ArmorSearch armorSearch;
 
     public ArmorSearchWrapper(ClassType classType, Gender gender, List<ArmorFilter> armorFilters) throws IOException {
         // Parse CSV
@@ -81,13 +82,13 @@ public class ArmorSearchWrapper {
         return skillList.stream().filter(sar -> sar.getPointsNeededToActivate() > 0).collect(Collectors.toList());
     }
 
-    public List<UniquelyGeneratedArmorSet> search(List<ArmorSetFilter> armorSetFilters, List<SkillActivationRequirement> desiredSkills, final int uniqueSetSearchLimit, final int decorationSearchLimit, OnSearchResultProgress onSearchResultProgress){
-        ArmorSearch armorSearch  = new ArmorSearch(armorSkillCacheTable,
-                                                   decorationLookupTable,
-                                                   armorSetFilters,
-                                                   uniqueSetSearchLimit,
-                                                   decorationSearchLimit,
-                                                   skillActivationChart,
+    public List<UniquelyGeneratedArmorSet> search(List<ArmorSetFilter> armorSetFilters, List<SkillActivationRequirement> desiredSkills, final int uniqueSetSearchLimit, final int decorationSearchLimit, OnSearchResultProgress onSearchResultProgress) {
+        armorSearch = new ArmorSearch(armorSkillCacheTable,
+                                      decorationLookupTable,
+                                      armorSetFilters,
+                                      uniqueSetSearchLimit,
+                                      decorationSearchLimit,
+                                      skillActivationChart,
                                                    onSearchResultProgress);
         List<ActivatedSkill> activatedSkills = new ArrayList<>(desiredSkills.size());
         desiredSkills.forEach(skillActivationRequirement -> {
@@ -106,5 +107,11 @@ public class ArmorSearchWrapper {
 
     public void setArmorFilters(List<ArmorFilter> armorFilters) {
         this.armorFilters = armorFilters;
+    }
+
+    public void stopSearching(){
+       if (armorSearch != null){
+           armorSearch.stop();
+       }
     }
 }

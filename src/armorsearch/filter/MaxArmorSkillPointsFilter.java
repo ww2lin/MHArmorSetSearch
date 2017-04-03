@@ -1,17 +1,18 @@
 package armorsearch.filter;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import models.ArmorSkill;
 import models.Equipment;
 
 /**
  * This Filter will be applied internally.
  *
- * This will select the equipments with MAX skill point from a list of equipments
- * OR
- * It will also select equipments that has MORE SLOTS than the equipment with the max skill points
- *
+ * This will select the equipments with MAX skill point from a list of equipments bucketed into slots
+
  * This Filter must be the last filter that is going to be applied, because
  * for example if this filter is applied before Rarity(3)
  * then after this filter is done, some of rare 3 armors might be dropped.
@@ -34,33 +35,82 @@ public class MaxArmorSkillPointsFilter implements ArmorFilter{
             return equipmentList;
         }
 
+        // bucket the equipment by slots.
+        Map<Integer, List<Equipment>> slotsMap = new HashMap<>();
+        // max point bucketed by slots.
+        Map<Integer, Integer> maxPointBySlot = new HashMap<>();
+
         // Return the armor with the max points in skillkind or has more slots than the maxed skill point equipment
-        List<Equipment> maxPointOrSlotsEquipments = new ArrayList<>();
+        List<Equipment> maxPointBySlotsEquipments = new ArrayList<>();
 
-        // Find the equipment with the max skill points first, and use it as a template
-        // Then compare other gear's slot with the template, we only select the
-        // new gear, if it has more slots.
-        Equipment templateEquipment = equipmentList.get(0);
-        int maxSkillPoints = findSkillPoint(templateEquipment);
 
-        // find the armor with the max skill...
         for (Equipment equipment : equipmentList) {
-            int currentMaxSkill = findSkillPoint(equipment);
-            if (currentMaxSkill >= maxSkillPoints) {
-                templateEquipment = equipment;
-                maxSkillPoints = currentMaxSkill;
+            List<Equipment> equipments = slotsMap.get(equipment.getSlots());
+            if (equipments == null) {
+                equipments = new ArrayList<>();
             }
+            equipments.add(equipment);
+            slotsMap.put(equipment.getSlots(), equipments);
         }
 
+        // find max points by slots
+        for (Map.Entry<Integer, List<Equipment>> entry : slotsMap.entrySet()) {
+            int slotCount = entry.getKey();
+            List<Equipment> equipments = entry.getValue();
+
+            Equipment templateEquipment = equipments.get(0);
+            int maxSkillPoints = findSkillPoint(templateEquipment);
+
+            // find the armor with the max skill...
+            for (Equipment equipment : equipments) {
+                int currentMaxSkill = findSkillPoint(equipment);
+                if (currentMaxSkill >= maxSkillPoints) {
+                    maxSkillPoints = currentMaxSkill;
+                }
+            }
+
+            maxPointBySlot.put(slotCount, maxSkillPoints);
+        }
+
+        // Select the max point equips by slots.
+        for (Map.Entry<Integer, List<Equipment>> entry : slotsMap.entrySet()) {
+            int slotCount = entry.getKey();
+            List<Equipment> equipments = entry.getValue();
+            int maxBySlot = maxPointBySlot.get(slotCount);
+            equipments.forEach(equipment -> {
+                int pointCount = findSkillPoint(equipment);
+                if (pointCount >= maxBySlot) {
+                    maxPointBySlotsEquipments.add(equipment);
+                }
+            });
+        }
+
+        // do one more round of filtering
+        // e.g if skills has +5 00-  and we have +7 000, we can skip the +5 00, armor
+        List<Equipment> results = new ArrayList<>(maxPointBySlotsEquipments);
+        for (Equipment equipment : maxPointBySlotsEquipments) {
+            results = filterByMaxValue(equipment, results);
+        }
+
+        return results;
+    }
+
+    public List<Equipment> filterByMaxValue(Equipment templateEquipment, List<Equipment> equipmentList){
+        List<Equipment> equipments = new ArrayList<>();
+        int maxSkillPoints = findSkillPoint(templateEquipment);
         // Find all the armors that has more slots than the template or the same skill points.
         for (Equipment equipment : equipmentList) {
             int currentMaxSkill = findSkillPoint(equipment);
-            if (equipment.getSlots() > templateEquipment.getSlots() ||
-                currentMaxSkill == maxSkillPoints)  {
-                maxPointOrSlotsEquipments.add(equipment);
+            //int differenceInSkillPoint = maxSkillPoints - currentMaxSkill;
+            //if (differesnceInSkillPoint >= 5) {
+            //    continue;
+            //}
+            if (equipment.getSlots() > templateEquipment.getSlots()||
+                currentMaxSkill >= maxSkillPoints)  {
+                equipments.add(equipment);
             }
         }
-        return maxPointOrSlotsEquipments;
+        return equipments;
     }
 
     private int findSkillPoint(Equipment equipment) {
