@@ -2,7 +2,6 @@ package armorsearch.thread;
 
 import armorsearch.DecorationSearch;
 import armorsearch.filter.ArmorSetFilter;
-import armorsearch.memorization.MemorizationCache;
 import interfaces.ArmorSearchWorkerProgress;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,7 +23,6 @@ public class ArmorSearchWorkerThread extends Thread {
     private ArmorSearchWorkerProgress armorSearchWorkerProgress;
     private List<ArmorSetFilter> armorSetFilters;
 
-    private Map<EquipmentType, EquipmentSlots> decorationsForCurrentSet;
     private DecorationSearch decorationSearch;
     SkillActivationChart skillActivationChart;
     List<ActivatedSkill> desiredSkills;
@@ -42,12 +40,6 @@ public class ArmorSearchWorkerThread extends Thread {
         this.armorSearchWorkerProgress = armorSearchWorkerProgress;
         this.armorSetFilters = armorSetFilters;
 
-
-        decorationsForCurrentSet = new HashMap<>();
-        for (EquipmentType equipmentType : EquipmentType.values()) {
-            decorationsForCurrentSet.put(equipmentType, new EquipmentSlots(0));
-        }
-
         decorationSearch = new DecorationSearch(decorationSearchLimit, desiredSkills, skillActivationChart, decorationLookupTable);
         this.skillActivationChart = skillActivationChart;
         this.desiredSkills = desiredSkills;
@@ -61,6 +53,10 @@ public class ArmorSearchWorkerThread extends Thread {
         }
     }
 
+    /**
+     * DP implementation of finding if a possible armor set exists.
+     * @return
+     */
     private List<UniquelyGeneratedArmorSet> searchArmor() {
 
         List<UniquelyGeneratedArmorSet> results = new ArrayList<>();
@@ -122,18 +118,15 @@ public class ArmorSearchWorkerThread extends Thread {
                         }
                     }
                     if (armorSearchWorkerProgress != null){
-                        for (int k = 0; k < i; ++k) {
-                            System.out.print(i + " " + table[k].size() + " --  ");
-                        }
-                        System.out.print(i + " " + sumEquipmentList.size() + " --  ");
                         armorSearchWorkerProgress.onProgress(id, null, setsTried);
                     }
                     ++setsTried;
                 }
             }
-
+            System.out.println(i+"  "+table[i].size());
             // place the sumNode back in i-th index
             table[i] = sumEquipmentList;
+
         }
 
         return results;

@@ -1,6 +1,5 @@
 package models.skillactivation;
 
-import armorsearch.thread.EquipmentSlots;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -57,13 +56,6 @@ public class SkillActivationChart {
         return newChart;
     }
 
-    public static Map<String, Integer> getActivatedSkillChart(Equipment equipment) {
-        Map<String, Integer> currentEquipmentSkillChart = new HashMap<>();
-        updateSkillChartByArmorSkill(currentEquipmentSkillChart, equipment.getArmorSkills(), 1);
-        updateSkillChartByDecoration(currentEquipmentSkillChart, equipment.getDecorations(), 1);
-        return currentEquipmentSkillChart;
-    }
-
     /**
      * Given a list of equipments and a @{models.ClassType}, return what skills has been activated.
      * This can return negative skill.
@@ -73,37 +65,12 @@ public class SkillActivationChart {
      * due to race condition, so instead a fresh copy of it, is made and passed in.
      * @return
      */
-    public static Map<String, Integer> getActivatedSkillChart(Map<EquipmentType, Equipment> equipmentSetTable, Map<EquipmentType, EquipmentSlots> decorationsForCurrentSet) {
+    public static Map<String, Integer> getActivatedSkillChart(Equipment equipment) {
         Map<String, Integer> currentEquipmentSkillChart = new HashMap<>();
-        int torsoUpCount = 0;
-
-        // loop over once and find the number of torsoUp armors
-        for (Equipment equipment : equipmentSetTable.values()) {
-            if (equipment.isTorsoUp()) {
-                ++torsoUpCount;
-            }
-        }
-        int skillMultiplier = torsoUpCount + 1;
-        // Calculate the skill point for decoration
-        for (Map.Entry<EquipmentType, EquipmentSlots> decorationSet : decorationsForCurrentSet.entrySet()) {
-            if (decorationSet.getKey() == EquipmentType.BODY) {
-                updateSkillChartByDecoration(currentEquipmentSkillChart, decorationSet.getValue().getDecorations(), skillMultiplier);
-            } else {
-                updateSkillChartByDecoration(currentEquipmentSkillChart, decorationSet.getValue().getDecorations(), 1);
-            }
-        }
-
-        for (Map.Entry<EquipmentType, Equipment> equipmentSet : equipmentSetTable.entrySet()) {
-            if (equipmentSet.getKey() == EquipmentType.BODY) {
-                updateSkillChartByArmorSkill(currentEquipmentSkillChart, equipmentSet.getValue().getArmorSkills(), skillMultiplier);
-            } else {
-                updateSkillChartByArmorSkill(currentEquipmentSkillChart, equipmentSet.getValue().getArmorSkills(), 1);
-            }
-        }
+        updateSkillChartByArmorSkill(currentEquipmentSkillChart, equipment.getArmorSkills(), 1);
+        updateSkillChartByDecoration(currentEquipmentSkillChart, equipment.getDecorations(), 1);
         return currentEquipmentSkillChart;
     }
-
-
 
     public static void updateSkillChartByArmorSkill(Map<String, Integer> currentEquipmentSkillChart, Set<ArmorSkill> armorSkills, int skillMuliplier){
         for (ArmorSkill armorSkill : armorSkills){

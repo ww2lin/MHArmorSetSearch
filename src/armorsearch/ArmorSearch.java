@@ -1,7 +1,6 @@
 package armorsearch;
 
 import armorsearch.filter.ArmorSetFilter;
-import armorsearch.memorization.MemorizationCache;
 import armorsearch.thread.ArmorSearchWorkerThread;
 import interfaces.ArmorSearchWorkerProgress;
 import interfaces.OnSearchResultProgress;
@@ -125,22 +124,6 @@ class ArmorSearch {
         return equipments;
     }
 
-    /**
-     * builds the node backwards, since we want the node with the most item to be the head
-     * @param splittedHead
-     * @param lists
-     * @return
-     */
-    private tempEquipmentNode constructEquipmentNode(List<Equipment> splittedHead, List<List<Equipment>> lists){
-        tempEquipmentNode head = null;
-        // Skip the first item, as that is the splitted head which is passed in
-        for (int i = lists.size() - 1; i > 0; --i){
-           head = new tempEquipmentNode(lists.get(i), head);
-        }
-        head = new tempEquipmentNode(splittedHead, head);
-        return head;
-
-    }
     private class ArmorSearchWorkerProgressImpl implements ArmorSearchWorkerProgress {
 
         @Override
