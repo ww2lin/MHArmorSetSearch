@@ -4,6 +4,7 @@ import java.util.List;
 import models.UniquelyGeneratedArmorSet;
 
 public interface OnSearchResultProgress {
+    void onStart(int max);
     void onProgress(UniquelyGeneratedArmorSet uniquelyGeneratedArmorSet, int current, int max);
     void onComplete(List<UniquelyGeneratedArmorSet> uniquelyGeneratedArmorSets);
 }

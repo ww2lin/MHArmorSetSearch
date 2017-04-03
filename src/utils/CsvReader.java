@@ -21,6 +21,7 @@ public class CsvReader {
     public static List<Equipment> getEquipmentFromCsvFile(String path, EquipmentType equipmentType) {
         CSVReader reader = null;
         try {
+            int id = 0;
             List<Equipment> lst = new ArrayList<>();
             reader = new CSVReader(new FileReader(path));
             String[] nextLine;
@@ -32,6 +33,7 @@ public class CsvReader {
             while ((nextLine = reader.readNext()) != null) {
                 // nextLine[] is an array of values from the line
                 Equipment equipment = CsvToModel.csvEquipmentRowToModel(nextLine, equipmentType);
+                equipment.setId(id++);
                 lst.add(equipment);
             }
             return lst;
@@ -95,6 +97,7 @@ public class CsvReader {
     public static Map<String, List<Decoration>> getDecorationFromCsvFile(String path) {
         CSVReader reader = null;
         try {
+            int id = 0;
             Map<String, List<Decoration>> decorationMap = new HashMap<>();
             reader = new CSVReader(new FileReader(path));
             String[] nextLine;
@@ -106,6 +109,7 @@ public class CsvReader {
             while ((nextLine = reader.readNext()) != null) {
                 // nextLine[] is an array of values from the line
                 Decoration decoration = CsvToModel.csvDecorationRowToModel(nextLine);
+                decoration.setId(id++);
                 decoration.getArmorSkills().forEach(armorSkill -> {
                     List<Decoration> decorationList = decorationMap.get(armorSkill.kind);
                     if (decorationList == null) {

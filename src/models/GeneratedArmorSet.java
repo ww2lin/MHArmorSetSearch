@@ -1,5 +1,6 @@
 package models;
 
+import armorsearch.thread.EquipmentNode;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -22,6 +23,10 @@ public class GeneratedArmorSet {
 
         totalBaseDefense = calculateTotalBaseDefense();
         totalMaxDefense = calculateTotalMaxDefense();
+    }
+
+    public GeneratedArmorSet(EquipmentNode equipmentNode) {
+        this(equipmentNode.getActivatedSkills(), equipmentNode.getEquipments());
     }
 
     public static class MostSkillComparator implements Comparator<GeneratedArmorSet> {

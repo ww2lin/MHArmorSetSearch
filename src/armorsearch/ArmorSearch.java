@@ -1,20 +1,25 @@
 package armorsearch;
 
 import armorsearch.filter.ArmorSetFilter;
+import armorsearch.memorization.MemorizationCache;
+import armorsearch.thread.ArmorSearchWorkerThread;
 import interfaces.ArmorSearchWorkerProgress;
 import interfaces.OnSearchResultProgress;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import models.Decoration;
 import models.Equipment;
+import models.EquipmentType;
 import models.UniquelyGeneratedArmorSet;
 import models.skillactivation.ActivatedSkill;
 import models.skillactivation.SkillActivationChart;
+import utils.WorkerThread;
 
 class ArmorSearch {
 
-    private static final int THREAD_COUNT = Runtime.getRuntime().availableProcessors();
+    private static final int THREAD_COUNT = 1;// Runtime.getRuntime().availableProcessors() / 2;
 
     private ArmorSkillCacheTable armorSkillCacheTable;
     private Map<String, List<Decoration>>decorationLookupTable;
@@ -28,7 +33,7 @@ class ArmorSearch {
     private int armorSetsTried = 0;
     private int maxArmorSetsToSearch = 0;
 
-    List<List<UniquelyGeneratedArmorSet>> matchedSet;
+    List<List<UniquelyGeneratedArmorSet>> matchedSet = new ArrayList<>();
 
     private boolean shouldStop = false;
 
@@ -51,57 +56,47 @@ class ArmorSearch {
         shouldStop = false;
 
         List<List<Equipment>> equipmentsWithDesiredSkills = new ArrayList<>(5);
-        List<Equipment> lst1 = getEquipmentsWithDesiredSkills(armorSkillCacheTable.getHeadEquipmentCache(), desiredSkills);
-        List<Equipment> lst2 = getEquipmentsWithDesiredSkills(armorSkillCacheTable.getBodyEquipmentCache(), desiredSkills);
-        List<Equipment> lst3 = getEquipmentsWithDesiredSkills(armorSkillCacheTable.getArmEquipmentCache(), desiredSkills);
-        List<Equipment> lst4 = getEquipmentsWithDesiredSkills(armorSkillCacheTable.getWstEquipmentCache(), desiredSkills);
-        List<Equipment> lst5 = getEquipmentsWithDesiredSkills(armorSkillCacheTable.getLegEquipmentCache(), desiredSkills);
+        List<Equipment> headList = getEquipmentsWithDesiredSkills(armorSkillCacheTable.getHeadEquipmentCache(), desiredSkills);
+        List<Equipment> bodyList = getEquipmentsWithDesiredSkills(armorSkillCacheTable.getBodyEquipmentCache(), desiredSkills);
+        List<Equipment> armList = getEquipmentsWithDesiredSkills(armorSkillCacheTable.getArmEquipmentCache(), desiredSkills);
+        List<Equipment> wstList = getEquipmentsWithDesiredSkills(armorSkillCacheTable.getWstEquipmentCache(), desiredSkills);
+        List<Equipment> legList = getEquipmentsWithDesiredSkills(armorSkillCacheTable.getLegEquipmentCache(), desiredSkills);
 
-        equipmentsWithDesiredSkills.add(lst1);
-        equipmentsWithDesiredSkills.add(lst2);
-        equipmentsWithDesiredSkills.add(lst3);
-        equipmentsWithDesiredSkills.add(lst4);
-        equipmentsWithDesiredSkills.add(lst5);
+        //equipmentsWithDesiredSkills.add(lst1);
+        //equipmentsWithDesiredSkills.add(lst2);
+        //equipmentsWithDesiredSkills.add(lst3);
+        //equipmentsWithDesiredSkills.add(lst4);
+        //equipmentsWithDesiredSkills.add(lst5);
+        //
+        //equipmentsWithDesiredSkills.sort((o1, o2) -> o2.size() - o1.size());
+        //
+        //// Split of the work base on the thread count available.
+        //List<Equipment> mostWorkLoadList = equipmentsWithDesiredSkills.get(0);
+        //int maxSize = mostWorkLoadList.size();
 
-        equipmentsWithDesiredSkills.sort((o1, o2) -> o2.size() - o1.size());
-
-        // Split of the work base on the thread count available.
-        List<Equipment> mostWorkLoadList = equipmentsWithDesiredSkills.get(0);
-        int maxSize = mostWorkLoadList.size();
-
-        List<List<Equipment>> splittedHead = new ArrayList<>(THREAD_COUNT);
-        for (int i = 0; i < THREAD_COUNT; ++i){
-            splittedHead.add(new ArrayList<>());
-        }
-
-
-        // distribute the workload of the head node.
-        for (int i = 0; i < maxSize; ++i){
-            int bucket = i % THREAD_COUNT;
-            splittedHead.get(bucket).add(mostWorkLoadList.get(i));
-        }
+        Map<EquipmentType, List<Equipment>> equipments = new HashMap<>();
+        equipments.put(EquipmentType.HEAD, headList);
+        equipments.put(EquipmentType.BODY, bodyList);
+        equipments.put(EquipmentType.ARM, armList);
+        equipments.put(EquipmentType.WST, wstList);
+        equipments.put(EquipmentType.LEG, legList);
 
 
-        // This is where the result will be stored.
-        matchedSet = new ArrayList<>(THREAD_COUNT);
-        EquipmentNode[] equipmentNodes = new EquipmentNode[THREAD_COUNT];
         for (int i = 0; i < THREAD_COUNT; ++i){
             matchedSet.add(new ArrayList<>());
-            equipmentNodes[i] = constructEquipmentNode(splittedHead.get(i), equipmentsWithDesiredSkills);
         }
 
-        maxArmorSetsToSearch = equipmentsWithDesiredSkills.stream().mapToInt(List::size).reduce(1, Math::multiplyExact);
-
         ArmorSearchWorkerThread[] workers = new ArmorSearchWorkerThread[THREAD_COUNT];
+
+        workers[0] = new ArmorSearchWorkerThread(0,
+                                                 equipments,
+                                                 new ArmorSearchWorkerProgressImpl(),
+                                                 decorationLookupTable,
+                                                 armorSetFilters,
+                                                 decorationSearchLimit,
+                                                 skillActivationChart,
+                                                 desiredSkills);
         for (int i = 0; i < THREAD_COUNT; ++i){
-            workers[i] = new ArmorSearchWorkerThread(i,
-                                                     equipmentNodes[i],
-                                                     new ArmorSearchWorkerProgressImpl(),
-                                                     decorationLookupTable,
-                                                     armorSetFilters,
-                                                     decorationSearchLimit,
-                                                     skillActivationChart,
-                                                     desiredSkills);
             workers[i].start();
         }
 
@@ -125,6 +120,7 @@ class ArmorSearch {
             if (equipmentsWithDesiredSkills != null && !equipmentsWithDesiredSkills.isEmpty()) {
                 equipments.addAll(equipmentsWithDesiredSkills);
             }
+            // TODO add in torso up/3 slots pieces
         }
         return equipments;
     }
@@ -135,13 +131,13 @@ class ArmorSearch {
      * @param lists
      * @return
      */
-    private EquipmentNode constructEquipmentNode(List<Equipment> splittedHead, List<List<Equipment>> lists){
-        EquipmentNode head = null;
+    private tempEquipmentNode constructEquipmentNode(List<Equipment> splittedHead, List<List<Equipment>> lists){
+        tempEquipmentNode head = null;
         // Skip the first item, as that is the splitted head which is passed in
         for (int i = lists.size() - 1; i > 0; --i){
-           head = new EquipmentNode(lists.get(i), head);
+           head = new tempEquipmentNode(lists.get(i), head);
         }
-        head = new EquipmentNode(splittedHead, head);
+        head = new tempEquipmentNode(splittedHead, head);
         return head;
 
     }
@@ -153,16 +149,16 @@ class ArmorSearch {
         }
 
         @Override
-        public void onProgress(int workerId, UniquelyGeneratedArmorSet uniquelyGeneratedArmorSet) {
+        public void onProgress(int workerId, UniquelyGeneratedArmorSet uniquelyGeneratedArmorSet, int armorSetsTried) {
             //matchedSet.set(workerId, uniquelyGeneratedArmorSet);
             if (uniquelyGeneratedArmorSet != null) {
-                ++armorSetsFound;
+                ++ArmorSearch.this.armorSetsFound;
             } else {
-                ++armorSetsTried;
+                ArmorSearch.this.armorSetsTried+=armorSetsTried;
             }
 
             if (onSearchResultProgress != null){
-                //onSearchResultProgress.onProgress(uniquelyGeneratedArmorSet, armorSetsTried, maxArmorSetsToSearch);
+                onSearchResultProgress.onProgress(uniquelyGeneratedArmorSet, ArmorSearch.this.armorSetsTried, maxArmorSetsToSearch);
             }
         }
 

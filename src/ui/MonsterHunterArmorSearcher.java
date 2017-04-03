@@ -216,6 +216,11 @@ public class MonsterHunterArmorSearcher extends JFrame {
 
     private class OnSearchResultProgressImpl implements OnSearchResultProgress {
         @Override
+        public void onStart(int max) {
+            progressBar.setMaximum(max);
+        }
+
+        @Override
         public void onProgress(UniquelyGeneratedArmorSet uniquelyGeneratedArmorSet, int current, int max) {
             //searchResultPanel.update(uniquelyGeneratedArmorSet);
             progressBar.setValue(current);

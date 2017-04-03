@@ -6,6 +6,7 @@ import java.util.Set;
 public class Decoration {
     private static final int NOT_AVAILABLE = 99;
 
+    int id;
     String name;
     int rarity;
     int slotsNeeded;
@@ -127,39 +128,12 @@ public class Decoration {
 
         Decoration that = (Decoration) o;
 
-        if (rarity != that.rarity) {
-            return false;
-        }
-        if (slotsNeeded != that.slotsNeeded) {
-            return false;
-        }
-        if (onlineMonsterAvailableAtQuestLevel != that.onlineMonsterAvailableAtQuestLevel) {
-            return false;
-        }
-        if (villageMonsterAvailableAtQuestLevel != that.villageMonsterAvailableAtQuestLevel) {
-            return false;
-        }
-        if (needBothOnlineAndOffLineQuest != that.needBothOnlineAndOffLineQuest) {
-            return false;
-        }
-        if (!name.equals(that.name)) {
-            return false;
-        }
-        if (!armorSkills.equals(that.armorSkills)) {
-            return false;
-        }
-        return itemParts.equals(that.itemParts);
+        return id == that.id;
     }
 
     @Override public int hashCode() {
         int result = name.hashCode();
-        result = 31 * result + rarity;
-        result = 31 * result + slotsNeeded;
-        result = 31 * result + onlineMonsterAvailableAtQuestLevel;
-        result = 31 * result + villageMonsterAvailableAtQuestLevel;
-        result = 31 * result + (needBothOnlineAndOffLineQuest ? 1 : 0);
-        result = 31 * result + armorSkills.hashCode();
-        result = 31 * result + itemParts.hashCode();
+        result = 31 * result + id;
         return result;
     }
 
@@ -170,5 +144,13 @@ public class Decoration {
             }
         }
         return true;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 }
