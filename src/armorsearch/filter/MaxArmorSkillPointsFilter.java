@@ -1,7 +1,6 @@
 package armorsearch.filter;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +15,11 @@ import models.Equipment;
  * This Filter must be the last filter that is going to be applied, because
  * for example if this filter is applied before Rarity(3)
  * then after this filter is done, some of rare 3 armors might be dropped.
+ *
+ * The torso up will bypass this check.
+ * This will however select multiple Torso Up, but when the we are doing the search
+ * we know what the skills users wants we can filter out the duplicated Torso up armors then.
+ * see {@link ArmorSkillCacheTable::getEquipmentsWithDesiredSkills}
  *
  * So... why am I doing this?
  * Because without a way to cut down the number of armor set possibilities it will take
@@ -79,7 +83,7 @@ public class MaxArmorSkillPointsFilter implements ArmorFilter{
             int maxBySlot = maxPointBySlot.get(slotCount);
             equipments.forEach(equipment -> {
                 int pointCount = findSkillPoint(equipment);
-                if (pointCount >= maxBySlot) {
+                if (pointCount >= maxBySlot || equipment.isTorsoUp()) {
                     maxPointBySlotsEquipments.add(equipment);
                 }
             });
@@ -106,7 +110,8 @@ public class MaxArmorSkillPointsFilter implements ArmorFilter{
             //    continue;
             //}
             if (equipment.getSlots() > templateEquipment.getSlots()||
-                currentMaxSkill >= maxSkillPoints)  {
+                currentMaxSkill >= maxSkillPoints ||
+                equipment.isTorsoUp())  {
                 equipments.add(equipment);
             }
         }
@@ -121,5 +126,4 @@ public class MaxArmorSkillPointsFilter implements ArmorFilter{
         }
         return 0;
     }
-
 }

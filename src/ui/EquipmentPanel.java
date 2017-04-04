@@ -3,7 +3,7 @@ package ui;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import language.StringConstants;
+import constants.StringConstants;
 import models.Equipment;
 
 public class EquipmentPanel extends JPanel{
@@ -31,7 +31,7 @@ public class EquipmentPanel extends JPanel{
             name = name + " " + StringConstants.ANY_TORSO_UP_ARMOR;
         }
 
-        if (equipment.isCanBeSubstitutedForAnyOtherEquipment()) {
+        if (equipment.isCanBeSubstitutedForAnyOtherThreeSlotEquipment()) {
             name = name + " " + StringConstants.ANY_ARMOR;
         }
         nameLabel.setText(name);

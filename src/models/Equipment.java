@@ -1,5 +1,6 @@
 package models;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,10 +25,10 @@ public class Equipment {
     private int baseDefense;
     private int maxDefense;
 
-    private List<Resistance> resistances;
+    private List<Resistance> resistances = Collections.emptyList();
 
-    private Set<ArmorSkill> armorSkills;
-    private Set<ItemPart> itemParts;
+    private Set<ArmorSkill> armorSkills = Collections.emptySet();
+    private Set<ItemPart> itemParts = Collections.emptySet();
 
     // State variable, not from the CSV
     private int slotsUsed;
@@ -35,7 +36,7 @@ public class Equipment {
     private Map<Decoration, Integer> decorations = new HashMap<>();
     private boolean isTorsoUp;
     private EquipmentType equipmentType;
-    private boolean canBeSubstitutedForAnyOtherEquipment;
+    private boolean canBeSubstitutedForAnyOtherThreeSlotEquipment;
 
     private Equipment(){}
 
@@ -58,7 +59,6 @@ public class Equipment {
         this.decorations.putAll(other.decorations);
         this.isTorsoUp = other.isTorsoUp;
         this.equipmentType = other.equipmentType;
-        this.canBeSubstitutedForAnyOtherEquipment = other.canBeSubstitutedForAnyOtherEquipment;
     }
 
     public static Equipment Builder(){
@@ -85,7 +85,7 @@ public class Equipment {
             ", decorations=" + decorations +
             ", isTorsoUp=" + isTorsoUp +
             ", equipmentType=" + equipmentType +
-            ", canBeSubstitutedForAnyOtherEquipment=" + canBeSubstitutedForAnyOtherEquipment +
+            ", canBeSubstitutedForAnyOtherThreeSlotEquipment=" + canBeSubstitutedForAnyOtherThreeSlotEquipment +
             '}';
     }
 
@@ -261,16 +261,18 @@ public class Equipment {
         return id;
     }
 
-    public void setId(int id) {
+    public Equipment setId(int id) {
         this.id = id;
+        return this;
     }
 
-    public boolean isCanBeSubstitutedForAnyOtherEquipment() {
-        return canBeSubstitutedForAnyOtherEquipment;
+    public boolean isCanBeSubstitutedForAnyOtherThreeSlotEquipment() {
+        return canBeSubstitutedForAnyOtherThreeSlotEquipment;
     }
 
-    public void setCanBeSubstitutedForAnyOtherEquipment(boolean canBeSubstitutedForAnyOtherEquipment) {
-        this.canBeSubstitutedForAnyOtherEquipment = canBeSubstitutedForAnyOtherEquipment;
+    public Equipment setCanBeSubstitutedForAnyOtherThreeSlotEquipment(boolean canBeSubstitutedForAnyOtherThreeSlotEquipment) {
+        this.canBeSubstitutedForAnyOtherThreeSlotEquipment = canBeSubstitutedForAnyOtherThreeSlotEquipment;
+        return this;
     }
 
     public void removeDecoration(Decoration decoration){
@@ -295,7 +297,27 @@ public class Equipment {
         decorations.put(decoration, frequency);
     }
 
-    @Override public boolean equals(Object o) {
+    public void addAllDecorations(List<Decoration> decorations){
+        for (Decoration decoration : decorations){
+            addDecoration(decoration);
+        }
+    }
+
+    public void addAllDecorations(Map<Decoration, Integer> decorationsMap){
+        for (Map.Entry<Decoration, Integer> entry : decorationsMap.entrySet()){
+            Decoration decoration = entry.getKey();
+            int points = entry.getValue();
+            Integer frequency = decorations.get(decoration);
+            if (frequency == null){
+                frequency = 0;
+            }
+            frequency+=points;
+            decorations.put(decoration, frequency);
+        }
+    }
+
+    @Override
+    public boolean equals(Object o) {
         if (this == o) {
             return true;
         }

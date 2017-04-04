@@ -2,6 +2,9 @@ package armorsearch;
 
 import armorsearch.filter.ArmorFilter;
 import armorsearch.filter.MaxArmorSkillPointsFilter;
+import constants.Constants;
+import constants.StringConstants;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -11,7 +14,9 @@ import java.util.stream.Collectors;
 import models.ArmorSkill;
 import models.ClassType;
 import models.Equipment;
+import models.EquipmentType;
 import models.Gender;
+import models.skillactivation.ActivatedSkill;
 import models.skillactivation.SkillActivationChart;
 
 public class ArmorSkillCacheTable {
@@ -22,6 +27,8 @@ public class ArmorSkillCacheTable {
     private Map<String, List<Equipment>> wstEquipmentCache = new HashMap<>();
     private Map<String, List<Equipment>> legEquipmentCache = new HashMap<>();
 
+    private Map<EquipmentType, Map<String, List<Equipment>>> allEquipments = new HashMap<>();
+
     private List<ArmorFilter> armorFilters;
     private ClassType classType;
     private Gender gender;
@@ -31,7 +38,7 @@ public class ArmorSkillCacheTable {
      * This construction should be moved into the csv while generating the List of equipments
      */
     //TODO fix torso up armors, and 3 slotted armors
-    public ArmorSkillCacheTable(SkillActivationChart skillActivationChart, AllEquipments allEquipments, List<ArmorFilter> armorFilters, ClassType classType, Gender gender) {
+    public ArmorSkillCacheTable(SkillActivationChart skillActivationChart, AllEquipments allEquipment, List<ArmorFilter> armorFilters, ClassType classType, Gender gender) {
         this.armorFilters = armorFilters;
         this.classType = classType;
         this.gender = gender;
@@ -39,12 +46,19 @@ public class ArmorSkillCacheTable {
         Set<String> skillKinds = skillActivationChart.getSkillKind();
 
         for (String skillkind : skillKinds) {
-            updateCacheBySkillKind(allEquipments.getHeadEquipments(), headEquipmentCache, skillkind);
-            updateCacheBySkillKind(allEquipments.getBodyEquipments(), bodyEquipmentCache, skillkind);
-            updateCacheBySkillKind(allEquipments.getArmEquipments(), armEquipmentCache, skillkind);
-            updateCacheBySkillKind(allEquipments.getWstEquipments(), wstEquipmentCache, skillkind);
-            updateCacheBySkillKind(allEquipments.getLegEquipments(), legEquipmentCache, skillkind);
+            updateCacheBySkillKind(allEquipment.getHeadEquipments(), headEquipmentCache, skillkind);
+            updateCacheBySkillKind(allEquipment.getBodyEquipments(), bodyEquipmentCache, skillkind);
+            updateCacheBySkillKind(allEquipment.getArmEquipments(), armEquipmentCache, skillkind);
+            updateCacheBySkillKind(allEquipment.getWstEquipments(), wstEquipmentCache, skillkind);
+            updateCacheBySkillKind(allEquipment.getLegEquipments(), legEquipmentCache, skillkind);
         }
+
+        this.allEquipments.put(EquipmentType.HEAD, headEquipmentCache);
+        this.allEquipments.put(EquipmentType.BODY, bodyEquipmentCache);
+        this.allEquipments.put(EquipmentType.ARM, armEquipmentCache);
+        this.allEquipments.put(EquipmentType.WST, wstEquipmentCache);
+        this.allEquipments.put(EquipmentType.LEG, legEquipmentCache);
+
     }
 
     private void updateCacheBySkillKind(final List<Equipment> equipmentData, Map<String, List<Equipment>> currentCache, String skillKind){
@@ -80,12 +94,12 @@ public class ArmorSkillCacheTable {
                         if (armorSkill.isKind(skillkind) && armorSkill.points > 0) {
                             return true;
                         }
-                        // keep TorsoUp Pieces, or armor with no skills but 3 slots
+                        // keep TorsoUp Pieces and 3 slotted no armor skill equipment bypassed all checks
                         if (equipment.isTorsoUp()) {
                             return true;
                         }
 
-                        if (equipment.getArmorSkills().size() == 0 && equipment.getSlots() == 3 ){
+                        if (equipment.getArmorSkills().size() == 0 && equipment.getSlots() == Constants.MAX_SLOTS){
                             return true;
                         }
 
@@ -103,23 +117,55 @@ public class ArmorSkillCacheTable {
         return equipments;
     }
 
-    public Map<String, List<Equipment>> getHeadEquipmentCache() {
-        return headEquipmentCache;
+
+    private List<Equipment> getEquipmentsWithDesiredSkills(EquipmentType equipmentType, List<ActivatedSkill> desiredSkills) {
+        Map<String, List<Equipment>> cache = allEquipments.get(equipmentType);
+
+        boolean alreadyContainTorsoUp = false;
+        // check to see if we need to sneak in charka armors.
+        boolean containsThreeSlottedEquipment = false;
+        List<Equipment> equipments = new ArrayList<>();
+        for (ActivatedSkill activatedSkill : desiredSkills) {
+            List<Equipment> equipmentsWithDesiredSkills = cache.get(activatedSkill.getKind());
+            if (equipmentsWithDesiredSkills != null) {
+                for (Equipment equipmentToAdd : equipmentsWithDesiredSkills) {
+                    if (equipmentToAdd.getSlots() == Constants.MAX_SLOTS) {
+                        // Found atleast one armor that has 3 slots.
+                        containsThreeSlottedEquipment = true;
+                    }
+
+                    // filter additional torso up equipments
+                    if (!equipmentToAdd.isTorsoUp()) {
+                        equipments.add(equipmentToAdd);
+                    } else if (!alreadyContainTorsoUp) {
+                        // mark that we have added a torso up equipment.
+                        alreadyContainTorsoUp = true;
+                        equipments.add(equipmentToAdd);
+                    }
+                }
+            }
+        }
+
+        if (!containsThreeSlottedEquipment) {
+            // Sneak in a 3 slotted no skill armor (e.g charkra armors)
+            //equipments.add(Equipment.Builder()
+            //                   .setId(((int)(Math.random() * 10000))+10000)
+            //                   .setName(StringConstants.ANY_THREE_SLOT_ARMOR)
+            //                   .setEquipmentType(equipmentType)
+            //                   .setSlots(Constants.MAX_SLOTS)
+            //                   .setRarity(0)
+            //                   .setCanBeSubstitutedForAnyOtherThreeSlotEquipment(true));
+        }
+        return equipments;
     }
 
-    public Map<String, List<Equipment>> getBodyEquipmentCache() {
-        return bodyEquipmentCache;
-    }
 
-    public Map<String, List<Equipment>> getArmEquipmentCache() {
-        return armEquipmentCache;
-    }
 
-    public Map<String, List<Equipment>> getWstEquipmentCache() {
-        return wstEquipmentCache;
-    }
-
-    public Map<String, List<Equipment>> getLegEquipmentCache() {
-        return legEquipmentCache;
+    public Map<EquipmentType, List<Equipment>> getEquipmentCache(List<ActivatedSkill> desiredSkills) {
+        Map<EquipmentType, List<Equipment>> results = new HashMap<>();
+        for (EquipmentType equipmentType : EquipmentType.values()) {
+            results.put(equipmentType, getEquipmentsWithDesiredSkills(equipmentType, desiredSkills));
+        }
+        return results;
     }
 }

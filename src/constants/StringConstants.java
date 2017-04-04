@@ -1,4 +1,4 @@
-package language;
+package constants;
 
 public class StringConstants {
 
@@ -32,6 +32,7 @@ public class StringConstants {
     public static final String RES_Thunder = "Thunder";
     public static final String RES_ICE = "Ice";
     public static final String RES_DRAGON = "Dragon";
+    public static final String ANY_THREE_SLOT_ARMOR = "Any 3 slots Armor";
 
 
     // HardCoded values
