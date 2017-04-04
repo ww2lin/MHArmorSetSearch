@@ -13,7 +13,7 @@ import models.Decoration;
 import models.Equipment;
 import models.EquipmentType;
 import models.Gender;
-import models.UniquelyGeneratedArmorSet;
+import models.GeneratedArmorSet;
 import models.skillactivation.ActivatedSkill;
 import models.skillactivation.SkillActivationChart;
 import models.skillactivation.SkillActivationRequirement;
@@ -82,18 +82,22 @@ public class ArmorSearchWrapper {
         return skillList.stream().filter(sar -> sar.getPointsNeededToActivate() > 0).collect(Collectors.toList());
     }
 
-    public List<UniquelyGeneratedArmorSet> search(List<ArmorSetFilter> armorSetFilters, List<SkillActivationRequirement> desiredSkills, final int uniqueSetSearchLimit, final int decorationSearchLimit, OnSearchResultProgress onSearchResultProgress) {
-        armorSearch = new ArmorSearch(armorSkillCacheTable,
-                                      decorationLookupTable,
-                                      armorSetFilters,
-                                      uniqueSetSearchLimit,
-                                      decorationSearchLimit,
-                                      skillActivationChart,
-                                                   onSearchResultProgress);
+    public List<GeneratedArmorSet> search(List<ArmorSetFilter> armorSetFilters, List<SkillActivationRequirement> desiredSkills, final int uniqueSetSearchLimit, final int decorationSearchLimit, OnSearchResultProgress onSearchResultProgress) {
         List<ActivatedSkill> activatedSkills = new ArrayList<>(desiredSkills.size());
+
         desiredSkills.forEach(skillActivationRequirement -> {
             activatedSkills.add(new ActivatedSkill(skillActivationRequirement));
         });
+
+        DecorationSearch decorationSearch = new DecorationSearch(activatedSkills, decorationLookupTable);
+
+        armorSearch = new ArmorSearch(armorSkillCacheTable,
+                                      armorSetFilters,
+                                      uniqueSetSearchLimit,
+                                      decorationSearch,
+                                      onSearchResultProgress);
+
+
         return armorSearch.findArmorSetWith(activatedSkills);
     }
 

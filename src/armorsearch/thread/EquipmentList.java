@@ -5,10 +5,14 @@ import java.util.List;
 
 public class EquipmentList {
 
-    List<EquipmentNode> equipmentNodes = new ArrayList<>();
+    private List<EquipmentNode> equipmentNodes = new ArrayList<>();
 
     public EquipmentList(List<EquipmentNode> equipmentNodes) {
         this.equipmentNodes = equipmentNodes;
+    }
+
+    public EquipmentList(EquipmentNode equipmentNode) {
+        equipmentNodes.add(equipmentNode);
     }
 
     public EquipmentList() {
@@ -20,5 +24,9 @@ public class EquipmentList {
 
     public int size(){
         return equipmentNodes.size();
+    }
+
+    public List<EquipmentNode> getEquipmentNodes() {
+        return equipmentNodes;
     }
 }

@@ -1,10 +1,10 @@
 package interfaces;
 
 import java.util.List;
-import models.UniquelyGeneratedArmorSet;
+import models.GeneratedArmorSet;
 
 public interface OnSearchResultProgress {
     void onStart(int max);
-    void onProgress(UniquelyGeneratedArmorSet uniquelyGeneratedArmorSet, int current, int max);
-    void onComplete(List<UniquelyGeneratedArmorSet> uniquelyGeneratedArmorSets);
+    void onProgress(GeneratedArmorSet generatedArmorSet, int current, int max);
+    void onComplete(List<GeneratedArmorSet> generatedArmorSets);
 }

@@ -1,7 +1,7 @@
 package models;
 
 import interfaces.Nullable;
-import language.StringConstants;
+import constants.StringConstants;
 
 public class ArmorSkill implements Nullable {
 

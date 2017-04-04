@@ -17,14 +17,14 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.WindowConstants;
-import language.StringConstants;
+import constants.StringConstants;
 import models.ClassType;
 import models.Gender;
-import models.UniquelyGeneratedArmorSet;
+import models.GeneratedArmorSet;
 import utils.WorkerThread;
 
 public class MonsterHunterArmorSearcher extends JFrame {
-
+    private static final int MAX_PROGRESS_BAR = 100;
     private int uniqueSetSearchLimit = 200;
     private int decorationSearchLimit = 1;
     private Gender gender = Gender.MALE;
@@ -35,7 +35,7 @@ public class MonsterHunterArmorSearcher extends JFrame {
     /**
      * Ui components
      */
-    private JProgressBar progressBar = new JProgressBar(0, uniqueSetSearchLimit);
+    private JProgressBar progressBar = new JProgressBar(0, MAX_PROGRESS_BAR);
     private JButton addDesireSkillButton = new JButton(StringConstants.ADD_SKILL);
     private JButton removeDesireSkillButton = new JButton(StringConstants.REMOVE_SKILL);
     private JButton clearAllDesireSkills = new JButton(StringConstants.CLEAR_ALL_SKILL);
@@ -221,17 +221,17 @@ public class MonsterHunterArmorSearcher extends JFrame {
         }
 
         @Override
-        public void onProgress(UniquelyGeneratedArmorSet uniquelyGeneratedArmorSet, int current, int max) {
+        public void onProgress(GeneratedArmorSet generatedArmorSet, int current, int max) {
             //searchResultPanel.update(uniquelyGeneratedArmorSet);
-            progressBar.setValue(current);
-            System.out.println(current+"  "+max);
+            //progressBar.setValue(current);
+            //System.out.println(current+"  "+max);
         }
 
         @Override
-        public void onComplete(List<UniquelyGeneratedArmorSet> uniquelyGeneratedArmorSets) {
+        public void onComplete(List<GeneratedArmorSet> generatedArmorSets) {
             setIdleState();
-            searchResultPanel.update(uniquelyGeneratedArmorSets);
-            System.out.println(uniquelyGeneratedArmorSets.size());
+            searchResultPanel.update(generatedArmorSets);
+            System.out.println(generatedArmorSets.size());
         }
     }
 }

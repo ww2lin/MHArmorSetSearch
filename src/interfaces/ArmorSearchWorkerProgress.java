@@ -1,11 +1,11 @@
 package interfaces;
 
 import java.util.List;
-import models.UniquelyGeneratedArmorSet;
+import models.GeneratedArmorSet;
 
 public interface ArmorSearchWorkerProgress {
     boolean shouldContinueSearching();
-    void onProgress(int workerId, UniquelyGeneratedArmorSet uniquelyGeneratedArmorSet, int armorSetsTried);
-    void onCompleted(int workerId, List<UniquelyGeneratedArmorSet> uniquelyGeneratedArmorSets);
+    void onProgress(int workerId, GeneratedArmorSet generatedArmorSet, int armorSetsTried);
+    void onCompleted(int workerId, List<GeneratedArmorSet> generatedArmorSets);
 
 }

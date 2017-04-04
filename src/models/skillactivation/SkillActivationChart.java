@@ -13,8 +13,8 @@ import models.EquipmentType;
 
 public class SkillActivationChart {
 
-    private ClassType classType;
-    private Map<String, List<SkillActivationRequirement>> skillActivationLookupTable;
+    private static ClassType classType;
+    private static Map<String, List<SkillActivationRequirement>> skillActivationLookupTable;
 
     /**
      * Mapping from the skill kind -> actual skill
@@ -72,6 +72,27 @@ public class SkillActivationChart {
         return currentEquipmentSkillChart;
     }
 
+    /**
+     * refactor this later to remove duplicated code.
+     * @param decoration
+     * @return
+     */
+    public static Map<String, Integer> getSkillChart(Decoration decoration){
+        Map<String, Integer> currentEquipmentSkillChart = new HashMap<>();
+        for (ArmorSkill armorSkill : decoration.getArmorSkills()){
+            Integer sum = currentEquipmentSkillChart.get(armorSkill.kind);
+            if (sum == null){
+                // if the current skill kind don't exist, assign it to 0
+                sum = 0;
+            }
+
+            // Times the armor skill by the number of the same jewels
+            sum += armorSkill.points;
+            currentEquipmentSkillChart.put(armorSkill.kind, sum);
+        }
+        return currentEquipmentSkillChart;
+    }
+
     public static void updateSkillChartByArmorSkill(Map<String, Integer> currentEquipmentSkillChart, Set<ArmorSkill> armorSkills, int skillMuliplier){
         for (ArmorSkill armorSkill : armorSkills){
             // accumulate the skill point by skill kind
@@ -113,7 +134,7 @@ public class SkillActivationChart {
      * @param currentEquipmentSkillChart
      * @return
      */
-    public List<ActivatedSkill> getActivatedSkills(Map<String, Integer> currentEquipmentSkillChart){
+    public static List<ActivatedSkill> getActivatedSkills(Map<String, Integer> currentEquipmentSkillChart){
         List<ActivatedSkill> activatedSkills = new LinkedList<>();
         for (Map.Entry<String, Integer> skill : currentEquipmentSkillChart.entrySet()) {
             String kind = skill.getKey();

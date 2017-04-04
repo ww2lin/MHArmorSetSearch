@@ -14,25 +14,24 @@ import javax.swing.ListCellRenderer;
 import javax.swing.border.EmptyBorder;
 import models.Equipment;
 import models.GeneratedArmorSet;
-import models.UniquelyGeneratedArmorSet;
 
 public class SearchResultPanel extends JPanel{
 
     private static final int LIST_SIZE = 400;
-    private JList<UniquelyGeneratedArmorSet> uniquelyGeneratedArmorSetJList;
-    private List<UniquelyGeneratedArmorSet> modelList = new ArrayList<>();
+    private JList<GeneratedArmorSet> generatedArmorSetJList;
+    private List<GeneratedArmorSet> modelList = new ArrayList<>();
 
     public SearchResultPanel() {
         super();
-        uniquelyGeneratedArmorSetJList = new JList<>(new Vector<>(modelList));
-        uniquelyGeneratedArmorSetJList.setCellRenderer(new ArmorResultRenderer());
-        JScrollPane scrollPane = new JScrollPane(uniquelyGeneratedArmorSetJList);
+        generatedArmorSetJList = new JList<>(new Vector<>(modelList));
+        generatedArmorSetJList.setCellRenderer(new ArmorResultRenderer());
+        JScrollPane scrollPane = new JScrollPane(generatedArmorSetJList);
         scrollPane.setPreferredSize(new Dimension(LIST_SIZE, LIST_SIZE));
         add(scrollPane);
 
     }
 
-    private static class ArmorResultRenderer extends JPanel implements ListCellRenderer<UniquelyGeneratedArmorSet> {
+    private static class ArmorResultRenderer extends JPanel implements ListCellRenderer<GeneratedArmorSet> {
         JSeparator separator;
         JPanel container = new JPanel();
         List<EquipmentPanel> equipmentPanels = new ArrayList<>(5);
@@ -46,10 +45,8 @@ public class SearchResultPanel extends JPanel{
         }
 
         @Override
-        public Component getListCellRendererComponent(JList<? extends UniquelyGeneratedArmorSet> list, UniquelyGeneratedArmorSet entry, int index, boolean isSelected, boolean cellHasFocus) {
+        public Component getListCellRendererComponent(JList<? extends GeneratedArmorSet> list, GeneratedArmorSet generatedArmorSet, int index, boolean isSelected, boolean cellHasFocus) {
 
-            List<GeneratedArmorSet> generatedArmorSets = entry.getGeneratedArmorSets();
-            GeneratedArmorSet generatedArmorSet = generatedArmorSets.get(0);
 
             List<Equipment> equipments = generatedArmorSet.getEquipments();
 
@@ -79,19 +76,19 @@ public class SearchResultPanel extends JPanel{
         }
     }
 
-    public void update(List<UniquelyGeneratedArmorSet> uniquelyGeneratedArmorSets){
+    public void update(List<GeneratedArmorSet> uniquelyGeneratedArmorSets){
         modelList = uniquelyGeneratedArmorSets;
-        uniquelyGeneratedArmorSetJList.setListData(new Vector<>(modelList));
+        generatedArmorSetJList.setListData(new Vector<>(modelList));
     }
 
-    public void update(UniquelyGeneratedArmorSet uniquelyGeneratedArmorSets){
+    public void update(GeneratedArmorSet uniquelyGeneratedArmorSets){
         modelList.add(uniquelyGeneratedArmorSets);
-        uniquelyGeneratedArmorSetJList.setListData(new Vector<>(modelList));
+        generatedArmorSetJList.setListData(new Vector<>(modelList));
     }
 
     public void clear(){
         modelList.clear();
-        uniquelyGeneratedArmorSetJList.setListData(new Vector<>(modelList));
+        generatedArmorSetJList.setListData(new Vector<>(modelList));
     }
 
 }

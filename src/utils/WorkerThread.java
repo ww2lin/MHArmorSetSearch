@@ -4,8 +4,7 @@ import armorsearch.ArmorSearchWrapper;
 import armorsearch.filter.ArmorSetFilter;
 import interfaces.OnSearchResultProgress;
 import java.util.List;
-import models.UniquelyGeneratedArmorSet;
-import models.skillactivation.ActivatedSkill;
+import models.GeneratedArmorSet;
 import models.skillactivation.SkillActivationRequirement;
 
 /**
@@ -30,8 +29,8 @@ public class WorkerThread extends Thread {
 
     @Override
     public void run() {
-        List<UniquelyGeneratedArmorSet> uniquelyGeneratedArmorSets = armorSearchWrapper.search(armorSetFilters, desiredSkills, uniqueSetSearchLimit, decorationSearchLimit, onSearchResultProgress);
-        onSearchResultProgress.onComplete(uniquelyGeneratedArmorSets);
+        List<GeneratedArmorSet> generatedArmorSets = armorSearchWrapper.search(armorSetFilters, desiredSkills, uniqueSetSearchLimit, decorationSearchLimit, onSearchResultProgress);
+        onSearchResultProgress.onComplete(generatedArmorSets);
 
     }
 }
