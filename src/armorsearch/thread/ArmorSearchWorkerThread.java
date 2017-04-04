@@ -6,12 +6,10 @@ import interfaces.ArmorSearchWorkerProgress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import models.Decoration;
 import models.Equipment;
 import models.EquipmentType;
 import models.GeneratedArmorSet;
 import models.skillactivation.ActivatedSkill;
-import models.skillactivation.SkillActivationChart;
 import models.skillactivation.SkillUtil;
 
 public class ArmorSearchWorkerThread extends Thread {
@@ -63,9 +61,10 @@ public class ArmorSearchWorkerThread extends Thread {
         // Base case.
         EquipmentType currentType = equipmentTypes[0];
         List<Equipment> equipments = equipmentsToSearch.get(currentType);
+        EquipmentList currentEquipmentList = new EquipmentList();
         for (Equipment equipment : equipments) {
-            List<EquipmentNode> equipmentNodes = decorationSearch.findArmorWithDecorationRecursively(equipment);
-            table[0] = new EquipmentList(equipmentNodes);
+            EquipmentNode equipmentNodes = decorationSearch.findArmorWithDecoration(equipment);
+            currentEquipmentList.add(equipmentNodes);
 
             // We did the earlier internal filtering, so there will only be one
             // Torso up armor piece per EquipmentType
@@ -74,12 +73,14 @@ public class ArmorSearchWorkerThread extends Thread {
             }
         }
 
+        table[0] = currentEquipmentList;
+
         // iterative case
         for (int i = 1; i < size; ++i){
             currentType = equipmentTypes[i];
             equipments = equipmentsToSearch.get(currentType);
 
-            EquipmentList currentEquipmentList = new EquipmentList();
+            currentEquipmentList = new EquipmentList();
             // construct all the table for the i element first.
             for (Equipment equipment : equipments) {
                 // TODO create a filter for desired skill, if a skill is maxed, then filter out the
@@ -93,6 +94,8 @@ public class ArmorSearchWorkerThread extends Thread {
             EquipmentList previousEquipmentList = table[i-1];
             EquipmentList sumEquipmentList = new EquipmentList();
 
+
+            // TODO Use multiple threads here to divide up the work.
             for (EquipmentNode preEquipmentNode : previousEquipmentList.getEquipmentNodes()) {
                 for (EquipmentNode curEquipmentNode : currentEquipmentList.getEquipmentNodes()) {
                     EquipmentNode sumNode = EquipmentNode.add(preEquipmentNode, curEquipmentNode);
