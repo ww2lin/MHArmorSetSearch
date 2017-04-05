@@ -127,6 +127,9 @@ public class MonsterHunterArmorSearcher extends JFrame {
         });
 
         stop.addActionListener(e -> {
+            if (workerThread != null) {
+                workerThread.interrupt();
+            }
             armorSearchWrapper.stopSearching();
             setIdleState();
         });
