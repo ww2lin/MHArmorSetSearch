@@ -46,10 +46,7 @@ public class SearchResultPanel extends JPanel{
 
         @Override
         public Component getListCellRendererComponent(JList<? extends GeneratedArmorSet> list, GeneratedArmorSet generatedArmorSet, int index, boolean isSelected, boolean cellHasFocus) {
-
-
             List<Equipment> equipments = generatedArmorSet.getEquipments();
-
             for (int i = 0; i < equipments.size(); ++i) {
                 Equipment equipment = equipments.get(i);
                 if (i >= equipmentPanels.size()) {

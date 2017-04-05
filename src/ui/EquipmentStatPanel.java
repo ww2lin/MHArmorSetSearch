@@ -76,11 +76,7 @@ public class EquipmentStatPanel extends JPanel{
                 Decoration decoration = decorationSet.getKey();
                 Integer count = decorationSet.getValue();
                 decorationsStringBuilder.append(decoration.getName());
-                decorationsStringBuilder.append(" ");
-                decorationsStringBuilder.append("x");
-                decorationsStringBuilder.append(" ");
-                decorationsStringBuilder.append(count);
-                decorationsStringBuilder.append(",");
+                decorationsStringBuilder.append(" ").append("x").append(" ").append(count).append(",");
             }
             decorationsStringBuilder.append(System.lineSeparator());
         });
@@ -122,8 +118,7 @@ public class EquipmentStatPanel extends JPanel{
         });
         resistanceTextArea.setText(resistanceStringBuilder.toString());
 
-        StringBuilder miscStringBuilder = new StringBuilder();
-        miscStringBuilder.append(StringConstants.DEFENSE);
+        StringBuilder miscStringBuilder = new StringBuilder(StringConstants.DEFENSE);
         miscStringBuilder.append(": ");
         miscStringBuilder.append(generatedArmorSet.getTotalBaseDefense());
         miscStringBuilder.append(" - ");

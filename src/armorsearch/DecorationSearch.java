@@ -102,29 +102,6 @@ public class DecorationSearch {
         return new EquipmentNode(equipment, equipmentskillChart);
     }
 
-    public List<EquipmentNode> findArmorWithDecorationRecursively(Equipment equipment) {
-        Equipment newEquipment = new Equipment(equipment);
-        List<EquipmentNode> equipmentNodes = new ArrayList<>();
-        findEquipmentWithDecoration(newEquipment, equipmentNodes);
-        return equipmentNodes;
-    }
-
-    private void findEquipmentWithDecoration(Equipment equipment, List<EquipmentNode> equipmentNodes) {
-        if (equipment.hasFreeSlots()) {
-            for (Decoration decoration : decorationsToTry) {
-                if (equipment.useSlots(decoration)) {
-                    findEquipmentWithDecoration(equipment, equipmentNodes);
-                    equipment.freeSlots(decoration);
-                }
-            }
-        }
-        Equipment newEquipment = new Equipment(equipment);
-        Map<String, Integer> skillTable = SkillActivationChart.getActivatedSkillChart(newEquipment);
-        List<Equipment> tempList = new ArrayList<>();
-        tempList.add(newEquipment);
-        equipmentNodes.add(new EquipmentNode(tempList, skillTable));
-    }
-
     // wrapper for the below object.
     private static class SkillChartDataList {
         private List<SkillChartWithDecoration> skillChartWithDecorations = new ArrayList<>();
