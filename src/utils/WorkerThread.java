@@ -18,6 +18,8 @@ public class WorkerThread extends Thread {
     private final int decorationSearchLimit;
     private List<ArmorSetFilter> armorSetFilters;
 
+    private boolean stop = false;
+
     public WorkerThread(OnSearchResultProgress onSearchResultProgress, ArmorSearchWrapper armorSearchWrapper, List<SkillActivationRequirement> desiredSkills, int uniqueSetSearchLimit, int decorationSearchLimit, List<ArmorSetFilter> armorSetFilters) {
         this.onSearchResultProgress = onSearchResultProgress;
         this.armorSearchWrapper = armorSearchWrapper;

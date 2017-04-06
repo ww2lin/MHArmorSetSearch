@@ -22,6 +22,10 @@ public class EquipmentList {
         equipmentNodes.add(equipmentNode);
     }
 
+    public void add(EquipmentList equipmentList) {
+        equipmentNodes.addAll(equipmentList.equipmentNodes);
+    }
+
     public int size(){
         return equipmentNodes.size();
     }

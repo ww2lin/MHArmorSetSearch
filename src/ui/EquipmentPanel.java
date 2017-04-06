@@ -24,16 +24,16 @@ public class EquipmentPanel extends JPanel{
     public void setData(Equipment equipment){
         String name = equipment.getName();
 
-        String type = equipment.getEquipmentType().name();
-        name = type +": "+name;
+        StringBuilder stringBuilder = new StringBuilder(equipment.getEquipmentType().name());
+        stringBuilder.append(": ").append(name);
 
         if (equipment.isTorsoUp()) {
-            name = name + " " + StringConstants.ANY_TORSO_UP_ARMOR;
+            stringBuilder.append(" ").append(StringConstants.ANY_TORSO_UP_ARMOR);
         }
 
         if (equipment.isCanBeSubstitutedForAnyOtherThreeSlotEquipment()) {
-            name = name + " " + StringConstants.ANY_ARMOR;
+            stringBuilder.append(" ").append(StringConstants.ANY_ARMOR);
         }
-        nameLabel.setText(name);
+        nameLabel.setText(stringBuilder.toString());
     }
 }

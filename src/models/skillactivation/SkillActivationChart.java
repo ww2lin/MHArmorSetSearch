@@ -56,6 +56,16 @@ public class SkillActivationChart {
         return newChart;
     }
 
+    public static Map<String, Integer> multiply(Map<String, Integer> chart, int skillMultiplier) {
+        Map<String, Integer> currentEquipmentSkillChart = new HashMap<>();
+        for (Map.Entry<String, Integer> entry : chart.entrySet()) {
+            String skill = entry.getKey();
+            int points = entry.getValue();
+            currentEquipmentSkillChart.put(skill, points * skillMultiplier);
+        }
+        return currentEquipmentSkillChart;
+    }
+
     /**
      * Given a list of equipments and a @{models.ClassType}, return what skills has been activated.
      * This can return negative skill.
@@ -93,7 +103,7 @@ public class SkillActivationChart {
         return currentEquipmentSkillChart;
     }
 
-    public static void updateSkillChartByArmorSkill(Map<String, Integer> currentEquipmentSkillChart, Set<ArmorSkill> armorSkills, int skillMuliplier){
+    public static void updateSkillChartByArmorSkill(Map<String, Integer> currentEquipmentSkillChart, Set<ArmorSkill> armorSkills, int skillMultiplier){
         for (ArmorSkill armorSkill : armorSkills){
             // accumulate the skill point by skill kind
             Integer sum = currentEquipmentSkillChart.get(armorSkill.kind);
@@ -103,7 +113,7 @@ public class SkillActivationChart {
             }
 
             sum += armorSkill.points;
-            sum *= skillMuliplier;
+            sum *= skillMultiplier;
             currentEquipmentSkillChart.put(armorSkill.kind, sum);
         }
     }

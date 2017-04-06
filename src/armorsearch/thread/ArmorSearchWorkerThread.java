@@ -1,12 +1,8 @@
 package armorsearch.thread;
 
-import armorsearch.DecorationSearch;
-import armorsearch.filter.ArmorSetFilter;
-import interfaces.ArmorSearchWorkerProgress;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import models.Equipment;
+import java.util.concurrent.atomic.AtomicInteger;
 import models.EquipmentType;
 import models.GeneratedArmorSet;
 import models.skillactivation.ActivatedSkill;
@@ -15,125 +11,85 @@ import models.skillactivation.SkillUtil;
 public class ArmorSearchWorkerThread extends Thread {
 
     private int id;
-    private Map<EquipmentType, List<Equipment>> equipmentsToSearch;
-    private ArmorSearchWorkerProgress armorSearchWorkerProgress;
-    private List<ArmorSetFilter> armorSetFilters;
+    private EquipmentType equipmentType;
+    private EquipmentList previousEquipmentList;
+    private EquipmentList currentEquipmentList;
+    private final EquipmentList updatedEquipmentSkillList;
 
-    private DecorationSearch decorationSearch;
     private List<ActivatedSkill> desiredSkills;
+    private final List<GeneratedArmorSet> generatedArmorSets;
+    private boolean stop = false;
+    private AtomicInteger setsFound;
+    private final int uniqueSetSearchLimit;
 
     public ArmorSearchWorkerThread(int id,
-                                   Map<EquipmentType, List<Equipment>> equipmentsToSearch,
-                                   ArmorSearchWorkerProgress armorSearchWorkerProgress,
-                                   List<ArmorSetFilter> armorSetFilters,
-                                   DecorationSearch decorationSearch,
-                                   List<ActivatedSkill> desiredSkills) {
+                                   AtomicInteger setsFound,
+                                   int uniqueSetSearchLimit,
+                                   EquipmentType equipmentType,
+                                   EquipmentList previousEquipmentList,
+                                   EquipmentList currentEquipmentList,
+                                   List<ActivatedSkill> desiredSkills,
+                                   EquipmentList updatedEquipmentSkillList,
+                                   List<GeneratedArmorSet> generatedArmorSets) {
         this.id = id;
-        this.equipmentsToSearch = equipmentsToSearch;
-        this.armorSearchWorkerProgress = armorSearchWorkerProgress;
-        this.armorSetFilters = armorSetFilters;
-        this.decorationSearch = decorationSearch;
+        this.setsFound = setsFound;
+        this.uniqueSetSearchLimit = uniqueSetSearchLimit;
+        this.equipmentType = equipmentType;
+        this.previousEquipmentList = previousEquipmentList;
+        this.currentEquipmentList = currentEquipmentList;
         this.desiredSkills = desiredSkills;
+        this.updatedEquipmentSkillList = updatedEquipmentSkillList;
+        this.generatedArmorSets = generatedArmorSets;
     }
 
     @Override
     public void run() {
-        List<GeneratedArmorSet> results = searchArmor();
-        if (armorSearchWorkerProgress != null){
-            armorSearchWorkerProgress.onCompleted(id, results);
-        }
-    }
-
-    /**
-     * DP implementation of finding if a possible armor set exists.
-     * @return
-     */
-    private List<GeneratedArmorSet> searchArmor() {
-
-        List<GeneratedArmorSet> results = new ArrayList<>();
-        int setsTried = 0;
-        int torsoUpCount = 0;
-        // Do the body last since we need to know the previous skill point need to adjust for torso ups.
-        EquipmentType[] equipmentTypes = {EquipmentType.HEAD, EquipmentType.ARM, EquipmentType.WST, EquipmentType.LEG, EquipmentType.BODY};
-        int size = equipmentTypes.length;
-        EquipmentList[] table = new EquipmentList[size];
-
-        // Base case.
-        EquipmentType currentType = equipmentTypes[0];
-        List<Equipment> equipments = equipmentsToSearch.get(currentType);
-        EquipmentList currentEquipmentList = new EquipmentList();
-        for (Equipment equipment : equipments) {
-            EquipmentNode equipmentNodes = decorationSearch.findArmorWithDecoration(equipment);
-            currentEquipmentList.add(equipmentNodes);
-
-            // We did the earlier internal filtering, so there will only be one
-            // Torso up armor piece per EquipmentType
-            if (equipment.isTorsoUp()) {
-                ++torsoUpCount;
-            }
-        }
-
-        table[0] = currentEquipmentList;
-
-        // iterative case
-        for (int i = 1; i < size; ++i){
-            currentType = equipmentTypes[i];
-            equipments = equipmentsToSearch.get(currentType);
-
-            currentEquipmentList = new EquipmentList();
-            // construct all the table for the i element first.
-            for (Equipment equipment : equipments) {
-                // TODO create a filter for desired skill, if a skill is maxed, then filter out the
-                // sets with it that contains the jewel.
-                EquipmentNode equipmentNodes = decorationSearch.findArmorWithDecoration(equipment);
-                currentEquipmentList.add(equipmentNodes);
-            }
-
-            // update the all the values for the current i from i-1
-            // add it to sumEquipmentList - this is to avoid value getting updated after one iteration
-            EquipmentList previousEquipmentList = table[i-1];
-            EquipmentList sumEquipmentList = new EquipmentList();
-
-
-            // TODO Use multiple threads here to divide up the work.
+        EquipmentList equipmentList = new EquipmentList();
+        List<GeneratedArmorSet> armorsFound = new ArrayList<>();
+        // TODO Use multiple threads here to divide up the work.
+        for (EquipmentNode curEquipmentNode : currentEquipmentList.getEquipmentNodes()) {
             for (EquipmentNode preEquipmentNode : previousEquipmentList.getEquipmentNodes()) {
-                for (EquipmentNode curEquipmentNode : currentEquipmentList.getEquipmentNodes()) {
-                    EquipmentNode sumNode = EquipmentNode.add(preEquipmentNode, curEquipmentNode);
-                    sumEquipmentList.add(sumNode);
+                if (stop) {
+                    return;
+                }
 
-                    if (!armorSearchWorkerProgress.shouldContinueSearching()) {
-                        return results;
-                    }
+                EquipmentNode sumNode = EquipmentNode.add(preEquipmentNode, curEquipmentNode, equipmentType);
+                equipmentList.add(sumNode);
 
-                    // Check if this table satisfy the desire skills.
-                    List<ActivatedSkill> activatedSkills = sumNode.getActivatedSkills();
-                    if (SkillUtil.containsDesiredSkills(desiredSkills, activatedSkills)) {
-                        GeneratedArmorSet generatedArmorSet = new GeneratedArmorSet(sumNode);
-                        results.add(generatedArmorSet);
+                // Check if this table satisfy the desire skills.
+                List<ActivatedSkill> activatedSkills = sumNode.getActivatedSkills();
+                if (SkillUtil.containsDesiredSkills(desiredSkills, activatedSkills)) {
+                    GeneratedArmorSet generatedArmorSet = new GeneratedArmorSet(sumNode);
+                    armorsFound.add(generatedArmorSet);
+                }
 
-                        if (armorSearchWorkerProgress != null){
-                            armorSearchWorkerProgress.onProgress(id, generatedArmorSet, setsTried);
-                        }
+                if (stop) {
+                    synchronized (generatedArmorSets) {
+                        generatedArmorSets.addAll(armorsFound);
                     }
-                    if (armorSearchWorkerProgress != null){
-                        armorSearchWorkerProgress.onProgress(id, null, setsTried);
-                    }
-                    ++setsTried;
+                    return;
+                }
+
+                if (setsFound.incrementAndGet() > uniqueSetSearchLimit) {
+                    returnData(equipmentList, armorsFound);
+                    return;
                 }
             }
-
-            // place the sumNode back in i-th index
-            table[i] = sumEquipmentList;
-            System.out.println(i+"  "+table[i].size());
-
         }
-
-        return results;
+        returnData(equipmentList, armorsFound);
     }
 
-    private void updateProgress(GeneratedArmorSet generatedArmorSet, int current) {
-        if (armorSearchWorkerProgress != null){
-            armorSearchWorkerProgress.onProgress(id, generatedArmorSet, current);
+    private void returnData(EquipmentList equipmentList, List<GeneratedArmorSet> armorsFound){
+        synchronized (updatedEquipmentSkillList) {
+            updatedEquipmentSkillList.add(equipmentList);
         }
+
+        synchronized (generatedArmorSets) {
+            generatedArmorSets.addAll(armorsFound);
+        }
+    }
+
+    public void exit(){
+        this.stop = true;
     }
 }
