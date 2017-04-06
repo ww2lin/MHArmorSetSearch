@@ -73,13 +73,15 @@ public class SearchResultPanel extends JPanel{
         }
     }
 
-    public void update(List<GeneratedArmorSet> uniquelyGeneratedArmorSets){
-        modelList = uniquelyGeneratedArmorSets;
-        generatedArmorSetJList.setListData(new Vector<>(modelList));
+    public void update(List<GeneratedArmorSet> generatedArmorSets){
+        modelList = generatedArmorSets;
     }
 
-    public void update(GeneratedArmorSet uniquelyGeneratedArmorSets){
-        modelList.add(uniquelyGeneratedArmorSets);
+    public synchronized void update(GeneratedArmorSet generatedArmorSet){
+        modelList.add(generatedArmorSet);
+    }
+
+    public synchronized void updateUi(){
         generatedArmorSetJList.setListData(new Vector<>(modelList));
     }
 

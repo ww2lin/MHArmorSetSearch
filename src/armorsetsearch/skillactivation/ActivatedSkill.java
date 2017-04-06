@@ -1,4 +1,4 @@
-package models.skillactivation;
+package armorsetsearch.skillactivation;
 
 public class ActivatedSkill {
     String name;

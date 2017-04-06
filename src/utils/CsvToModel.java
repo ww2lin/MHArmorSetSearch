@@ -15,7 +15,7 @@ import models.Gender;
 import models.ItemPart;
 import models.Resistance;
 import models.ResistanceType;
-import models.skillactivation.SkillActivationRequirement;
+import armorsetsearch.skillactivation.SkillActivationRequirement;
 
 class CsvToModel {
 

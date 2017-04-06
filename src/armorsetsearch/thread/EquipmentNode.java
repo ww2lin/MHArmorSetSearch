@@ -1,12 +1,12 @@
-package armorsearch.thread;
+package armorsetsearch.thread;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import models.Equipment;
 import models.EquipmentType;
-import models.skillactivation.ActivatedSkill;
-import models.skillactivation.SkillActivationChart;
+import armorsetsearch.skillactivation.ActivatedSkill;
+import armorsetsearch.skillactivation.SkillActivationChart;
 
 public class EquipmentNode {
     private List<Equipment> equipments = new ArrayList<>(5);

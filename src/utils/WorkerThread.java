@@ -1,11 +1,11 @@
 package utils;
 
-import armorsearch.ArmorSearchWrapper;
-import armorsearch.filter.ArmorSetFilter;
+import armorsetsearch.ArmorSearchWrapper;
+import armorsetsearch.filter.ArmorSetFilter;
 import interfaces.OnSearchResultProgress;
 import java.util.List;
 import models.GeneratedArmorSet;
-import models.skillactivation.SkillActivationRequirement;
+import armorsetsearch.skillactivation.SkillActivationRequirement;
 
 /**
  * Do the search in a thread, to avoid blocking the UI thread

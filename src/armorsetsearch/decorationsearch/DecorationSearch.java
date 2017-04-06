@@ -1,6 +1,6 @@
-package armorsearch;
+package armorsetsearch.decorationsearch;
 
-import armorsearch.thread.EquipmentNode;
+import armorsetsearch.thread.EquipmentNode;
 import constants.Constants;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.Map;
 import models.Decoration;
 import models.Equipment;
-import models.skillactivation.ActivatedSkill;
-import models.skillactivation.SkillActivationChart;
+import armorsetsearch.skillactivation.ActivatedSkill;
+import armorsetsearch.skillactivation.SkillActivationChart;
 
 public class DecorationSearch {
 

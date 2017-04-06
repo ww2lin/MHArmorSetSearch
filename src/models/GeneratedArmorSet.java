@@ -1,10 +1,10 @@
 package models;
 
-import armorsearch.thread.EquipmentNode;
+import armorsetsearch.thread.EquipmentNode;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import models.skillactivation.ActivatedSkill;
+import armorsetsearch.skillactivation.ActivatedSkill;
 
 
 // contains a list of equipment sets, with decorations

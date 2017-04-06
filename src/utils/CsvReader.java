@@ -12,7 +12,7 @@ import java.util.Map;
 import models.Decoration;
 import models.Equipment;
 import models.EquipmentType;
-import models.skillactivation.SkillActivationRequirement;
+import armorsetsearch.skillactivation.SkillActivationRequirement;
 
 /**
  * This is a mess, have to clean this up at some point.

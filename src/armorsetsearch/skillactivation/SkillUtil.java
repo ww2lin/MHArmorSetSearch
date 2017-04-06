@@ -1,4 +1,4 @@
-package models.skillactivation;
+package armorsetsearch.skillactivation;
 
 import java.util.List;
 

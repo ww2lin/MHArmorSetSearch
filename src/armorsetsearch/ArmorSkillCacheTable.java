@@ -1,7 +1,7 @@
-package armorsearch;
+package armorsetsearch;
 
-import armorsearch.filter.ArmorFilter;
-import armorsearch.filter.MaxArmorSkillPointsFilter;
+import armorsetsearch.filter.ArmorFilter;
+import armorsetsearch.filter.MaxArmorSkillPointsFilter;
 import constants.Constants;
 import constants.StringConstants;
 import java.util.ArrayList;
@@ -16,8 +16,8 @@ import models.ClassType;
 import models.Equipment;
 import models.EquipmentType;
 import models.Gender;
-import models.skillactivation.ActivatedSkill;
-import models.skillactivation.SkillActivationChart;
+import armorsetsearch.skillactivation.ActivatedSkill;
+import armorsetsearch.skillactivation.SkillActivationChart;
 
 public class ArmorSkillCacheTable {
     // Build a table from kind -> All equipment has that kind of skill
@@ -164,6 +164,10 @@ public class ArmorSkillCacheTable {
     public Map<EquipmentType, List<Equipment>> getEquipmentCache(List<ActivatedSkill> desiredSkills) {
         Map<EquipmentType, List<Equipment>> results = new HashMap<>();
         for (EquipmentType equipmentType : EquipmentType.values()) {
+            if (equipmentType == EquipmentType.WEP){
+                // no equipment for wep, skip.
+                continue;
+            }
             results.put(equipmentType, getEquipmentsWithDesiredSkills(equipmentType, desiredSkills));
         }
         return results;

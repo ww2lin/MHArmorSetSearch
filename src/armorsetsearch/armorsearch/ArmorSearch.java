@@ -1,9 +1,11 @@
-package armorsearch;
+package armorsetsearch.armorsearch;
 
-import armorsearch.filter.ArmorSetFilter;
-import armorsearch.thread.ArmorSearchWorkerThread;
-import armorsearch.thread.EquipmentList;
-import armorsearch.thread.EquipmentNode;
+import armorsetsearch.ArmorSkillCacheTable;
+import armorsetsearch.decorationsearch.DecorationSearch;
+import armorsetsearch.filter.ArmorSetFilter;
+import armorsetsearch.thread.ArmorSearchWorkerThread;
+import armorsetsearch.thread.EquipmentList;
+import armorsetsearch.thread.EquipmentNode;
 import interfaces.OnSearchResultProgress;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,12 +14,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import models.Equipment;
 import models.EquipmentType;
 import models.GeneratedArmorSet;
-import models.skillactivation.ActivatedSkill;
+import armorsetsearch.skillactivation.ActivatedSkill;
 
-class ArmorSearch {
+import static constants.Constants.THREAD_COUNT;
 
-    // offset hyper threading.
-    private static final int THREAD_COUNT = Math.max(1, Runtime.getRuntime().availableProcessors() / 2);
+public class ArmorSearch {
 
     private ArmorSkillCacheTable armorSkillCacheTable;
     private List<ArmorSetFilter> armorSetFilters;
@@ -28,8 +29,10 @@ class ArmorSearch {
     // use to stop the threads.
     private boolean stop = false;
     private ArmorSearchWorkerThread[] workerThreads;
+    private int weapSlots;
 
-    public ArmorSearch(ArmorSkillCacheTable armorSkillCacheTable, List<ArmorSetFilter> armorSetFilters, int uniqueSetSearchLimit, DecorationSearch decorationSearch, OnSearchResultProgress onSearchResultProgress) {
+    public ArmorSearch(int weapSlots, ArmorSkillCacheTable armorSkillCacheTable, List<ArmorSetFilter> armorSetFilters, int uniqueSetSearchLimit, DecorationSearch decorationSearch, OnSearchResultProgress onSearchResultProgress) {
+        this.weapSlots = weapSlots;
         this.armorSkillCacheTable = armorSkillCacheTable;
         this.armorSetFilters = armorSetFilters;
         this.uniqueSetSearchLimit = uniqueSetSearchLimit;
@@ -55,6 +58,11 @@ class ArmorSearch {
     private List<GeneratedArmorSet> searchArmor(List<ActivatedSkill> desiredSkills, Map<EquipmentType, List<Equipment>> equipmentsToSearch) {
         System.out.println("Number Of threads going to be spawned: "+THREAD_COUNT);
         long timeStamp = System.currentTimeMillis();
+
+
+        // TODO get rid of -1 when wep is implemetned
+        int progressChuck = 100 / (EquipmentType.values().length -1);
+        int progressBar = progressChuck;
 
         List<GeneratedArmorSet> results = new ArrayList<>();
         // Do the body last since we need to know the previous skill point need to adjust for torso ups.
@@ -93,6 +101,7 @@ class ArmorSearch {
             // add it to sumEquipmentList - this is to avoid value getting updated after one iteration
             EquipmentList previousEquipmentList = table[i-1];
 
+            final int currentMaxPossibleSet = previousEquipmentList.size() * currentEquipmentList.size();
 
             // divide up the list into multiple parts and use multiple threads to do the calculation
             EquipmentList[] dataSet = new EquipmentList[THREAD_COUNT];
@@ -111,6 +120,9 @@ class ArmorSearch {
             for (int j = 0; j < THREAD_COUNT; ++j){
                 workerThreads[j] = new ArmorSearchWorkerThread(j,
                                                                setsFound,
+                                                               progressBar,
+                                                               currentMaxPossibleSet,
+                                                               onSearchResultProgress,
                                                                uniqueSetSearchLimit,
                                                                equipmentTypes[i],
                                                                previousEquipmentList,
@@ -133,10 +145,11 @@ class ArmorSearch {
                 }
             }
 
-            if (stop || setsFound.get() > uniqueSetSearchLimit) {
-                return results;
-            }
+            //if (stop || setsFound.get() > uniqueSetSearchLimit) {
+                //return results;
+            //}
 
+            progressBar+=progressChuck;
 
             // place the sumNode back in i-th index
             table[i] = updatedEquipmentSkillList;
@@ -144,6 +157,11 @@ class ArmorSearch {
         }
         timeStamp = System.currentTimeMillis() - timeStamp;
         System.out.println("armor search time elapsed(ms): "+timeStamp);
+
+        if (onSearchResultProgress != null) {
+            onSearchResultProgress.onProgress(null, progressBar);
+        }
+
         return results;
     }
 

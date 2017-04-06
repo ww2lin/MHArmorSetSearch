@@ -1,7 +1,9 @@
-package armorsearch;
+package armorsetsearch;
 
-import armorsearch.filter.ArmorFilter;
-import armorsearch.filter.ArmorSetFilter;
+import armorsetsearch.armorsearch.ArmorSearch;
+import armorsetsearch.decorationsearch.DecorationSearch;
+import armorsetsearch.filter.ArmorFilter;
+import armorsetsearch.filter.ArmorSetFilter;
 import interfaces.OnSearchResultProgress;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -14,9 +16,9 @@ import models.Equipment;
 import models.EquipmentType;
 import models.Gender;
 import models.GeneratedArmorSet;
-import models.skillactivation.ActivatedSkill;
-import models.skillactivation.SkillActivationChart;
-import models.skillactivation.SkillActivationRequirement;
+import armorsetsearch.skillactivation.ActivatedSkill;
+import armorsetsearch.skillactivation.SkillActivationChart;
+import armorsetsearch.skillactivation.SkillActivationRequirement;
 import utils.CsvReader;
 
 public class ArmorSearchWrapper {
@@ -41,6 +43,8 @@ public class ArmorSearchWrapper {
     private ClassType classType;
     private List<ArmorFilter> armorFilters;
     private ArmorSearch armorSearch;
+
+    private int weapSlot = 0;
 
     public ArmorSearchWrapper(ClassType classType, Gender gender, List<ArmorFilter> armorFilters) throws IOException {
         // Parse CSV
@@ -91,7 +95,8 @@ public class ArmorSearchWrapper {
 
         DecorationSearch decorationSearch = new DecorationSearch(activatedSkills, decorationLookupTable);
 
-        armorSearch = new ArmorSearch(armorSkillCacheTable,
+        armorSearch = new ArmorSearch(weapSlot,
+                                      armorSkillCacheTable,
                                       armorSetFilters,
                                       uniqueSetSearchLimit,
                                       decorationSearch,
@@ -111,6 +116,10 @@ public class ArmorSearchWrapper {
 
     public void setArmorFilters(List<ArmorFilter> armorFilters) {
         this.armorFilters = armorFilters;
+    }
+
+    public void setWeapSlot(int weapSlot) {
+        this.weapSlot = weapSlot;
     }
 
     public void stopSearching(){

@@ -1,4 +1,4 @@
-package armorsearch.thread;
+package armorsetsearch.thread;
 
 import java.util.ArrayList;
 import java.util.List;

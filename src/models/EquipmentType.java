@@ -1,5 +1,5 @@
 package models;
 
 public enum EquipmentType {
-    HEAD, BODY, ARM, WST, LEG,
+    WEP, HEAD, BODY, ARM, WST, LEG,
 }

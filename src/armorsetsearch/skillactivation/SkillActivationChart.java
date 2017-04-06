@@ -1,4 +1,4 @@
-package models.skillactivation;
+package armorsetsearch.skillactivation;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -9,7 +9,6 @@ import models.ArmorSkill;
 import models.ClassType;
 import models.Decoration;
 import models.Equipment;
-import models.EquipmentType;
 
 public class SkillActivationChart {
 
@@ -22,7 +21,7 @@ public class SkillActivationChart {
      */
     public SkillActivationChart(Map<String, List<SkillActivationRequirement>> skillChart, ClassType classType) {
         skillActivationLookupTable = skillChart;
-        this.classType = classType;
+        SkillActivationChart.classType = classType;
     }
 
     public Set<String> getSkillKind() {
@@ -66,15 +65,6 @@ public class SkillActivationChart {
         return currentEquipmentSkillChart;
     }
 
-    /**
-     * Given a list of equipments and a @{models.ClassType}, return what skills has been activated.
-     * This can return negative skill.
-     *
-     * @param decorationsForCurrentSet since the program is run in multiple threads,
-     * editing the decorations in the equipment list will result in a crash
-     * due to race condition, so instead a fresh copy of it, is made and passed in.
-     * @return
-     */
     public static Map<String, Integer> getActivatedSkillChart(Equipment equipment) {
         Map<String, Integer> currentEquipmentSkillChart = new HashMap<>();
         updateSkillChartByArmorSkill(currentEquipmentSkillChart, equipment.getArmorSkills(), 1);
@@ -172,9 +162,5 @@ public class SkillActivationChart {
             }
         }
         return activatedSkills;
-    }
-
-    public void setClassType(ClassType classType) {
-        this.classType = classType;
     }
 }

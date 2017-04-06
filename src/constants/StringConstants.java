@@ -4,6 +4,7 @@ public class StringConstants {
 
     // ui
     public static final String TITLE = "Monster Hunter - Armor Searcher";
+    public static final String WEP_SLOT = "Weapon Slot";
     public static final String ADD_SKILL = "Add Skill";
     public static final String REMOVE_SKILL = "Remove Skill";
     public static final String SEARCH_SKILL = "Search";
