@@ -57,6 +57,12 @@ public class ArmorSearchWorkerThread extends Thread {
         int setsTried = 0;
         EquipmentList equipmentList = new EquipmentList();
         List<GeneratedArmorSet> armorsFound = new ArrayList<>();
+
+        if (currentEquipmentList == null) {
+            // number of sets is smaller than the number of threads.
+            return;
+        }
+
         for (EquipmentNode curEquipmentNode : currentEquipmentList.getEquipmentNodes()) {
             for (EquipmentNode preEquipmentNode : previousEquipmentList.getEquipmentNodes()) {
                 if (stop) {

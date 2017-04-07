@@ -24,7 +24,7 @@ public class ArmorSkillPanel extends JPanel{
         skillActivationRequirementJList = new JList<>(new Vector<>(modelList));
         skillActivationRequirementJList.setCellRenderer(new SkillListRender());
         JScrollPane scrollPane = new JScrollPane(skillActivationRequirementJList);
-        scrollPane.setPreferredSize(new Dimension(LIST_SIZE, LIST_SIZE));
+        scrollPane.setPreferredSize(new Dimension(LIST_SIZE, LIST_SIZE * 2));
         add(scrollPane);
 
     }

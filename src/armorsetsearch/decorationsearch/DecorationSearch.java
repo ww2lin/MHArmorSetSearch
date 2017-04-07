@@ -93,10 +93,6 @@ public class DecorationSearch {
             Map<String, Integer> skillChartWithEquipment = SkillActivationChart.add(equipmentskillChart, skillChartWithDecoration.skillChart);
             Equipment copied = new Equipment(equipment);
             copied.addAllDecorations(skillChartWithDecoration.decorations);
-
-            // Since we always use the max slots possible, we will have 0 slots left
-            copied.setSlots(0);
-
             return new EquipmentNode(copied, skillChartWithEquipment);
         }
         return new EquipmentNode(equipment, equipmentskillChart);

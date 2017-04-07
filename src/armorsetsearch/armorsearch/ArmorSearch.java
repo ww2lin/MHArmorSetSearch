@@ -6,8 +6,10 @@ import armorsetsearch.filter.ArmorSetFilter;
 import armorsetsearch.thread.ArmorSearchWorkerThread;
 import armorsetsearch.thread.EquipmentList;
 import armorsetsearch.thread.EquipmentNode;
+import constants.Constants;
 import interfaces.OnSearchResultProgress;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -16,6 +18,7 @@ import models.EquipmentType;
 import models.GeneratedArmorSet;
 import armorsetsearch.skillactivation.ActivatedSkill;
 
+import static constants.Constants.GENERATED_EQUIPMENT_ID;
 import static constants.Constants.THREAD_COUNT;
 
 public class ArmorSearch {
@@ -47,7 +50,6 @@ public class ArmorSearch {
      */
     public List<GeneratedArmorSet> findArmorSetWith(List<ActivatedSkill> desiredSkills) {
         Map<EquipmentType, List<Equipment>> equipments = armorSkillCacheTable.getEquipmentCache(desiredSkills);
-
         return searchArmor(desiredSkills, equipments);
     }
 
@@ -59,16 +61,28 @@ public class ArmorSearch {
         System.out.println("Number Of threads going to be spawned: "+THREAD_COUNT);
         long timeStamp = System.currentTimeMillis();
 
-        EquipmentType[] equipmentTypes = {EquipmentType.HEAD, EquipmentType.ARM, EquipmentType.WST, EquipmentType.LEG, EquipmentType.BODY};
+        // Do the body last since we need to know the previous skill point need to adjust for torso ups.
+        EquipmentType[] equipmentTypes;
 
-        int progressChuck = 100 / (equipmentTypes.length);
+        // Check if we have slot for wep.
+        if (weapSlots == 0) {
+            equipmentTypes = new EquipmentType[]{EquipmentType.HEAD, EquipmentType.ARM, EquipmentType.WST, EquipmentType.LEG, EquipmentType.BODY};
+        } else {
+            equipmentTypes = new EquipmentType[]{EquipmentType.HEAD, EquipmentType.ARM, EquipmentType.WST, EquipmentType.LEG, EquipmentType.BODY, EquipmentType.WEP};
+            // Smuggle in a weap with slots.
+            Equipment wep = Equipment.Builder()
+                .setId(GENERATED_EQUIPMENT_ID)
+                .setName("")
+                .setEquipmentType(EquipmentType.WEP)
+                .setSlots(weapSlots);
+            equipmentsToSearch.put(EquipmentType.WEP, Collections.singletonList(wep));
+        }
+
+        // Offset one for searching for charms.
+        int progressChuck = Constants.MAX_PROGRESS_BAR / (equipmentTypes.length + 1);
         int progressBar = progressChuck;
 
         List<GeneratedArmorSet> results = new ArrayList<>();
-        // Do the body last since we need to know the previous skill point need to adjust for torso ups.
-
-
-
         int size = equipmentTypes.length;
         EquipmentList[] table = new EquipmentList[size];
 
@@ -144,9 +158,9 @@ public class ArmorSearch {
                 }
             }
 
-            //if (stop || setsFound.get() > uniqueSetSearchLimit) {
-                //return results;
-            //}
+            if (stop || setsFound.get() > uniqueSetSearchLimit) {
+                return results;
+            }
 
             progressBar+=progressChuck;
 

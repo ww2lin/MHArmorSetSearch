@@ -1,25 +1,22 @@
 package ui;
 
-import java.util.Map;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import constants.StringConstants;
-import models.Decoration;
 import models.GeneratedArmorSet;
 
 public class EquipmentStatPanel extends JPanel{
 
     private JTextArea armorSkillTextArea = new JTextArea();
-    private JTextArea decorationTextArea = new JTextArea();
     private JTextArea rarityTextArea = new JTextArea();
     private JTextArea resistanceTextArea = new JTextArea();
     private JTextArea miscTextArea = new JTextArea();
 
-    private JTextArea[] allTextArea = {armorSkillTextArea, decorationTextArea, rarityTextArea, resistanceTextArea, miscTextArea};
+    private JTextArea[] allTextArea = {armorSkillTextArea, rarityTextArea, resistanceTextArea, miscTextArea};
 
-    public EquipmentStatPanel(GeneratedArmorSet generatedArmorSet) {
+    public EquipmentStatPanel() {
 
         JPanel container = new JPanel();
         container.setLayout(new BoxLayout(container, BoxLayout.X_AXIS));
@@ -27,10 +24,6 @@ public class EquipmentStatPanel extends JPanel{
         JPanel armorSkillSection = new JPanel();
         armorSkillSection.setBorder(BorderFactory.createTitledBorder(StringConstants.ARMOR_SKILL));
         armorSkillSection.add(armorSkillTextArea);
-
-        JPanel decorationSection = new JPanel();
-        decorationSection.setBorder(BorderFactory.createTitledBorder(StringConstants.DECORATIONS));
-        decorationSection.add(decorationTextArea);
 
         JPanel raritySection = new JPanel();
         raritySection.setBorder(BorderFactory.createTitledBorder(StringConstants.RARITY));
@@ -49,13 +42,11 @@ public class EquipmentStatPanel extends JPanel{
         }
 
         container.add(armorSkillSection);
-        container.add(decorationSection);
         container.add(raritySection);
         container.add(resistanceSection);
         container.add(miscSection);
 
         add(container);
-        setData(generatedArmorSet);
     }
 
     public void setData(GeneratedArmorSet generatedArmorSet) {
@@ -67,20 +58,6 @@ public class EquipmentStatPanel extends JPanel{
             armorSkills.append(System.lineSeparator());
         });
         armorSkillTextArea.setText(armorSkills.toString());
-
-        StringBuilder decorationsStringBuilder = new StringBuilder();
-        generatedArmorSet.getEquipments().forEach(equipment -> {
-            decorationsStringBuilder.append(equipment.getEquipmentType().name());
-            decorationsStringBuilder.append(" ");
-            for (Map.Entry<Decoration, Integer>  decorationSet : equipment.getDecorations().entrySet()){
-                Decoration decoration = decorationSet.getKey();
-                Integer count = decorationSet.getValue();
-                decorationsStringBuilder.append(decoration.getName());
-                decorationsStringBuilder.append(" ").append("x").append(" ").append(count).append(",");
-            }
-            decorationsStringBuilder.append(System.lineSeparator());
-        });
-        decorationTextArea.setText(decorationsStringBuilder.toString());
 
         StringBuilder rarityStringBuilder = new StringBuilder();
         generatedArmorSet.getEquipments().forEach(equipment -> {

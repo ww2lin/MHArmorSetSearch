@@ -14,6 +14,8 @@ public class StringConstants {
     public static final String ALL_SKILL_BY_CLASS_GENDER = "Skills for this class and gender";
     public static final String SKILL_TO_SEARCH = "Skills to search";
 
+
+    public static final String ANY_WEAPON_WITH_SLOT = "Any weapon with slot(s): ";
     public static final String ANY_TORSO_UP_ARMOR = "( or any torso up equipment )";
     public static final String ANY_ARMOR = "( any armor )";
 
