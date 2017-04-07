@@ -17,6 +17,10 @@ public class StringConstants {
     public static final String ANY_TORSO_UP_ARMOR = "( or any torso up equipment )";
     public static final String ANY_ARMOR = "( any armor )";
 
+    public static final String NUMBER_OF_SETS_FOUND = "Number of Sets Found: ";
+    public static final String TOO_MANY_SETS = "Too many sets found, displaying the first: ";
+
+
     // sub headers
     public static final String SKILL_HEADER = "Skill";
     public static final String SEARCH_HEADER = "Search";

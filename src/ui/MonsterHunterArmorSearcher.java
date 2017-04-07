@@ -1,10 +1,13 @@
 package ui;
 
 import armorsetsearch.ArmorSearchWrapper;
+import com.sun.javafx.binding.StringConstant;
+import com.sun.tools.javac.code.Attribute;
 import constants.Constants;
 import interfaces.OnSearchResultProgress;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -38,6 +41,7 @@ public class MonsterHunterArmorSearcher extends JFrame {
     private ArmorSearchWrapper armorSearchWrapper;
 
     private long lastUpdateUiTimeStamp = 0;
+    private int currentProgress = 0;
 
     /**
      * Ui components
@@ -56,6 +60,7 @@ public class MonsterHunterArmorSearcher extends JFrame {
     private ArmorSkillPanel searchArmorSkillPanel;
     private ArmorSkillPanel desiredArmorSkillPanel;
     private SearchResultPanel searchResultPanel;
+    private JLabel numberOfSetsFound = new JLabel(StringConstants.NUMBER_OF_SETS_FOUND+0);
 
     private WorkerThread workerThread;
 
@@ -158,7 +163,9 @@ public class MonsterHunterArmorSearcher extends JFrame {
 
     private JPanel buildArmorSearchResultSection(){
         JPanel container = new JPanel();
+        container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
         searchResultPanel = new SearchResultPanel();
+        container.add(numberOfSetsFound);
         container.add(searchResultPanel);
         return container;
     }
@@ -214,14 +221,14 @@ public class MonsterHunterArmorSearcher extends JFrame {
     private void setIdleState() {
         search.setEnabled(true);
         stop.setEnabled(false);
-        progressBar.setValue(0);
-        progressBar.setStringPainted(false);
     }
 
     private void setInSearchState() {
+        currentProgress = 0;
         searchResultPanel.clear();
         search.setEnabled(false);
         stop.setEnabled(true);
+        numberOfSetsFound.setText(StringConstants.NUMBER_OF_SETS_FOUND);
         progressBar.setStringPainted(true);
     }
 
@@ -235,20 +242,24 @@ public class MonsterHunterArmorSearcher extends JFrame {
         public void onProgress(GeneratedArmorSet generatedArmorSet, int current) {
             if (generatedArmorSet != null) {
                 searchResultPanel.update(generatedArmorSet);
-            }
-            if (System.currentTimeMillis() - lastUpdateUiTimeStamp > UI_UPDATE_THRESHOLD) {
-                searchResultPanel.updateUi();
-                progressBar.setValue(current);
+                numberOfSetsFound.setText(StringConstants.NUMBER_OF_SETS_FOUND+searchResultPanel.getArmorSize());
             }
 
-            System.out.println("Current process: " + current);
+            long time = System.currentTimeMillis();
+            if (current > currentProgress && time - lastUpdateUiTimeStamp > UI_UPDATE_THRESHOLD) {
+                currentProgress = current;
+                progressBar.setValue(currentProgress);
+                System.out.println("Current process: " + current);
+                lastUpdateUiTimeStamp = time;
+            }
         }
 
         @Override
         public void onComplete(List<GeneratedArmorSet> generatedArmorSets) {
-            int max = generatedArmorSets.size();
-            searchResultPanel.update(generatedArmorSets.subList(0, Math.min(max, uniqueSetSearchLimit)));
-            searchResultPanel.updateUi();
+            if (generatedArmorSets.size() >= uniqueSetSearchLimit) {
+                progressBar.setValue(MAX_PROGRESS_BAR);
+                numberOfSetsFound.setText(StringConstants.TOO_MANY_SETS+uniqueSetSearchLimit);
+            }
             System.out.println(generatedArmorSets.size());
             setIdleState();
         }

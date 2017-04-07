@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 import javax.swing.BoxLayout;
+import javax.swing.DefaultListModel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -19,11 +20,11 @@ public class SearchResultPanel extends JPanel{
 
     private static final int LIST_SIZE = 400;
     private JList<GeneratedArmorSet> generatedArmorSetJList;
-    private List<GeneratedArmorSet> modelList = new ArrayList<>();
+    private DefaultListModel<GeneratedArmorSet> modelList = new DefaultListModel<>();
 
     public SearchResultPanel() {
         super();
-        generatedArmorSetJList = new JList<>(new Vector<>(modelList));
+        generatedArmorSetJList = new JList<>(modelList);
         generatedArmorSetJList.setCellRenderer(new ArmorResultRenderer());
         JScrollPane scrollPane = new JScrollPane(generatedArmorSetJList);
         scrollPane.setPreferredSize(new Dimension(LIST_SIZE, LIST_SIZE));
@@ -74,20 +75,20 @@ public class SearchResultPanel extends JPanel{
     }
 
     public void update(List<GeneratedArmorSet> generatedArmorSets){
-        modelList = generatedArmorSets;
+        generatedArmorSets.forEach(generatedArmorSet -> {
+            modelList.addElement(generatedArmorSet);
+        });
     }
 
     public synchronized void update(GeneratedArmorSet generatedArmorSet){
-        modelList.add(generatedArmorSet);
-    }
-
-    public synchronized void updateUi(){
-        generatedArmorSetJList.setListData(new Vector<>(modelList));
+        modelList.addElement(generatedArmorSet);
     }
 
     public void clear(){
         modelList.clear();
-        generatedArmorSetJList.setListData(new Vector<>(modelList));
     }
 
+    public int getArmorSize(){
+        return modelList.size();
+    }
 }

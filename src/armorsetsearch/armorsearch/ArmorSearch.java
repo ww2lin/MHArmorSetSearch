@@ -59,14 +59,14 @@ public class ArmorSearch {
         System.out.println("Number Of threads going to be spawned: "+THREAD_COUNT);
         long timeStamp = System.currentTimeMillis();
 
+        EquipmentType[] equipmentTypes = {EquipmentType.HEAD, EquipmentType.ARM, EquipmentType.WST, EquipmentType.LEG, EquipmentType.BODY};
 
-        // TODO get rid of -1 when wep is implemetned
-        int progressChuck = 100 / (EquipmentType.values().length -1);
+        int progressChuck = 100 / (equipmentTypes.length);
         int progressBar = progressChuck;
 
         List<GeneratedArmorSet> results = new ArrayList<>();
         // Do the body last since we need to know the previous skill point need to adjust for torso ups.
-        EquipmentType[] equipmentTypes = {EquipmentType.HEAD, EquipmentType.ARM, EquipmentType.WST, EquipmentType.LEG, EquipmentType.BODY};
+
 
 
         int size = equipmentTypes.length;
@@ -101,7 +101,7 @@ public class ArmorSearch {
             // add it to sumEquipmentList - this is to avoid value getting updated after one iteration
             EquipmentList previousEquipmentList = table[i-1];
 
-            final int currentMaxPossibleSet = previousEquipmentList.size() * currentEquipmentList.size();
+            final float maxPossiblePercentage = (float)progressChuck / (previousEquipmentList.size() * currentEquipmentList.size());
 
             // divide up the list into multiple parts and use multiple threads to do the calculation
             EquipmentList[] dataSet = new EquipmentList[THREAD_COUNT];
@@ -121,7 +121,7 @@ public class ArmorSearch {
                 workerThreads[j] = new ArmorSearchWorkerThread(j,
                                                                setsFound,
                                                                progressBar,
-                                                               currentMaxPossibleSet,
+                                                               maxPossiblePercentage,
                                                                onSearchResultProgress,
                                                                uniqueSetSearchLimit,
                                                                equipmentTypes[i],
@@ -140,8 +140,7 @@ public class ArmorSearch {
                 try {
                     workerThreads[j].join();
                 } catch (InterruptedException e) {
-                    System.err.println("Interrupt exception while 'joining' threads - stopped:"+stop);
-                    e.printStackTrace();
+                    return results;
                 }
             }
 
@@ -168,6 +167,7 @@ public class ArmorSearch {
     public void stop() {
         stop = true;
         for (int i = 0; i < THREAD_COUNT; ++i){
+            workerThreads[i].interrupt();
             workerThreads[i].exit();
         }
     }

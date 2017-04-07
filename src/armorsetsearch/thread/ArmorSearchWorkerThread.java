@@ -1,12 +1,9 @@
 package armorsetsearch.thread;
 
-import constants.Constants;
 import interfaces.OnSearchResultProgress;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import javax.swing.SwingUtilities;
 import models.EquipmentType;
 import models.GeneratedArmorSet;
 import armorsetsearch.skillactivation.ActivatedSkill;
@@ -16,7 +13,7 @@ public class ArmorSearchWorkerThread extends Thread {
 
     private int id;
     private int currentProgress;
-    private int currentMaxPossibleSet;
+    private float maxPossiblePercentage;
     private EquipmentType equipmentType;
     private EquipmentList previousEquipmentList;
     private EquipmentList currentEquipmentList;
@@ -32,7 +29,7 @@ public class ArmorSearchWorkerThread extends Thread {
     public ArmorSearchWorkerThread(int id,
                                    AtomicInteger setsFound,
                                    int currentProgress,
-                                   int currentMaxPossibleSet,
+                                   float maxPossiblePercentage,
                                    OnSearchResultProgress onSearchResultProgress,
                                    int uniqueSetSearchLimit,
                                    EquipmentType equipmentType,
@@ -44,7 +41,7 @@ public class ArmorSearchWorkerThread extends Thread {
         this.id = id;
         this.setsFound = setsFound;
         this.currentProgress = currentProgress;
-        this.currentMaxPossibleSet = currentMaxPossibleSet;
+        this.maxPossiblePercentage = maxPossiblePercentage;
         this.onSearchResultProgress = onSearchResultProgress;
         this.uniqueSetSearchLimit = uniqueSetSearchLimit;
         this.equipmentType = equipmentType;
@@ -57,11 +54,15 @@ public class ArmorSearchWorkerThread extends Thread {
 
     @Override
     public void run() {
+        int setsTried = 0;
         EquipmentList equipmentList = new EquipmentList();
         List<GeneratedArmorSet> armorsFound = new ArrayList<>();
         for (EquipmentNode curEquipmentNode : currentEquipmentList.getEquipmentNodes()) {
             for (EquipmentNode preEquipmentNode : previousEquipmentList.getEquipmentNodes()) {
                 if (stop) {
+                    synchronized (generatedArmorSets) {
+                        generatedArmorSets.addAll(armorsFound);
+                    }
                     return;
                 }
 
@@ -76,17 +77,11 @@ public class ArmorSearchWorkerThread extends Thread {
                     updateUi(generatedArmorSet, setsFound.incrementAndGet());
                 }
 
-                if (stop) {
-                    synchronized (generatedArmorSets) {
-                        generatedArmorSets.addAll(armorsFound);
-                    }
+                updateUi(null, ++setsTried);
+                if (setsFound.get() > uniqueSetSearchLimit) {
+                    returnData(equipmentList, armorsFound);
                     return;
                 }
-                updateUi(null, setsFound.incrementAndGet());
-                //if (setsFound.incrementAndGet() > uniqueSetSearchLimit) {
-                //    returnData(equipmentList, armorsFound);
-                //    return;
-                //}
             }
         }
         returnData(equipmentList, armorsFound);
@@ -103,18 +98,13 @@ public class ArmorSearchWorkerThread extends Thread {
     }
 
     private void updateUi(GeneratedArmorSet generatedArmorSet, int progress) {
-        //try {
-        //    SwingUtilities.invokeAndWait(() -> {
-                if (onSearchResultProgress != null) {
-                    onSearchResultProgress.onProgress(generatedArmorSet, getProgressNumber(progress));
-                }
-            //});
-        //} catch (Exception e) {
-        //}
+        if (onSearchResultProgress != null) {
+            onSearchResultProgress.onProgress(generatedArmorSet, getProgressNumber(progress));
+        }
     }
 
     private int getProgressNumber(float i){
-        return currentProgress + (int)(i/currentMaxPossibleSet);
+        return currentProgress + Math.round(i * maxPossiblePercentage);
     }
 
     public void exit(){
