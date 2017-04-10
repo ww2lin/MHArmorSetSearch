@@ -102,19 +102,23 @@ public class MaxArmorSkillPointsFilter implements ArmorFilter{
     public List<Equipment> filterByMaxValue(Equipment templateEquipment, List<Equipment> equipmentList){
         List<Equipment> equipments = new ArrayList<>();
         int maxSkillPoints = findSkillPoint(templateEquipment);
+        boolean alreadyHasTorsoUp = false;
         // Find all the armors that has more slots than the template or the same skill points.
         for (Equipment equipment : equipmentList) {
             int currentMaxSkill = findSkillPoint(equipment);
-            //int differenceInSkillPoint = maxSkillPoints - currentMaxSkill;
-            //if (differesnceInSkillPoint >= 5) {
-            //    continue;
-            //}
-            if (equipment.getSlots() > templateEquipment.getSlots()||
-                currentMaxSkill >= maxSkillPoints ||
-                equipment.isTorsoUp())  {
+            if (equipment.getSlots() > templateEquipment.getSlots()) {
+                equipments.add(equipment);
+            } else if (currentMaxSkill >= maxSkillPoints && maxSkillPoints > 0){
+                // select base on rarity
+                if (equipment.getRarity() >= templateEquipment.getRarity()) {
+                    equipments.add(equipment);
+                }
+            } else if (!alreadyHasTorsoUp && equipment.isTorsoUp()) {
+                alreadyHasTorsoUp = true;
                 equipments.add(equipment);
             }
         }
+        // Need to remember to add back the templatePiece
         return equipments;
     }
 

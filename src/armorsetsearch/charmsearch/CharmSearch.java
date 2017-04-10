@@ -63,6 +63,10 @@ public class CharmSearch {
             }
             // go thru the slots
             SlotsLoop: for (int slotNumber = 1; slotNumber <= Constants.MAX_SLOTS; ++slotNumber) {
+                if (onSearchResultProgress != null) {
+                    onSearchResultProgress.onProgress(null, Math.round(currentProgress + (float)progress/maxProgress * maxRatio));
+                }
+
                 // Check if solution exist for 1...n slots
                 // If a set exist such that slotNumber < n, where  1<slotNumber<n. Then we can exit early for this set.
                 List<SkillChartWithDecoration> skillChartWithDecorationsToTry = decorationSearch.getSkillListBySlot(missingSkill.missingSkillsMap.keySet(), slotNumber);
@@ -93,7 +97,12 @@ public class CharmSearch {
                         for (ArmorSkill armorSkill : decoration.getArmorSkills()) {
                             Integer points = leftOverSkills.get(armorSkill.kind);
                             if (points != null) {
-                                leftOverSkills.put(armorSkill.kind, points - armorSkill.points);
+                                int leftOverPoints = points - armorSkill.points;
+                                if (leftOverPoints > 0 ) {
+                                    leftOverSkills.put(armorSkill.kind, leftOverPoints);
+                                } else {
+                                    leftOverSkills.remove(armorSkill.kind);
+                                }
                             }
                         }
                     }
