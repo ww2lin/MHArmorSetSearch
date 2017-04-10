@@ -6,7 +6,7 @@ public class Constants {
     public static final int GENERATED_EQUIPMENT_ID = -1;
 
     public static final int MAX_SKILL = 10;
-    public static final int MAX_SKILL_POINT = 100;
+    public static final int MAX_SKILL_POINT = 90;
 
     public static final int MAX_PROGRESS_BAR = 100;
 
