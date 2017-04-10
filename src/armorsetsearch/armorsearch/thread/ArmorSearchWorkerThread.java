@@ -1,16 +1,19 @@
-package armorsearch.thread;
+package armorsetsearch.armorsearch.thread;
 
+import interfaces.OnSearchResultProgress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import models.EquipmentType;
 import models.GeneratedArmorSet;
-import models.skillactivation.ActivatedSkill;
-import models.skillactivation.SkillUtil;
+import armorsetsearch.skillactivation.ActivatedSkill;
+import armorsetsearch.skillactivation.SkillUtil;
 
 public class ArmorSearchWorkerThread extends Thread {
 
     private int id;
+    private int currentProgress;
+    private float maxPossiblePercentage;
     private EquipmentType equipmentType;
     private EquipmentList previousEquipmentList;
     private EquipmentList currentEquipmentList;
@@ -21,9 +24,13 @@ public class ArmorSearchWorkerThread extends Thread {
     private boolean stop = false;
     private AtomicInteger setsFound;
     private final int uniqueSetSearchLimit;
+    private OnSearchResultProgress onSearchResultProgress;
 
     public ArmorSearchWorkerThread(int id,
                                    AtomicInteger setsFound,
+                                   int currentProgress,
+                                   float maxPossiblePercentage,
+                                   OnSearchResultProgress onSearchResultProgress,
                                    int uniqueSetSearchLimit,
                                    EquipmentType equipmentType,
                                    EquipmentList previousEquipmentList,
@@ -33,6 +40,9 @@ public class ArmorSearchWorkerThread extends Thread {
                                    List<GeneratedArmorSet> generatedArmorSets) {
         this.id = id;
         this.setsFound = setsFound;
+        this.currentProgress = currentProgress;
+        this.maxPossiblePercentage = maxPossiblePercentage;
+        this.onSearchResultProgress = onSearchResultProgress;
         this.uniqueSetSearchLimit = uniqueSetSearchLimit;
         this.equipmentType = equipmentType;
         this.previousEquipmentList = previousEquipmentList;
@@ -44,12 +54,21 @@ public class ArmorSearchWorkerThread extends Thread {
 
     @Override
     public void run() {
+        int setsTried = 0;
         EquipmentList equipmentList = new EquipmentList();
         List<GeneratedArmorSet> armorsFound = new ArrayList<>();
-        // TODO Use multiple threads here to divide up the work.
+
+        if (currentEquipmentList == null) {
+            // number of sets is smaller than the number of threads.
+            return;
+        }
+
         for (EquipmentNode curEquipmentNode : currentEquipmentList.getEquipmentNodes()) {
             for (EquipmentNode preEquipmentNode : previousEquipmentList.getEquipmentNodes()) {
                 if (stop) {
+                    synchronized (generatedArmorSets) {
+                        generatedArmorSets.addAll(armorsFound);
+                    }
                     return;
                 }
 
@@ -61,16 +80,11 @@ public class ArmorSearchWorkerThread extends Thread {
                 if (SkillUtil.containsDesiredSkills(desiredSkills, activatedSkills)) {
                     GeneratedArmorSet generatedArmorSet = new GeneratedArmorSet(sumNode);
                     armorsFound.add(generatedArmorSet);
+                    updateUi(generatedArmorSet, setsFound.incrementAndGet());
                 }
 
-                if (stop) {
-                    synchronized (generatedArmorSets) {
-                        generatedArmorSets.addAll(armorsFound);
-                    }
-                    return;
-                }
-
-                if (setsFound.incrementAndGet() > uniqueSetSearchLimit) {
+                updateUi(null, ++setsTried);
+                if (setsFound.get() > uniqueSetSearchLimit) {
                     returnData(equipmentList, armorsFound);
                     return;
                 }
@@ -87,6 +101,16 @@ public class ArmorSearchWorkerThread extends Thread {
         synchronized (generatedArmorSets) {
             generatedArmorSets.addAll(armorsFound);
         }
+    }
+
+    private void updateUi(GeneratedArmorSet generatedArmorSet, int progress) {
+        if (onSearchResultProgress != null) {
+            onSearchResultProgress.onProgress(generatedArmorSet, getProgressNumber(progress));
+        }
+    }
+
+    private int getProgressNumber(float i){
+        return currentProgress + Math.round(i * maxPossiblePercentage);
     }
 
     public void exit(){

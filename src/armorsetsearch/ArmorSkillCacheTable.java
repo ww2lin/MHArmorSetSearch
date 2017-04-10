@@ -1,7 +1,7 @@
-package armorsearch;
+package armorsetsearch;
 
-import armorsearch.filter.ArmorFilter;
-import armorsearch.filter.MaxArmorSkillPointsFilter;
+import armorsetsearch.filter.ArmorFilter;
+import armorsetsearch.filter.MaxArmorSkillPointsFilter;
 import constants.Constants;
 import constants.StringConstants;
 import java.util.ArrayList;
@@ -16,8 +16,8 @@ import models.ClassType;
 import models.Equipment;
 import models.EquipmentType;
 import models.Gender;
-import models.skillactivation.ActivatedSkill;
-import models.skillactivation.SkillActivationChart;
+import armorsetsearch.skillactivation.ActivatedSkill;
+import armorsetsearch.skillactivation.SkillActivationChart;
 
 public class ArmorSkillCacheTable {
     // Build a table from kind -> All equipment has that kind of skill
@@ -149,7 +149,7 @@ public class ArmorSkillCacheTable {
         if (!containsThreeSlottedEquipment) {
             // Sneak in a 3 slotted no skill armor (e.g charkra armors)
             equipments.add(Equipment.Builder()
-                               .setId(Constants.GENERATED_ARMOR_ID)
+                               .setId(Constants.GENERATED_EQUIPMENT_ID)
                                .setName(StringConstants.ANY_THREE_SLOT_ARMOR)
                                .setEquipmentType(equipmentType)
                                .setSlots(Constants.MAX_SLOTS)
@@ -164,6 +164,10 @@ public class ArmorSkillCacheTable {
     public Map<EquipmentType, List<Equipment>> getEquipmentCache(List<ActivatedSkill> desiredSkills) {
         Map<EquipmentType, List<Equipment>> results = new HashMap<>();
         for (EquipmentType equipmentType : EquipmentType.values()) {
+            if (equipmentType == EquipmentType.WEP){
+                // no equipment for wep, skip.
+                continue;
+            }
             results.put(equipmentType, getEquipmentsWithDesiredSkills(equipmentType, desiredSkills));
         }
         return results;

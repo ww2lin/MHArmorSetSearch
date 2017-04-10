@@ -10,11 +10,11 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import models.skillactivation.SkillActivationRequirement;
+import armorsetsearch.skillactivation.SkillActivationRequirement;
 
 public class ArmorSkillPanel extends JPanel{
 
-    private static final int LIST_SIZE = 250;
+    private static final int LIST_SIZE = 200;
     private JList<SkillActivationRequirement> skillActivationRequirementJList;
     private List<SkillActivationRequirement> modelList;
 
@@ -24,7 +24,7 @@ public class ArmorSkillPanel extends JPanel{
         skillActivationRequirementJList = new JList<>(new Vector<>(modelList));
         skillActivationRequirementJList.setCellRenderer(new SkillListRender());
         JScrollPane scrollPane = new JScrollPane(skillActivationRequirementJList);
-        scrollPane.setPreferredSize(new Dimension(LIST_SIZE, LIST_SIZE));
+        scrollPane.setPreferredSize(new Dimension(LIST_SIZE, LIST_SIZE * 2));
         add(scrollPane);
 
     }

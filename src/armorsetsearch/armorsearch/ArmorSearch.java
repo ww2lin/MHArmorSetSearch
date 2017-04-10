@@ -1,40 +1,49 @@
-package armorsearch;
+package armorsetsearch.armorsearch;
 
-import armorsearch.filter.ArmorSetFilter;
-import armorsearch.thread.ArmorSearchWorkerThread;
-import armorsearch.thread.EquipmentList;
-import armorsearch.thread.EquipmentNode;
+import armorsetsearch.ArmorSkillCacheTable;
+import armorsetsearch.charmsearch.CharmSearch;
+import armorsetsearch.decorationsearch.DecorationSearch;
+import armorsetsearch.filter.ArmorSetFilter;
+import armorsetsearch.armorsearch.thread.ArmorSearchWorkerThread;
+import armorsetsearch.armorsearch.thread.EquipmentList;
+import armorsetsearch.armorsearch.thread.EquipmentNode;
+import constants.Constants;
 import interfaces.OnSearchResultProgress;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import models.Equipment;
 import models.EquipmentType;
 import models.GeneratedArmorSet;
-import models.skillactivation.ActivatedSkill;
+import armorsetsearch.skillactivation.ActivatedSkill;
 
-class ArmorSearch {
+import static constants.Constants.GENERATED_EQUIPMENT_ID;
+import static constants.Constants.THREAD_COUNT;
 
-    // offset hyper threading.
-    private static final int THREAD_COUNT = Math.max(1, Runtime.getRuntime().availableProcessors() / 2);
+public class ArmorSearch {
 
     private ArmorSkillCacheTable armorSkillCacheTable;
     private List<ArmorSetFilter> armorSetFilters;
     private final int uniqueSetSearchLimit;
     private OnSearchResultProgress onSearchResultProgress;
     private DecorationSearch decorationSearch;
+    private CharmSearch charmSearch;
 
     // use to stop the threads.
     private boolean stop = false;
     private ArmorSearchWorkerThread[] workerThreads;
+    private int weapSlots;
 
-    public ArmorSearch(ArmorSkillCacheTable armorSkillCacheTable, List<ArmorSetFilter> armorSetFilters, int uniqueSetSearchLimit, DecorationSearch decorationSearch, OnSearchResultProgress onSearchResultProgress) {
+    public ArmorSearch(int weapSlots, ArmorSkillCacheTable armorSkillCacheTable, List<ArmorSetFilter> armorSetFilters, int uniqueSetSearchLimit, DecorationSearch decorationSearch, CharmSearch charmSearch, OnSearchResultProgress onSearchResultProgress) {
+        this.weapSlots = weapSlots;
         this.armorSkillCacheTable = armorSkillCacheTable;
         this.armorSetFilters = armorSetFilters;
         this.uniqueSetSearchLimit = uniqueSetSearchLimit;
         this.onSearchResultProgress = onSearchResultProgress;
         this.decorationSearch = decorationSearch;
+        this.charmSearch = charmSearch;
     }
 
     /**
@@ -44,7 +53,6 @@ class ArmorSearch {
      */
     public List<GeneratedArmorSet> findArmorSetWith(List<ActivatedSkill> desiredSkills) {
         Map<EquipmentType, List<Equipment>> equipments = armorSkillCacheTable.getEquipmentCache(desiredSkills);
-
         return searchArmor(desiredSkills, equipments);
     }
 
@@ -56,11 +64,28 @@ class ArmorSearch {
         System.out.println("Number Of threads going to be spawned: "+THREAD_COUNT);
         long timeStamp = System.currentTimeMillis();
 
-        List<GeneratedArmorSet> results = new ArrayList<>();
         // Do the body last since we need to know the previous skill point need to adjust for torso ups.
-        EquipmentType[] equipmentTypes = {EquipmentType.HEAD, EquipmentType.ARM, EquipmentType.WST, EquipmentType.LEG, EquipmentType.BODY};
+        EquipmentType[] equipmentTypes;
 
+        // Check if we have slot for wep.
+        if (weapSlots == 0) {
+            equipmentTypes = new EquipmentType[]{EquipmentType.HEAD, EquipmentType.ARM, EquipmentType.WST, EquipmentType.LEG, EquipmentType.BODY};
+        } else {
+            equipmentTypes = new EquipmentType[]{EquipmentType.HEAD, EquipmentType.ARM, EquipmentType.WST, EquipmentType.LEG, EquipmentType.BODY, EquipmentType.WEP};
+            // Smuggle in a weap with slots.
+            Equipment wep = Equipment.Builder()
+                .setId(GENERATED_EQUIPMENT_ID)
+                .setName("")
+                .setEquipmentType(EquipmentType.WEP)
+                .setSlots(weapSlots);
+            equipmentsToSearch.put(EquipmentType.WEP, Collections.singletonList(wep));
+        }
 
+        // Offset one for searching for charms.
+        int progressChuck = Constants.MAX_PROGRESS_BAR / (equipmentTypes.length + 1);
+        int progressBar = progressChuck;
+
+        List<GeneratedArmorSet> results = new ArrayList<>();
         int size = equipmentTypes.length;
         EquipmentList[] table = new EquipmentList[size];
 
@@ -93,6 +118,7 @@ class ArmorSearch {
             // add it to sumEquipmentList - this is to avoid value getting updated after one iteration
             EquipmentList previousEquipmentList = table[i-1];
 
+            final float maxPossiblePercentage = (float)progressChuck / (previousEquipmentList.size() * currentEquipmentList.size());
 
             // divide up the list into multiple parts and use multiple threads to do the calculation
             EquipmentList[] dataSet = new EquipmentList[THREAD_COUNT];
@@ -111,6 +137,9 @@ class ArmorSearch {
             for (int j = 0; j < THREAD_COUNT; ++j){
                 workerThreads[j] = new ArmorSearchWorkerThread(j,
                                                                setsFound,
+                                                               progressBar,
+                                                               maxPossiblePercentage,
+                                                               onSearchResultProgress,
                                                                uniqueSetSearchLimit,
                                                                equipmentTypes[i],
                                                                previousEquipmentList,
@@ -128,8 +157,7 @@ class ArmorSearch {
                 try {
                     workerThreads[j].join();
                 } catch (InterruptedException e) {
-                    System.err.println("Interrupt exception while 'joining' threads - stopped:"+stop);
-                    e.printStackTrace();
+                    return results;
                 }
             }
 
@@ -137,6 +165,7 @@ class ArmorSearch {
                 return results;
             }
 
+            progressBar+=progressChuck;
 
             // place the sumNode back in i-th index
             table[i] = updatedEquipmentSkillList;
@@ -144,12 +173,26 @@ class ArmorSearch {
         }
         timeStamp = System.currentTimeMillis() - timeStamp;
         System.out.println("armor search time elapsed(ms): "+timeStamp);
+
+        if (onSearchResultProgress != null) {
+            onSearchResultProgress.onProgress(null, progressBar);
+        }
+
+        System.out.println("Starting Charm Search");
+        timeStamp = System.currentTimeMillis();
+
+        results.addAll(charmSearch.findAValidCharmWithArmorSkill(desiredSkills, table[size-1], progressBar));
+
+        timeStamp = System.currentTimeMillis() - timeStamp;
+        System.out.println("charm search time elpased(ms): "+timeStamp);
+
         return results;
     }
 
     public void stop() {
         stop = true;
         for (int i = 0; i < THREAD_COUNT; ++i){
+            workerThreads[i].interrupt();
             workerThreads[i].exit();
         }
     }

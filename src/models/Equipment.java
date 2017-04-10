@@ -286,6 +286,7 @@ public class Equipment {
         } else {
             decorations.put(decoration, frequency);
         }
+        slotsUsed-=decoration.getSlotsNeeded();
     }
 
     public void addDecoration(Decoration decoration){
@@ -294,6 +295,7 @@ public class Equipment {
             frequency = 0;
         }
         ++frequency;
+        slotsUsed+=decoration.getSlotsNeeded();
         decorations.put(decoration, frequency);
     }
 

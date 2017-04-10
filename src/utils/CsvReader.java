@@ -9,10 +9,11 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import models.CharmData;
 import models.Decoration;
 import models.Equipment;
 import models.EquipmentType;
-import models.skillactivation.SkillActivationRequirement;
+import armorsetsearch.skillactivation.SkillActivationRequirement;
 
 /**
  * This is a mess, have to clean this up at some point.
@@ -120,6 +121,38 @@ public class CsvReader {
                 });
             }
             return decorationMap;
+        } catch (IOException e) {
+            return Collections.emptyMap();
+        } finally {
+            // Messy steps to clean up the file reader
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+    public static Map<String, List<CharmData>> getCharmFromCsvFile(String path) {
+        CSVReader reader = null;
+        try {
+            Map<String, List<CharmData>> charmMap = new HashMap<>();
+            reader = new CSVReader(new FileReader(path));
+            String[] header;
+            String[] nextLine1;
+            String[] nextLine2;
+
+            // skip over the header
+            header = reader.readNext();
+
+            // go over the CSV file line by line.
+            while ((nextLine1 = reader.readNext()) != null && (nextLine2 = reader.readNext()) != null) {
+                List<CharmData> charmDatas = CsvToModel.csvCharmRowToModel(header, nextLine1, nextLine2);
+                String skillKind = nextLine1[0];
+                charmMap.put(skillKind, charmDatas);
+            }
+            return charmMap;
         } catch (IOException e) {
             return Collections.emptyMap();
         } finally {

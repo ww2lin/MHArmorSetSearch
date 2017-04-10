@@ -1,32 +1,46 @@
 package models;
 
-import armorsearch.thread.EquipmentNode;
+import armorsetsearch.armorsearch.thread.EquipmentNode;
+import armorsetsearch.skillactivation.SkillActivationChart;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import models.skillactivation.ActivatedSkill;
-
+import armorsetsearch.skillactivation.ActivatedSkill;
+import java.util.Map;
 
 // contains a list of equipment sets, with decorations
 public class GeneratedArmorSet {
     List<ActivatedSkill> activatedSkills;
+    Map<String, Integer> skillTable;
     List<Resistance> totalResistance;
     List<Equipment> equipments;
+
+    // Some set might not need this.
+    GeneratedCharm generatedCharm;
 
     int totalBaseDefense;
     int totalMaxDefense;
 
-    public GeneratedArmorSet(List<ActivatedSkill> activatedSkills, List<Equipment> equipments) {
-        this.activatedSkills = activatedSkills;
-        this.equipments = equipments;
-        totalResistance = calculateTotalResistance();
+    public GeneratedArmorSet(EquipmentNode equipmentNode) {
+        this.skillTable = equipmentNode.getSkillTable();
+        this.activatedSkills = equipmentNode.getActivatedSkills();
+        this.equipments = equipmentNode.getEquipments();
 
+        totalResistance = calculateTotalResistance();
         totalBaseDefense = calculateTotalBaseDefense();
         totalMaxDefense = calculateTotalMaxDefense();
     }
 
-    public GeneratedArmorSet(EquipmentNode equipmentNode) {
-        this(equipmentNode.getActivatedSkills(), equipmentNode.getEquipments());
+    public GeneratedArmorSet(EquipmentNode equipmentNode, GeneratedCharm generatedCharm, Map<String, Integer> skillTable) {
+        this.skillTable = skillTable;
+        this.generatedCharm = generatedCharm;
+        this.activatedSkills = SkillActivationChart.getActivatedSkills(this.skillTable);
+        this.equipments = equipmentNode.getEquipments();
+
+        totalResistance = calculateTotalResistance();
+        totalBaseDefense = calculateTotalBaseDefense();
+        totalMaxDefense = calculateTotalMaxDefense();
+
     }
 
     public static class MostSkillComparator implements Comparator<GeneratedArmorSet> {
@@ -37,10 +51,16 @@ public class GeneratedArmorSet {
         }
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
         return "GeneratedArmorSet{" +
             "activatedSkills=" + activatedSkills +
+            ", skillTable=" + skillTable +
+            ", totalResistance=" + totalResistance +
             ", equipments=" + equipments +
+            ", generatedCharm=" + generatedCharm +
+            ", totalBaseDefense=" + totalBaseDefense +
+            ", totalMaxDefense=" + totalMaxDefense +
             '}';
     }
 
@@ -50,6 +70,10 @@ public class GeneratedArmorSet {
 
     public List<Equipment> getEquipments() {
         return equipments;
+    }
+
+    public GeneratedCharm getGeneratedCharm() {
+        return generatedCharm;
     }
 
     private List<Resistance> calculateTotalResistance(){

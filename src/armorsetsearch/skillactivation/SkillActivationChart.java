@@ -1,4 +1,4 @@
-package models.skillactivation;
+package armorsetsearch.skillactivation;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -9,7 +9,7 @@ import models.ArmorSkill;
 import models.ClassType;
 import models.Decoration;
 import models.Equipment;
-import models.EquipmentType;
+import models.GeneratedCharm;
 
 public class SkillActivationChart {
 
@@ -22,7 +22,7 @@ public class SkillActivationChart {
      */
     public SkillActivationChart(Map<String, List<SkillActivationRequirement>> skillChart, ClassType classType) {
         skillActivationLookupTable = skillChart;
-        this.classType = classType;
+        SkillActivationChart.classType = classType;
     }
 
     public Set<String> getSkillKind() {
@@ -66,15 +66,6 @@ public class SkillActivationChart {
         return currentEquipmentSkillChart;
     }
 
-    /**
-     * Given a list of equipments and a @{models.ClassType}, return what skills has been activated.
-     * This can return negative skill.
-     *
-     * @param decorationsForCurrentSet since the program is run in multiple threads,
-     * editing the decorations in the equipment list will result in a crash
-     * due to race condition, so instead a fresh copy of it, is made and passed in.
-     * @return
-     */
     public static Map<String, Integer> getActivatedSkillChart(Equipment equipment) {
         Map<String, Integer> currentEquipmentSkillChart = new HashMap<>();
         updateSkillChartByArmorSkill(currentEquipmentSkillChart, equipment.getArmorSkills(), 1);
@@ -101,6 +92,13 @@ public class SkillActivationChart {
             currentEquipmentSkillChart.put(armorSkill.kind, sum);
         }
         return currentEquipmentSkillChart;
+    }
+
+    public static Map<String, Integer> getSkillChart(GeneratedCharm generatedCharm, int charmSkillMultiplier){
+        Map<String, Integer> currentCharmSkillChart = new HashMap<>();
+        updateSkillChartByCharmSkill(currentCharmSkillChart, generatedCharm, charmSkillMultiplier);
+        updateSkillChartByDecoration(currentCharmSkillChart, generatedCharm.getDecorations(), charmSkillMultiplier);
+        return currentCharmSkillChart;
     }
 
     public static void updateSkillChartByArmorSkill(Map<String, Integer> currentEquipmentSkillChart, Set<ArmorSkill> armorSkills, int skillMultiplier){
@@ -139,6 +137,20 @@ public class SkillActivationChart {
         }
     }
 
+    public static void updateSkillChartByCharmSkill(Map<String, Integer> currentEquipmentSkillChart, GeneratedCharm generatedCharm, int charmMultiplier){
+        for (GeneratedCharm.CharmSkill charmSkill : generatedCharm.getCharmSkills()){
+            // accumulate the skill point by skill kind
+            Integer sum = currentEquipmentSkillChart.get(charmSkill.getSkillKind());
+            if (sum == null){
+                // if the current skill kind don't exist, assign it to 0
+                sum = 0;
+            }
+
+            sum += charmSkill.getSkillPoints() * charmMultiplier;
+            currentEquipmentSkillChart.put(charmSkill.getSkillKind(), sum);
+        }
+    }
+
     /**
      * check to see which skill is activated.
      * @param currentEquipmentSkillChart
@@ -172,9 +184,5 @@ public class SkillActivationChart {
             }
         }
         return activatedSkills;
-    }
-
-    public void setClassType(ClassType classType) {
-        this.classType = classType;
     }
 }

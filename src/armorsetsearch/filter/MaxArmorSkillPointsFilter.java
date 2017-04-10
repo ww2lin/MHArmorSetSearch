@@ -1,4 +1,4 @@
-package armorsearch.filter;
+package armorsetsearch.filter;
 
 import java.util.ArrayList;
 import java.util.HashMap;

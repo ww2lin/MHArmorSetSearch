@@ -1,26 +1,33 @@
-package armorsearch;
+package armorsetsearch;
 
-import armorsearch.filter.ArmorFilter;
-import armorsearch.filter.ArmorSetFilter;
+import armorsetsearch.armorsearch.ArmorSearch;
+import armorsetsearch.charmsearch.CharmSearch;
+import armorsetsearch.decorationsearch.DecorationSearch;
+import armorsetsearch.filter.ArmorFilter;
+import armorsetsearch.filter.ArmorSetFilter;
+import armorsetsearch.skillactivation.SkillUtil;
 import interfaces.OnSearchResultProgress;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import models.CharmData;
 import models.ClassType;
 import models.Decoration;
 import models.Equipment;
 import models.EquipmentType;
 import models.Gender;
 import models.GeneratedArmorSet;
-import models.skillactivation.ActivatedSkill;
-import models.skillactivation.SkillActivationChart;
-import models.skillactivation.SkillActivationRequirement;
+import armorsetsearch.skillactivation.ActivatedSkill;
+import armorsetsearch.skillactivation.SkillActivationChart;
+import armorsetsearch.skillactivation.SkillActivationRequirement;
 import utils.CsvReader;
 
 public class ArmorSearchWrapper {
 
+    //TODO extract these into an external file, such that data can be configure without a rebuild.
     private static final String FILE_PATH_HEAD_EQUIPMENT = "data/MH_EQUIP_HEAD.csv";
     private static final String FILE_PATH_BODY_EQUIPMENT = "data/MH_EQUIP_BODY.csv";
     private static final String FILE_PATH_ARM_EQUIPMENT = "data/MH_EQUIP_ARM.csv";
@@ -28,10 +35,12 @@ public class ArmorSearchWrapper {
     private static final String FILE_PATH_LEG_EQUIPMENT = "data/MH_EQUIP_LEG.csv";
     private static final String FILE_PATH_SKILL_ACTIVATION = "data/MH_SKILL.csv";
     private static final String FILE_PATH_DECORATION = "data/MH_DECO.csv";
+    private static final String FILE_PATH_CHARM = "data/MH_CHARM_TABLE.csv";
 
     private AllEquipments allEquipments;
     private Map<String, List<SkillActivationRequirement>> skillActivationChartMap;
     private Map<String, List<Decoration>> decorationLookupTable;
+    private Map<String, List<CharmData>> charmLookupTable;
     private SkillActivationChart skillActivationChart;
     private ArmorSkillCacheTable armorSkillCacheTable;
 
@@ -41,6 +50,9 @@ public class ArmorSearchWrapper {
     private ClassType classType;
     private List<ArmorFilter> armorFilters;
     private ArmorSearch armorSearch;
+    private CharmSearch charmSearch;
+
+    private int weapSlot = 0;
 
     public ArmorSearchWrapper(ClassType classType, Gender gender, List<ArmorFilter> armorFilters) throws IOException {
         // Parse CSV
@@ -54,7 +66,7 @@ public class ArmorSearchWrapper {
 
         skillActivationChartMap = CsvReader.getSkillActivationRequirementFromCsvFile(FILE_PATH_SKILL_ACTIVATION);
         decorationLookupTable = CsvReader.getDecorationFromCsvFile(FILE_PATH_DECORATION);
-
+        charmLookupTable = CsvReader.getCharmFromCsvFile(FILE_PATH_CHARM);
         this.gender = gender;
         this.classType = classType;
         this.armorFilters = armorFilters;
@@ -82,7 +94,15 @@ public class ArmorSearchWrapper {
         return skillList.stream().filter(sar -> sar.getPointsNeededToActivate() > 0).collect(Collectors.toList());
     }
 
-    public List<GeneratedArmorSet> search(List<ArmorSetFilter> armorSetFilters, List<SkillActivationRequirement> desiredSkills, final int uniqueSetSearchLimit, final int decorationSearchLimit, OnSearchResultProgress onSearchResultProgress) {
+    public List<GeneratedArmorSet> search(List<ArmorSetFilter> armorSetFilters,
+                                          List<SkillActivationRequirement> desiredSkills,
+                                          final int uniqueSetSearchLimit,
+                                          final int decorationSearchLimit,
+                                          OnSearchResultProgress onSearchResultProgress) {
+        if (!SkillUtil.shouldDoSearch(desiredSkills)) {
+            return Collections.emptyList();
+        }
+
         List<ActivatedSkill> activatedSkills = new ArrayList<>(desiredSkills.size());
 
         desiredSkills.forEach(skillActivationRequirement -> {
@@ -91,10 +111,15 @@ public class ArmorSearchWrapper {
 
         DecorationSearch decorationSearch = new DecorationSearch(activatedSkills, decorationLookupTable);
 
-        armorSearch = new ArmorSearch(armorSkillCacheTable,
+        charmSearch = new CharmSearch(uniqueSetSearchLimit, onSearchResultProgress, charmLookupTable, decorationSearch);
+
+
+        armorSearch = new ArmorSearch(weapSlot,
+                                      armorSkillCacheTable,
                                       armorSetFilters,
                                       uniqueSetSearchLimit,
                                       decorationSearch,
+                                      charmSearch,
                                       onSearchResultProgress);
 
 
@@ -113,9 +138,17 @@ public class ArmorSearchWrapper {
         this.armorFilters = armorFilters;
     }
 
+    public void setWeapSlot(int weapSlot) {
+        this.weapSlot = weapSlot;
+    }
+
     public void stopSearching(){
        if (armorSearch != null){
            armorSearch.stop();
+       }
+
+       if (charmSearch != null) {
+           charmSearch.stop();
        }
     }
 }

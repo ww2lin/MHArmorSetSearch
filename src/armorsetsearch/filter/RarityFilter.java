@@ -1,4 +1,4 @@
-package armorsearch.filter;
+package armorsetsearch.filter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import models.Equipment;
 import models.EquipmentType;
-import models.GeneratedArmorSet;
 
 public class RarityFilter implements ArmorFilter, ArmorSetFilter {
 
