@@ -5,6 +5,7 @@ import constants.Constants;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -17,12 +18,14 @@ import armorsetsearch.skillactivation.SkillActivationChart;
 
 public class DecorationSearch {
 
-    private List<Decoration> decorationsToTry = new ArrayList<>();
     private Map<Integer, List<Decoration>> slotToDecorationMap = new HashMap<>();
     private SkillChartDataList[] decorationSkillTable;
 
     public DecorationSearch(List<ActivatedSkill> desiredSkills, Map<String, List<Decoration>> decorationLookupTable) {
-
+        Set<String> wantedSkills = new HashSet<>();
+        for (ActivatedSkill activatedSkill : desiredSkills) {
+            wantedSkills.add(activatedSkill.getKind());
+        }
         for (ActivatedSkill activatedSkill : desiredSkills) {
             List<Decoration> decorations = decorationLookupTable.get(activatedSkill.getKind());
             if (decorations != null) {
@@ -34,14 +37,31 @@ public class DecorationSearch {
                     List<Decoration> sameSlotDecorations = slotToDecorationMap.get(decoration.getSlotsNeeded());
                     if (sameSlotDecorations == null) {
                         sameSlotDecorations = new ArrayList<>();
+                        sameSlotDecorations.add(decoration);
+                        slotToDecorationMap.put(decoration.getSlotsNeeded(), sameSlotDecorations);
+                    } else {
+                        for (ArmorSkill armorSkill : decoration.getArmorSkills()) {
+                            for (Decoration sameSlotDecoration : sameSlotDecorations) {
+                                for (ArmorSkill sameSlotArmorSkill : sameSlotDecoration.getArmorSkills()) {
+                                    if (armorSkill.isKind(sameSlotArmorSkill.kind)
+                                        && wantedSkills.contains(armorSkill.kind)
+                                        && armorSkill.points > sameSlotArmorSkill.points) {
+                                        sameSlotDecorations.remove(sameSlotDecoration);
+                                        sameSlotDecorations.add(decoration);
+                                        slotToDecorationMap.put(decoration.getSlotsNeeded(), sameSlotDecorations);
+                                    }
+                                }
+                            }
+                        }
                     }
-                    sameSlotDecorations.add(decoration);
-                    slotToDecorationMap.put(decoration.getSlotsNeeded(), sameSlotDecorations);
-                    decorationsToTry.add(decoration);
                 }
             }
         }
+        System.out.println("Building Decoration data");
+        long timeStamp = System.currentTimeMillis();
         decorationSkillTable = initDecorationSkillChart();
+        timeStamp = System.currentTimeMillis() - timeStamp;
+        System.out.println("Decoration data finished, time elapsed(ms): "+timeStamp);
     }
 
     /**

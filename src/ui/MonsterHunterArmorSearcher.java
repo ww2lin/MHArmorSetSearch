@@ -268,7 +268,7 @@ public class MonsterHunterArmorSearcher extends JFrame {
             if (current > currentProgress && time - lastUpdateUiTimeStamp > UI_UPDATE_THRESHOLD) {
                 currentProgress = current;
 
-                System.out.println("Current process: " + current);
+                System.out.println("Current Progress: " + current);
                 lastUpdateUiTimeStamp = time;
             }
         }

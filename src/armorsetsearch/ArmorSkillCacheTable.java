@@ -121,7 +121,6 @@ public class ArmorSkillCacheTable {
     private List<Equipment> getEquipmentsWithDesiredSkills(EquipmentType equipmentType, List<ActivatedSkill> desiredSkills) {
         Map<String, List<Equipment>> cache = allEquipments.get(equipmentType);
 
-        boolean alreadyContainTorsoUp = false;
         // check to see if we need to sneak in charka armors.
         boolean containsThreeSlottedEquipment = false;
         List<Equipment> equipments = new ArrayList<>();
@@ -136,10 +135,6 @@ public class ArmorSkillCacheTable {
 
                     // filter additional torso up equipments
                     if (!equipmentToAdd.isTorsoUp()) {
-                        equipments.add(equipmentToAdd);
-                    } else if (!alreadyContainTorsoUp) {
-                        // mark that we have added a torso up equipment.
-                        alreadyContainTorsoUp = true;
                         equipments.add(equipmentToAdd);
                     }
                 }

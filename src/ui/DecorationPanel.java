@@ -43,5 +43,7 @@ public class DecorationPanel extends JPanel{
             }
         });
         decorationTextArea.setText(decorationsStringBuilder.toString());
+
+        setVisible(!decorationsStringBuilder.toString().isEmpty());
     }
 }

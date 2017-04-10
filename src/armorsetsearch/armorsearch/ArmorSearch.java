@@ -169,6 +169,10 @@ public class ArmorSearch {
 
             // place the sumNode back in i-th index
             table[i] = updatedEquipmentSkillList;
+
+            // free up the memory that we dont need anymore.
+            table[i-1] = null;
+
             System.out.println(i+"  "+table[i].size());
         }
         timeStamp = System.currentTimeMillis() - timeStamp;
@@ -184,7 +188,7 @@ public class ArmorSearch {
         results.addAll(charmSearch.findAValidCharmWithArmorSkill(desiredSkills, table[size-1], progressBar));
 
         timeStamp = System.currentTimeMillis() - timeStamp;
-        System.out.println("charm search time elpased(ms): "+timeStamp);
+        System.out.println("charm search time elapsed(ms): "+timeStamp);
 
         return results;
     }
