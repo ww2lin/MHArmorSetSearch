@@ -24,7 +24,7 @@ public class SearchResultPanel extends JPanel{
         generatedArmorSetJList = new JList<>(modelList);
         generatedArmorSetJList.setCellRenderer(new ArmorResultRenderer());
         JScrollPane scrollPane = new JScrollPane(generatedArmorSetJList);
-        scrollPane.setPreferredSize(new Dimension(600, 600));
+        scrollPane.setPreferredSize(new Dimension(700, 600));
         add(scrollPane);
 
     }
@@ -33,6 +33,7 @@ public class SearchResultPanel extends JPanel{
         EquipmentsPanel equipmentsPanel = new EquipmentsPanel();
         DecorationPanel decorationPanel = new DecorationPanel();
         EquipmentStatPanel equipmentStatPanel = new EquipmentStatPanel();
+        CharmPanel charmPanel = new CharmPanel();
 
         public ArmorResultRenderer() {
             setBorder(new EmptyBorder(1, 1, 1, 1));
@@ -45,7 +46,7 @@ public class SearchResultPanel extends JPanel{
 
             equipmentAndDecorationContainer.add(equipmentsPanel);
             equipmentAndDecorationContainer.add(decorationPanel);
-
+            equipmentAndDecorationContainer.add(charmPanel);
 
             container.add(new JSeparator(JSeparator.HORIZONTAL));
             container.add(equipmentAndDecorationContainer);
@@ -61,6 +62,7 @@ public class SearchResultPanel extends JPanel{
             equipmentsPanel.setData(equipments);
             equipmentStatPanel.setData(generatedArmorSet);
             decorationPanel.setData(generatedArmorSet);
+            charmPanel.setData(generatedArmorSet.getGeneratedCharm());
             return this;
         }
     }

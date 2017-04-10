@@ -1,12 +1,15 @@
 package utils;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import models.ArmorSkill;
+import models.CharmData;
 import models.ClassType;
 import models.Decoration;
 import models.Equipment;
@@ -147,6 +150,56 @@ class CsvToModel {
 
     }
 
+    public static List<CharmData> csvCharmRowToModel(String[] charmTypes, String[] row1, String[] row2) {
+        String skillkind = row1[0];
+        // skip column 1, where it denote if its first/second skill.
+
+        // First type of charm
+        CharmData charmData1 = getCharmPoints(skillkind, row1[2], row2[2], charmTypes[2]);
+        CharmData charmData2 = getCharmPoints(skillkind, row1[3], row2[3], charmTypes[3]);
+        CharmData charmData3 = getCharmPoints(skillkind, row1[4], row2[4], charmTypes[4]);
+        CharmData charmData4 = getCharmPoints(skillkind, row1[5], row2[5], charmTypes[5]);
+
+        List<CharmData> charmDatas = new ArrayList<>();
+        charmDatas.add(charmData1);
+        charmDatas.add(charmData2);
+        charmDatas.add(charmData3);
+        charmDatas.add(charmData4);
+
+        return charmDatas.stream().filter(Objects::nonNull).collect(Collectors.toList());
+    }
+
+    private static CharmData getCharmPoints(String skillkind, String skill1, String skill2, String charmType) {
+        List<CharmData.CharmPoint> charmPoints = new ArrayList<>();
+        if (skill1 != null && !skill1.isEmpty()) {
+            // skill is separated by ~
+            String[] skillRange = skill1.split("~");
+            int min = tryParseInt(skillRange[0]);
+            int max = tryParseInt(skillRange[1]);
+
+            charmPoints.add(new CharmData.CharmPoint(min, max, 1));
+        }
+
+        if (skill2 != null && !skill2.isEmpty()) {
+            // skill is separated by ~
+            String[] skillRange = skill2.split("~");
+            int min = tryParseInt(skillRange[0]);
+            int max = tryParseInt(skillRange[1]);
+
+            charmPoints.add(new CharmData.CharmPoint(min, max, 2));
+        }
+
+        if (charmPoints.isEmpty()) {
+            return null;
+        }
+
+        return CharmData.Builder()
+            .setSkillkind(skillkind)
+            .setCharmType(charmType)
+            .setCharmPoints(charmPoints);
+
+    }
+
     private static int tryParseInt(String value) {
         try {
             return Integer.parseInt(value);
@@ -155,6 +208,7 @@ class CsvToModel {
             return 0;
         }
     }
+
 
 
     private static Set<ArmorSkill> removeEmptyArmorValues(Collection<ArmorSkill> collection) {

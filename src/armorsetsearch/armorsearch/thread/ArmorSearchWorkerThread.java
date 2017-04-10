@@ -1,4 +1,4 @@
-package armorsetsearch.thread;
+package armorsetsearch.armorsearch.thread;
 
 import interfaces.OnSearchResultProgress;
 import java.util.ArrayList;

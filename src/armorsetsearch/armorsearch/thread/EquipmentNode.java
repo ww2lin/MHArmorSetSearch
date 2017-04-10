@@ -1,4 +1,4 @@
-package armorsetsearch.thread;
+package armorsetsearch.armorsearch.thread;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +17,7 @@ public class EquipmentNode {
     private EquipmentNode(List<Equipment> equipments, Map<String, Integer> skillTable, int skillMultiplier) {
         this.equipments = equipments;
         this.skillTable = skillTable;
-        activatedSkills =  SkillActivationChart.getActivatedSkills(skillTable);
+        activatedSkills = SkillActivationChart.getActivatedSkills(skillTable);
         this.skillMultiplier = skillMultiplier;
     }
 
@@ -30,6 +30,10 @@ public class EquipmentNode {
 
     public List<ActivatedSkill> getActivatedSkills() {
         return activatedSkills;
+    }
+
+    public Map<String, Integer> getSkillTable() {
+        return skillTable;
     }
 
     public List<Equipment> getEquipments() {

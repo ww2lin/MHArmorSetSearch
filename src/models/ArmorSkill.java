@@ -9,6 +9,8 @@ public class ArmorSkill implements Nullable {
     // E.g its NOT AuS, AuM, or negate stun,
     // it is Attack, Poison, Stun, Hearing
     public String kind;
+
+    // Can be positive or negative
     public int points;
 
     private ArmorSkill(String kind, int points) {
@@ -33,6 +35,10 @@ public class ArmorSkill implements Nullable {
 
     public boolean isKind(String kind){
         return this.kind.equalsIgnoreCase(kind);
+    }
+
+    public boolean isPositive() {
+        return points > 0;
     }
 
     @Override

@@ -6,6 +6,8 @@ public class StringConstants {
     public static final String TITLE = "Monster Hunter - Armor Searcher";
     public static final String WEP_SLOT = "Weapon Slot";
     public static final String ADD_SKILL = "Add Skill";
+    public static final String CLASS = "Class";
+    public static final String GENDER = "Gender";
     public static final String REMOVE_SKILL = "Remove Skill";
     public static final String SEARCH_SKILL = "Search";
     public static final String STOP_SKILL_SEARCH = "Stop";
@@ -19,9 +21,11 @@ public class StringConstants {
     public static final String ANY_TORSO_UP_ARMOR = "( or any torso up equipment )";
     public static final String ANY_ARMOR = "( any armor )";
 
+    public static final String NO_SETS_FOUND = "No Sets found. ";
     public static final String NUMBER_OF_SETS_FOUND = "Number of Sets Found: ";
     public static final String TOO_MANY_SETS = "Too many sets found, displaying the first: ";
 
+    public static final String ANY_CHARM_WITH_SLOTS= "Any charm with slots: ";
 
     // sub headers
     public static final String SKILL_HEADER = "Skill";
@@ -30,6 +34,10 @@ public class StringConstants {
     // sub headers inside the search result -- equipment stat table
     public static final String ARMOR_SKILL = "Armor Skill";
     public static final String DECORATIONS = "Decorations";
+    public static final String CHARM = "Charm";
+    public static final String CHARM_ANY = "Any";
+    public static final String CHARM_TYPE = "Charm Type: ";
+    public static final String Charm_Slots = "Slots: ";
     public static final String RARITY = "Rarity";
     public static final String DEFENSE = "Defense";
     public static final String MISC = "Misc.";

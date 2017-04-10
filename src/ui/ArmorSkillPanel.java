@@ -14,7 +14,7 @@ import armorsetsearch.skillactivation.SkillActivationRequirement;
 
 public class ArmorSkillPanel extends JPanel{
 
-    private static final int LIST_SIZE = 250;
+    private static final int LIST_SIZE = 200;
     private JList<SkillActivationRequirement> skillActivationRequirementJList;
     private List<SkillActivationRequirement> modelList;
 

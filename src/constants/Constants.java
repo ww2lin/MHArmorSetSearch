@@ -2,6 +2,7 @@ package constants;
 
 public class Constants {
     public static final int MAX_SLOTS = 3;
+    public static final int MAX_NUMBER_CHARM_SKILL = 2;
     public static final int GENERATED_EQUIPMENT_ID = -1;
 
     public static final int MAX_SKILL = 10;

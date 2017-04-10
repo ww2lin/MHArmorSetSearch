@@ -1,11 +1,12 @@
 package armorsetsearch.armorsearch;
 
 import armorsetsearch.ArmorSkillCacheTable;
+import armorsetsearch.charmsearch.CharmSearch;
 import armorsetsearch.decorationsearch.DecorationSearch;
 import armorsetsearch.filter.ArmorSetFilter;
-import armorsetsearch.thread.ArmorSearchWorkerThread;
-import armorsetsearch.thread.EquipmentList;
-import armorsetsearch.thread.EquipmentNode;
+import armorsetsearch.armorsearch.thread.ArmorSearchWorkerThread;
+import armorsetsearch.armorsearch.thread.EquipmentList;
+import armorsetsearch.armorsearch.thread.EquipmentNode;
 import constants.Constants;
 import interfaces.OnSearchResultProgress;
 import java.util.ArrayList;
@@ -28,19 +29,21 @@ public class ArmorSearch {
     private final int uniqueSetSearchLimit;
     private OnSearchResultProgress onSearchResultProgress;
     private DecorationSearch decorationSearch;
+    private CharmSearch charmSearch;
 
     // use to stop the threads.
     private boolean stop = false;
     private ArmorSearchWorkerThread[] workerThreads;
     private int weapSlots;
 
-    public ArmorSearch(int weapSlots, ArmorSkillCacheTable armorSkillCacheTable, List<ArmorSetFilter> armorSetFilters, int uniqueSetSearchLimit, DecorationSearch decorationSearch, OnSearchResultProgress onSearchResultProgress) {
+    public ArmorSearch(int weapSlots, ArmorSkillCacheTable armorSkillCacheTable, List<ArmorSetFilter> armorSetFilters, int uniqueSetSearchLimit, DecorationSearch decorationSearch, CharmSearch charmSearch, OnSearchResultProgress onSearchResultProgress) {
         this.weapSlots = weapSlots;
         this.armorSkillCacheTable = armorSkillCacheTable;
         this.armorSetFilters = armorSetFilters;
         this.uniqueSetSearchLimit = uniqueSetSearchLimit;
         this.onSearchResultProgress = onSearchResultProgress;
         this.decorationSearch = decorationSearch;
+        this.charmSearch = charmSearch;
     }
 
     /**
@@ -174,6 +177,14 @@ public class ArmorSearch {
         if (onSearchResultProgress != null) {
             onSearchResultProgress.onProgress(null, progressBar);
         }
+
+        System.out.println("Starting Charm Search");
+        timeStamp = System.currentTimeMillis();
+
+        results.addAll(charmSearch.findAValidCharmWithArmorSkill(desiredSkills, table[size-1], progressBar));
+
+        timeStamp = System.currentTimeMillis() - timeStamp;
+        System.out.println("charm search time elpased(ms): "+timeStamp);
 
         return results;
     }

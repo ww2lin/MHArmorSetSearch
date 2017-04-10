@@ -82,15 +82,15 @@ public class SkillActivationRequirement {
 
         SkillActivationRequirement that = (SkillActivationRequirement) o;
 
-        if (pointsNeededToActivate != that.pointsNeededToActivate) {
-            return false;
-        }
+        //if (pointsNeededToActivate != that.pointsNeededToActivate) {
+        //    return false;
+        //}
         if (isNegativeSkill != that.isNegativeSkill) {
             return false;
         }
-        if (!name.equals(that.name)) {
-            return false;
-        }
+        //if (!name.equals(that.name)) {
+        //    return false;
+        //}
         if (!kind.equals(that.kind)) {
             return false;
         }
@@ -98,9 +98,9 @@ public class SkillActivationRequirement {
     }
 
     @Override public int hashCode() {
-        int result = name.hashCode();
-        result = 31 * result + kind.hashCode();
-        result = 31 * result + pointsNeededToActivate;
+        //int result = name.hashCode();
+        int result = kind.hashCode();
+        //result = 31 * result + pointsNeededToActivate;
         result = 31 * result + classType.hashCode();
         result = 31 * result + (isNegativeSkill ? 1 : 0);
         return result;

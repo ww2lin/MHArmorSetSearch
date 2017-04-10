@@ -1,12 +1,15 @@
 package armorsetsearch.decorationsearch;
 
-import armorsetsearch.thread.EquipmentNode;
+import armorsetsearch.armorsearch.thread.EquipmentNode;
 import constants.Constants;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import models.ArmorSkill;
 import models.Decoration;
 import models.Equipment;
 import armorsetsearch.skillactivation.ActivatedSkill;
@@ -39,6 +42,32 @@ public class DecorationSearch {
             }
         }
         decorationSkillTable = initDecorationSkillChart();
+    }
+
+    /**
+     * Find all the decoration that has the skillkind
+     * @param skillKinds
+     * @param slots
+     * @return
+     */
+    public List<SkillChartWithDecoration> getSkillListBySlot(Set<String> skillKinds, int slots) {
+        SkillChartDataList skillChartDataList = decorationSkillTable[slots];
+        if (skillChartDataList != null) {
+            // Only return the result with a decoration that has the wanted skill.
+            return skillChartDataList.getSkillChartWithDecorations().stream().filter(skillChartWithDecoration -> {
+                int decorationWithDesireSkill = 0;
+                for (Decoration decoration : skillChartWithDecoration.decorations) {
+                    for (ArmorSkill armorSkill : decoration.getArmorSkills()) {
+                        if (skillKinds.contains(armorSkill.kind) && armorSkill.isPositive()) {
+                            ++decorationWithDesireSkill;
+                        }
+                    }
+                }
+                return decorationWithDesireSkill == skillChartWithDecoration.decorations.size();
+            }).collect(Collectors.toList());
+        }
+
+        return Collections.emptyList();
     }
 
     /**
@@ -96,69 +125,5 @@ public class DecorationSearch {
             return new EquipmentNode(copied, skillChartWithEquipment);
         }
         return new EquipmentNode(equipment, equipmentskillChart);
-    }
-
-    // wrapper for the below object.
-    private static class SkillChartDataList {
-        private List<SkillChartWithDecoration> skillChartWithDecorations = new ArrayList<>();
-
-        public SkillChartDataList(List<SkillChartWithDecoration> skillChartWithDecorations) {
-            this.skillChartWithDecorations = skillChartWithDecorations;
-        }
-
-        public SkillChartDataList() {
-        }
-
-        public void add(SkillChartWithDecoration skillChartWithDecoration){
-            skillChartWithDecorations.add(skillChartWithDecoration);
-        }
-
-        public void addAll(SkillChartDataList skillChartDataList){
-            skillChartWithDecorations.addAll(skillChartDataList.skillChartWithDecorations);
-        }
-
-        public SkillChartWithDecoration get(int index){
-            return skillChartWithDecorations.get(index);
-        }
-
-        public List<SkillChartWithDecoration> getSkillChartWithDecorations() {
-            return skillChartWithDecorations;
-        }
-
-        public static SkillChartDataList cartesianProduct(SkillChartDataList list1, SkillChartDataList list2){
-            SkillChartDataList skillChartDataList = new SkillChartDataList();
-            for (SkillChartWithDecoration skillChartWithDecoration1 : list1.skillChartWithDecorations) {
-                for (SkillChartWithDecoration skillChartWithDecoration2 : list2.skillChartWithDecorations) {
-                    SkillChartWithDecoration newSkillChart = SkillChartWithDecoration.add(skillChartWithDecoration1, skillChartWithDecoration2);
-                    skillChartDataList.add(newSkillChart);
-                }
-            }
-            return skillChartDataList;
-        }
-    }
-
-    /**
-     * Each skill chart corresponds to a list of decorations.
-     */
-    private static class SkillChartWithDecoration {
-        // TODO change this into decoration -> frequency
-        List<Decoration> decorations = new ArrayList<>();
-        Map<String, Integer> skillChart = new HashMap<>();
-
-        public SkillChartWithDecoration(List<Decoration> decorations, Map<String, Integer> skillChart) {
-            this.decorations = decorations;
-            this.skillChart = skillChart;
-        }
-
-        public SkillChartWithDecoration() {
-        }
-
-        public static SkillChartWithDecoration add(SkillChartWithDecoration skillChart1, SkillChartWithDecoration skillChart2){
-            SkillChartWithDecoration newSkillChart = new SkillChartWithDecoration();
-            newSkillChart.decorations.addAll(skillChart1.decorations);
-            newSkillChart.decorations.addAll(skillChart2.decorations);
-            newSkillChart.skillChart = SkillActivationChart.add(skillChart1.skillChart, skillChart2.skillChart);
-            return newSkillChart;
-        }
     }
 }

@@ -104,6 +104,15 @@ public class Decoration {
         return this;
     }
 
+    public boolean containsPositiveSkill(String skillKind) {
+        for (ArmorSkill armorSkill : armorSkills) {
+            if (armorSkill.isKind(skillKind) && armorSkill.isPositive()){
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override public String toString() {
         return "Decoration{" +
             "name='" + name + '\'' +

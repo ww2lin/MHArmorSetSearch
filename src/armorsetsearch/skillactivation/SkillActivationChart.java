@@ -9,6 +9,7 @@ import models.ArmorSkill;
 import models.ClassType;
 import models.Decoration;
 import models.Equipment;
+import models.GeneratedCharm;
 
 public class SkillActivationChart {
 
@@ -93,6 +94,13 @@ public class SkillActivationChart {
         return currentEquipmentSkillChart;
     }
 
+    public static Map<String, Integer> getSkillChart(GeneratedCharm generatedCharm, int charmSkillMultiplier){
+        Map<String, Integer> currentCharmSkillChart = new HashMap<>();
+        updateSkillChartByCharmSkill(currentCharmSkillChart, generatedCharm, charmSkillMultiplier);
+        updateSkillChartByDecoration(currentCharmSkillChart, generatedCharm.getDecorations(), charmSkillMultiplier);
+        return currentCharmSkillChart;
+    }
+
     public static void updateSkillChartByArmorSkill(Map<String, Integer> currentEquipmentSkillChart, Set<ArmorSkill> armorSkills, int skillMultiplier){
         for (ArmorSkill armorSkill : armorSkills){
             // accumulate the skill point by skill kind
@@ -126,6 +134,20 @@ public class SkillActivationChart {
                 sum *= skillMuliplier;
                 currentEquipmentSkillChart.put(armorSkill.kind, sum);
             }
+        }
+    }
+
+    public static void updateSkillChartByCharmSkill(Map<String, Integer> currentEquipmentSkillChart, GeneratedCharm generatedCharm, int charmMultiplier){
+        for (GeneratedCharm.CharmSkill charmSkill : generatedCharm.getCharmSkills()){
+            // accumulate the skill point by skill kind
+            Integer sum = currentEquipmentSkillChart.get(charmSkill.getSkillKind());
+            if (sum == null){
+                // if the current skill kind don't exist, assign it to 0
+                sum = 0;
+            }
+
+            sum += charmSkill.getSkillPoints() * charmMultiplier;
+            currentEquipmentSkillChart.put(charmSkill.getSkillKind(), sum);
         }
     }
 
