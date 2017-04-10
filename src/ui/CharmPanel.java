@@ -48,5 +48,6 @@ public class CharmPanel extends JPanel {
             }
             charmTextArea.setText(charmStringBuilder.toString());
         }
+        setVisible(generatedCharm != null);
     }
 }

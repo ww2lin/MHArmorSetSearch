@@ -6,6 +6,7 @@ Given a list search requirements, the program will try to find if there exist a 
 
 
 TODO:
+0. import charm function
 1. need to add in mantis set.
 2. add in filter by defense, rarity... etc
 3. language support
