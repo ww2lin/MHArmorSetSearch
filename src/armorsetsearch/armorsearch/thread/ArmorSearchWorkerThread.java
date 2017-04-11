@@ -80,10 +80,13 @@ public class ArmorSearchWorkerThread extends Thread {
                 if (SkillUtil.containsDesiredSkills(desiredSkills, activatedSkills)) {
                     GeneratedArmorSet generatedArmorSet = new GeneratedArmorSet(sumNode);
                     armorsFound.add(generatedArmorSet);
-                    updateUi(generatedArmorSet, setsFound.incrementAndGet());
+                    if (onSearchResultProgress != null) {
+                        onSearchResultProgress.onProgress(generatedArmorSet);
+                    }
                 }
-
-                updateUi(null, ++setsTried);
+                if (onSearchResultProgress != null) {
+                    onSearchResultProgress.onProgress(getProgressNumber(++setsTried));
+                }
                 if (setsFound.get() > uniqueSetSearchLimit) {
                     returnData(equipmentList, armorsFound);
                     return;
@@ -100,12 +103,6 @@ public class ArmorSearchWorkerThread extends Thread {
 
         synchronized (generatedArmorSets) {
             generatedArmorSets.addAll(armorsFound);
-        }
-    }
-
-    private void updateUi(GeneratedArmorSet generatedArmorSet, int progress) {
-        if (onSearchResultProgress != null) {
-            onSearchResultProgress.onProgress(generatedArmorSet, getProgressNumber(progress));
         }
     }
 

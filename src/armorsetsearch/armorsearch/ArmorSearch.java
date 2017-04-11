@@ -179,7 +179,7 @@ public class ArmorSearch {
         System.out.println("armor search time elapsed(ms): "+timeStamp);
 
         if (onSearchResultProgress != null) {
-            onSearchResultProgress.onProgress(null, progressBar);
+            onSearchResultProgress.onProgress(progressBar);
         }
 
         System.out.println("Starting Charm Search");
