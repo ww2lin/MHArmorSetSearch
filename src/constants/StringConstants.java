@@ -18,8 +18,8 @@ public class StringConstants {
 
 
     public static final String ANY_WEAPON_WITH_SLOT = "Any weapon with slot(s): ";
-    public static final String ANY_TORSO_UP_ARMOR = "( or any torso up equipment )";
-    public static final String ANY_ARMOR = "( any armor )";
+    public static final String ANY_TORSO_UP_ARMOR = "( any torso up equipment )";
+    public static final String ANY_ARMOR = "Any armor with slots: ";
 
     public static final String NO_SETS_FOUND = "No Sets found. ";
     public static final String NUMBER_OF_SETS_FOUND = "Number of Sets Found: ";
@@ -47,7 +47,7 @@ public class StringConstants {
     public static final String RES_Thunder = "Thunder";
     public static final String RES_ICE = "Ice";
     public static final String RES_DRAGON = "Dragon";
-    public static final String ANY_THREE_SLOT_ARMOR = "Any 3 slots Armor";
+    public static final String GENERATED_ARMOR = "";
 
 
     // HardCoded values

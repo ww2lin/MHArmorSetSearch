@@ -23,9 +23,13 @@ public class EquipmentsPanel extends JPanel{
     }
 
     public void setData(List<Equipment> equipments){
-        for (int i = 0; i < equipments.size(); ++i) {
-            Equipment equipment = equipments.get(i);
-            equipmentPanels.get(i).setData(equipment);
+        for (int i = 0; i < EquipmentType.values().length; ++i) {
+            if (i < equipments.size()) {
+                Equipment equipment = equipments.get(i);
+                equipmentPanels.get(i).setData(equipment);
+            } else {
+                equipmentPanels.get(i).resetData();
+            }
         }
     }
 }

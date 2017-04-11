@@ -1,5 +1,6 @@
 package ui;
 
+import constants.Constants;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -21,22 +22,25 @@ public class EquipmentPanel extends JPanel{
     }
 
     public void setData(Equipment equipment){
-        String name = equipment.getName();
 
         StringBuilder stringBuilder = new StringBuilder(equipment.getEquipmentType().name());
-        stringBuilder.append(": ").append(name);
+        stringBuilder.append(": ").append(equipment.getName());
+
+        if (equipment.isCanBeSubstitutedForAnyOtherThreeSlotEquipment()) {
+            stringBuilder.append(StringConstants.ANY_ARMOR).append(equipment.getSlotsUsed());
+        }
 
         if (equipment.isTorsoUp()) {
             stringBuilder.append(" ").append(StringConstants.ANY_TORSO_UP_ARMOR);
-        }
-
-        if (equipment.isCanBeSubstitutedForAnyOtherThreeSlotEquipment()) {
-            stringBuilder.append(" ").append(StringConstants.ANY_ARMOR);
         }
 
         if (equipment.getEquipmentType() == EquipmentType.WEP) {
             stringBuilder.append(" ").append(StringConstants.ANY_WEAPON_WITH_SLOT).append(equipment.getSlots());
         }
         nameLabel.setText(stringBuilder.toString());
+    }
+
+    public void resetData(){
+        nameLabel.setText("");
     }
 }

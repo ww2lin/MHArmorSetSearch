@@ -145,7 +145,7 @@ public class ArmorSkillCacheTable {
             // Sneak in a 3 slotted no skill armor (e.g charkra armors)
             equipments.add(Equipment.Builder()
                                .setId(Constants.GENERATED_EQUIPMENT_ID)
-                               .setName(StringConstants.ANY_THREE_SLOT_ARMOR)
+                               .setName(StringConstants.GENERATED_ARMOR)
                                .setEquipmentType(equipmentType)
                                .setSlots(Constants.MAX_SLOTS)
                                .setRarity(0)

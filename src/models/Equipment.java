@@ -59,6 +59,8 @@ public class Equipment {
         this.decorations.putAll(other.decorations);
         this.isTorsoUp = other.isTorsoUp;
         this.equipmentType = other.equipmentType;
+        this.canBeSubstitutedForAnyOtherThreeSlotEquipment = other.canBeSubstitutedForAnyOtherThreeSlotEquipment;
+        this.slotsUsed = other.slotsUsed;
     }
 
     public static Equipment Builder(){
@@ -127,6 +129,10 @@ public class Equipment {
 
     public int getSlots() {
         return slots;
+    }
+
+    public int getSlotsUsed() {
+        return slotsUsed;
     }
 
     public Equipment setSlots(int slots) {
@@ -203,31 +209,6 @@ public class Equipment {
         return this;
     }
 
-    public boolean useSlots(Decoration decoration) {
-        if (decoration.getSlotsNeeded() + slotsUsed <= slots) {
-            slotsUsed += decoration.getSlotsNeeded();
-            addDecoration(decoration);
-            return true;
-        } return false;
-    }
-
-    public boolean freeSlots(Decoration decoration) {
-        if (slotsUsed - decoration.getSlotsNeeded() >= 0) {
-            slotsUsed -= decoration.getSlotsNeeded();
-            removeDecoration(decoration);
-            return true;
-        } else return false;
-    }
-
-
-    public int getFreeSlots() {
-        return slots - slotsUsed;
-    }
-
-    public boolean hasFreeSlots() {
-        return slots - slotsUsed > 0;
-    }
-
     public Set<ArmorSkill> getArmorSkills() {
         return armorSkills;
     }
@@ -266,6 +247,10 @@ public class Equipment {
         return this;
     }
 
+    public int getSlotsNeeded(){
+        return slotsUsed;
+    }
+
     public boolean isCanBeSubstitutedForAnyOtherThreeSlotEquipment() {
         return canBeSubstitutedForAnyOtherThreeSlotEquipment;
     }
@@ -302,19 +287,6 @@ public class Equipment {
     public void addAllDecorations(List<Decoration> decorations){
         for (Decoration decoration : decorations){
             addDecoration(decoration);
-        }
-    }
-
-    public void addAllDecorations(Map<Decoration, Integer> decorationsMap){
-        for (Map.Entry<Decoration, Integer> entry : decorationsMap.entrySet()){
-            Decoration decoration = entry.getKey();
-            int points = entry.getValue();
-            Integer frequency = decorations.get(decoration);
-            if (frequency == null){
-                frequency = 0;
-            }
-            frequency+=points;
-            decorations.put(decoration, frequency);
         }
     }
 
