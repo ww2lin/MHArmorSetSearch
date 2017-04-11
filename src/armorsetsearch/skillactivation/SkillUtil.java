@@ -51,7 +51,7 @@ public class SkillUtil {
         }
 
         int sumSkillPoint = desiredSkills.stream().mapToInt(SkillActivationRequirement::getPointsNeededToActivate).sum();
-        return sumSkillPoint < Constants.MAX_SKILL_POINT;
+        return sumSkillPoint <= Constants.MAX_SKILL_POINT;
     }
 
     /**

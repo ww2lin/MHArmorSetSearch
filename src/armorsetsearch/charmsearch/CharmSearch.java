@@ -64,7 +64,7 @@ public class CharmSearch {
             // go thru the slots
             SlotsLoop: for (int slotNumber = 1; slotNumber <= Constants.MAX_SLOTS; ++slotNumber) {
                 if (onSearchResultProgress != null) {
-                    onSearchResultProgress.onProgress(null, Math.round(currentProgress + (float)progress/maxProgress * maxRatio));
+                    onSearchResultProgress.onProgress(Math.round(currentProgress + (float)progress/maxProgress * maxRatio));
                 }
 
                 // Check if solution exist for 1...n slots
@@ -86,7 +86,7 @@ public class CharmSearch {
                         GeneratedArmorSet generatedArmorSet = new GeneratedArmorSet(missingSkill.equipmentNode, generatedCharm, onlyDecorationCharm);
                         generatedArmorSets.add(generatedArmorSet);
                         if (onSearchResultProgress != null) {
-                            onSearchResultProgress.onProgress(generatedArmorSet, Math.round(currentProgress + (float)progress/maxProgress * maxRatio));
+                            onSearchResultProgress.onProgress(generatedArmorSet);
                         }
                         break SlotsLoop;
                     }
@@ -133,7 +133,7 @@ public class CharmSearch {
                                        GeneratedArmorSet generatedArmorSet = buildGeneratedArmorSet(generatedCharm, missingSkill);
                                        generatedArmorSets.add(generatedArmorSet);
                                        if (onSearchResultProgress != null) {
-                                           onSearchResultProgress.onProgress(generatedArmorSet, Math.round(currentProgress + (float)progress/maxProgress * maxRatio));
+                                           onSearchResultProgress.onProgress(generatedArmorSet);
                                        }
                                    }
                                }
@@ -168,7 +168,7 @@ public class CharmSearch {
                                                             generatedArmorSets.add(generatedArmorSet);
 
                                                             if (onSearchResultProgress != null) {
-                                                                onSearchResultProgress.onProgress(generatedArmorSet, Math.round(currentProgress + (float)progress/maxProgress * maxRatio));
+                                                                onSearchResultProgress.onProgress(generatedArmorSet);
                                                             }
 
                                                             break SlotsLoop;

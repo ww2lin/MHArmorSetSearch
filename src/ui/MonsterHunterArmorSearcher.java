@@ -256,20 +256,25 @@ public class MonsterHunterArmorSearcher extends JFrame {
         }
 
         @Override
-        public void onProgress(GeneratedArmorSet generatedArmorSet, int current) {
-            if (generatedArmorSet != null) {
-                SwingUtilities.invokeLater(() -> {
-                    searchResultPanel.update(generatedArmorSet);
-                    numberOfSetsFound.setText(StringConstants.NUMBER_OF_SETS_FOUND+searchResultPanel.getArmorSize());
-                    progressBar.setValue(currentProgress);
-                });
-            }
+        public void onProgress(GeneratedArmorSet generatedArmorSet) {
+            SwingUtilities.invokeLater(() -> {
+                searchResultPanel.update(generatedArmorSet);
+                numberOfSetsFound.setText(StringConstants.NUMBER_OF_SETS_FOUND + searchResultPanel.getArmorSize());
+            });
+        }
+
+        @Override
+        public void onProgress(int current) {
             long time = System.currentTimeMillis();
             if (current > currentProgress && time - lastUpdateUiTimeStamp > UI_UPDATE_THRESHOLD) {
                 currentProgress = current;
 
                 System.out.println("Current Progress: " + current);
                 lastUpdateUiTimeStamp = time;
+
+                SwingUtilities.invokeLater(() -> {
+                    progressBar.setValue(currentProgress);
+                });
             }
         }
 
