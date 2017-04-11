@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -56,7 +57,7 @@ public class CsvReader {
     public static Map<String, List<SkillActivationRequirement>> getSkillActivationRequirementFromCsvFile(String path) {
         CSVReader reader = null;
         try {
-            Map<String, List<SkillActivationRequirement>> skillActivationChart = new HashMap<>();
+            Map<String, List<SkillActivationRequirement>> skillActivationChart = new LinkedHashMap<>();
             reader = new CSVReader(new FileReader(path));
             String[] nextLine;
 
