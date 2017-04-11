@@ -22,12 +22,6 @@ import armorsetsearch.skillactivation.SkillActivationRequirement;
 
 class CsvToModel {
 
-    /**
-     * TODO: extract special armors that will be placed in all cache.
-     * Such as torso up armors, or 3 slots gears.
-     * @param row
-     * @return
-     */
     public static Equipment csvEquipmentRowToModel(String[] row, EquipmentType equipmentType) {
         String name = row[0];
         Gender gender = Gender.values()[tryParseInt(row[1])];
@@ -93,12 +87,15 @@ class CsvToModel {
         String kind = row[1];
         Integer pointsToActivate = tryParseInt(row[2]);
         ClassType classType = ClassType.values()[tryParseInt(row[3])];
+
+        String displayText = row[5];
         return SkillActivationRequirement.Builder()
             .setName(name)
             .setKind(kind)
             .setPointsNeededToActivate(pointsToActivate)
             .setClassType(classType)
-            .setIsNegativeSkill(pointsToActivate <= 0);
+            .setIsNegativeSkill(pointsToActivate <= 0)
+            .setDisplayText(displayText);
     }
 
     public static Decoration csvDecorationRowToModel(String[] row) {

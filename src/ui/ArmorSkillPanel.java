@@ -34,7 +34,7 @@ public class ArmorSkillPanel extends JPanel{
         public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
             Component renderer = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
             if (renderer instanceof JLabel && value instanceof SkillActivationRequirement) {
-                ((JLabel) renderer).setText(((SkillActivationRequirement) value).getName());
+                ((JLabel) renderer).setText(((SkillActivationRequirement) value).getDisplayText());
             }
             return renderer;
         }

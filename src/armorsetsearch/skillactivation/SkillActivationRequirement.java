@@ -9,6 +9,10 @@ public class SkillActivationRequirement {
     private ClassType classType;
     private boolean isNegativeSkill;
 
+    // only for displaying purposes.
+    // This is what will be shown on the UI
+    private String displayText;
+
     private SkillActivationRequirement(){}
 
     public static SkillActivationRequirement Builder() {
@@ -58,6 +62,15 @@ public class SkillActivationRequirement {
 
     public boolean isNegativeSkill() {
         return isNegativeSkill;
+    }
+
+    public String getDisplayText() {
+        return displayText;
+    }
+
+    public SkillActivationRequirement setDisplayText(String displayText) {
+        this.displayText = displayText;
+        return this;
     }
 
     @Override

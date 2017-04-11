@@ -33,7 +33,7 @@ public class ArmorSearchWrapper {
     private static final String FILE_PATH_ARM_EQUIPMENT = "data/MH_EQUIP_ARM.csv";
     private static final String FILE_PATH_WST_EQUIPMENT = "data/MH_EQUIP_WST.csv";
     private static final String FILE_PATH_LEG_EQUIPMENT = "data/MH_EQUIP_LEG.csv";
-    private static final String FILE_PATH_SKILL_ACTIVATION = "data/MH_SKILL.csv";
+    private static final String FILE_PATH_SKILL_ACTIVATION = "data/MH_SKILL_TRANS.csv";
     private static final String FILE_PATH_DECORATION = "data/MH_DECO.csv";
     private static final String FILE_PATH_CHARM = "data/MH_CHARM_TABLE.csv";
 
