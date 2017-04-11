@@ -54,7 +54,7 @@ public class EquipmentStatPanel extends JPanel{
         generatedArmorSet.getActivatedSkills().forEach(activatedSkill -> {
             armorSkills.append(activatedSkill.getAccumulatedPoints());
             armorSkills.append(" ");
-            armorSkills.append(activatedSkill.getName());
+            armorSkills.append(activatedSkill.getDisplayText());
             armorSkills.append(System.lineSeparator());
         });
         armorSkillTextArea.setText(armorSkills.toString());

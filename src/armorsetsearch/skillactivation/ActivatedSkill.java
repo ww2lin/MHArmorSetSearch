@@ -7,11 +7,15 @@ public class ActivatedSkill {
     private int pointsNeededToActivate;
     private int accumulatedPoints;
 
+    // for displaying on UI
+    private String displayText;
+
     public ActivatedSkill(SkillActivationRequirement skillActivationRequirement, int accumulatedPoints) {
         this.name = skillActivationRequirement.getName();
         this.kind = skillActivationRequirement.getKind();
         this.pointsNeededToActivate = skillActivationRequirement.getPointsNeededToActivate();
         this.accumulatedPoints = accumulatedPoints;
+        this.displayText = skillActivationRequirement.getDisplayText();
     }
 
     public ActivatedSkill(SkillActivationRequirement skillActivationRequirement) {
@@ -19,12 +23,7 @@ public class ActivatedSkill {
         this.kind = skillActivationRequirement.getKind();
         this.pointsNeededToActivate = skillActivationRequirement.getPointsNeededToActivate();
         this.accumulatedPoints =  0;
-    }
-
-    public ActivatedSkill(String name, String kind, int pointsNeededToActivate) {
-        this.name = name;
-        this.kind = kind;
-        this.pointsNeededToActivate = pointsNeededToActivate;
+        this.displayText = skillActivationRequirement.getDisplayText();
     }
 
     public String getKind() {
@@ -41,6 +40,10 @@ public class ActivatedSkill {
 
     public int getAccumulatedPoints() {
         return accumulatedPoints;
+    }
+
+    public String getDisplayText() {
+        return displayText;
     }
 
     @Override public String toString() {
