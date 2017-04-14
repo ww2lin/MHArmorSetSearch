@@ -7,9 +7,11 @@ import armorsetsearch.filter.ArmorSetFilter;
 import armorsetsearch.armorsearch.thread.ArmorSearchWorkerThread;
 import armorsetsearch.armorsearch.thread.EquipmentList;
 import armorsetsearch.armorsearch.thread.EquipmentNode;
+import armorsetsearch.skillactivation.SkillActivationChart;
 import constants.Constants;
 import interfaces.OnSearchResultProgress;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +20,7 @@ import models.Equipment;
 import models.EquipmentType;
 import models.GeneratedArmorSet;
 import armorsetsearch.skillactivation.ActivatedSkill;
+import utils.StopWatch;
 
 import static constants.Constants.GENERATED_EQUIPMENT_ID;
 import static constants.Constants.THREAD_COUNT;
@@ -25,25 +28,19 @@ import static constants.Constants.THREAD_COUNT;
 public class ArmorSearch {
 
     private ArmorSkillCacheTable armorSkillCacheTable;
-    private List<ArmorSetFilter> armorSetFilters;
     private final int uniqueSetSearchLimit;
     private OnSearchResultProgress onSearchResultProgress;
-    private DecorationSearch decorationSearch;
-    private CharmSearch charmSearch;
 
     // use to stop the threads.
     private boolean stop = false;
     private ArmorSearchWorkerThread[] workerThreads;
     private int weapSlots;
 
-    public ArmorSearch(int weapSlots, ArmorSkillCacheTable armorSkillCacheTable, List<ArmorSetFilter> armorSetFilters, int uniqueSetSearchLimit, DecorationSearch decorationSearch, CharmSearch charmSearch, OnSearchResultProgress onSearchResultProgress) {
+    public ArmorSearch(int weapSlots, ArmorSkillCacheTable armorSkillCacheTable, int uniqueSetSearchLimit, OnSearchResultProgress onSearchResultProgress) {
         this.weapSlots = weapSlots;
         this.armorSkillCacheTable = armorSkillCacheTable;
-        this.armorSetFilters = armorSetFilters;
         this.uniqueSetSearchLimit = uniqueSetSearchLimit;
         this.onSearchResultProgress = onSearchResultProgress;
-        this.decorationSearch = decorationSearch;
-        this.charmSearch = charmSearch;
     }
 
     /**
@@ -51,7 +48,7 @@ public class ArmorSearch {
      * @param desiredSkills that the user wants to generate
      * @return list of equipment that matches what the user wants
      */
-    public List<GeneratedArmorSet> findArmorSetWith(List<ActivatedSkill> desiredSkills) {
+    public EquipmentList findArmorSetWith(List<ActivatedSkill> desiredSkills) {
         Map<EquipmentType, List<Equipment>> equipments = armorSkillCacheTable.getEquipmentCache(desiredSkills);
         return searchArmor(desiredSkills, equipments);
     }
@@ -60,10 +57,7 @@ public class ArmorSearch {
      * DP implementation of finding if a possible armor set exists.
      * @return
      */
-    private List<GeneratedArmorSet> searchArmor(List<ActivatedSkill> desiredSkills, Map<EquipmentType, List<Equipment>> equipmentsToSearch) {
-        System.out.println("Number Of threads going to be spawned: "+THREAD_COUNT);
-        long timeStamp = System.currentTimeMillis();
-
+    private EquipmentList searchArmor(List<ActivatedSkill> desiredSkills, Map<EquipmentType, List<Equipment>> equipmentsToSearch) {
         // Do the body last since we need to know the previous skill point need to adjust for torso ups.
         EquipmentType[] equipmentTypes;
 
@@ -94,8 +88,7 @@ public class ArmorSearch {
         List<Equipment> equipments = equipmentsToSearch.get(currentType);
         EquipmentList currentEquipmentList = new EquipmentList();
         for (Equipment equipment : equipments) {
-            EquipmentNode equipmentNodes = decorationSearch.findArmorWithDecoration(equipment);
-            currentEquipmentList.add(equipmentNodes);
+            currentEquipmentList.add(new EquipmentNode(equipment, SkillActivationChart.getActivatedSkillChart(equipment)));
         }
         table[0] = currentEquipmentList;
         System.out.println("0   "+table[0].size());
@@ -108,10 +101,7 @@ public class ArmorSearch {
             currentEquipmentList = new EquipmentList();
             // construct all the table for the i element first.
             for (Equipment equipment : equipments) {
-                // TODO create a filter for desired skill, if a skill is maxed, then filter out the
-                // sets with it that contains the jewel.
-                EquipmentNode equipmentNodes = decorationSearch.findArmorWithDecoration(equipment);
-                currentEquipmentList.add(equipmentNodes);
+                currentEquipmentList.add(new EquipmentNode(equipment, SkillActivationChart.getActivatedSkillChart(equipment)));
             }
 
             // update the all the values for the current i from i-1
@@ -157,12 +147,7 @@ public class ArmorSearch {
                 try {
                     workerThreads[j].join();
                 } catch (InterruptedException e) {
-                    return results;
                 }
-            }
-
-            if (stop || setsFound.get() > uniqueSetSearchLimit) {
-                return results;
             }
 
             progressBar+=progressChuck;
@@ -175,22 +160,36 @@ public class ArmorSearch {
 
             System.out.println(i+"  "+table[i].size());
         }
-        timeStamp = System.currentTimeMillis() - timeStamp;
-        System.out.println("armor search time elapsed(ms): "+timeStamp);
 
         if (onSearchResultProgress != null) {
             onSearchResultProgress.onProgress(progressBar);
         }
 
-        System.out.println("Starting Charm Search");
-        timeStamp = System.currentTimeMillis();
 
-        results.addAll(charmSearch.findAValidCharmWithArmorSkill(desiredSkills, table[size-1], progressBar));
+        // For testing.
+        //String[] test = new String[] {"グリードXRヘルム", "グリードXRアーム", "グリードXRフォールド", "グリードXRグリーヴ", "グリードXRメイル"};
+        //List<String> test1 = new ArrayList<>(Arrays.asList(test));
 
-        timeStamp = System.currentTimeMillis() - timeStamp;
-        System.out.println("charm search time elapsed(ms): "+timeStamp);
+        //List<EquipmentNode> equipmentNodes = table[size - 1].getEquipmentNodes();
+        //for (int i = 0; i < equipmentNodes.size(); ++i) {
+        //    EquipmentNode equipmentNode = equipmentNodes.get(i);
+        //    List<Equipment> equipments1 = equipmentNode.getEquipments();
+        //    boolean sameSet = true;
+        //    for (int j = 0; j < equipments1.size(); ++j) {
+        //        if (!test1.contains(equipments1.get(j).getName())) {
+        //            sameSet = false;
+        //            break;
+        //        }
+        //    }
+        //
+        //    if (sameSet) {
+        //        // same set found
+        //        System.out.println("some test "+i);
+        //        //return new EquipmentList(equipmentNode);
+        //    }
+        //}
 
-        return results;
+        return table[size - 1];
     }
 
     public void stop() {

@@ -73,7 +73,7 @@ public class ArmorSearchWorkerThread extends Thread {
                 }
 
                 EquipmentNode sumNode = EquipmentNode.add(preEquipmentNode, curEquipmentNode, equipmentType);
-                equipmentList.add(sumNode);
+
 
                 // Check if this table satisfy the desire skills.
                 List<ActivatedSkill> activatedSkills = sumNode.getActivatedSkills();
@@ -83,6 +83,9 @@ public class ArmorSearchWorkerThread extends Thread {
                     if (onSearchResultProgress != null) {
                         onSearchResultProgress.onProgress(generatedArmorSet);
                     }
+                } else {
+                    // Only add the set to the search set if its in complete.
+                    equipmentList.add(sumNode);
                 }
                 if (onSearchResultProgress != null) {
                     onSearchResultProgress.onProgress(getProgressNumber(++setsTried));

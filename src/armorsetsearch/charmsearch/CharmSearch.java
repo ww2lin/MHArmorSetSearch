@@ -4,6 +4,7 @@ import armorsetsearch.armorsearch.thread.EquipmentList;
 import armorsetsearch.armorsearch.thread.EquipmentNode;
 import armorsetsearch.decorationsearch.DecorationSearch;
 import armorsetsearch.decorationsearch.SkillChartWithDecoration;
+import armorsetsearch.decorationsearch.SkillTable;
 import armorsetsearch.skillactivation.ActivatedSkill;
 import armorsetsearch.skillactivation.SkillActivationChart;
 import armorsetsearch.skillactivation.SkillUtil;
@@ -19,6 +20,7 @@ import java.util.Map;
 import models.ArmorSkill;
 import models.CharmData;
 import models.Decoration;
+import models.Equipment;
 import models.GeneratedArmorSet;
 import models.GeneratedCharm;
 
@@ -36,16 +38,48 @@ public class CharmSearch {
         this.decorationSearch = decorationSearch;
     }
 
-    public List<GeneratedArmorSet> findAValidCharmWithArmorSkill(List<ActivatedSkill> desiredSkills, EquipmentList equipmentList, int currentProgress){
+    private void placeDecorations(EquipmentNode equipmentNode, SkillTable skillTable){
+        List<DecorationSearch.DecorationForOneEquipment> decorationForOneEquipments = skillTable.getDecorations();
+        for (DecorationSearch.DecorationForOneEquipment decorationForOneEquipment : decorationForOneEquipments) {
+            List<Decoration> decorations = decorationForOneEquipment.getDecorations();
+            int slotsNeeded = decorations.stream().mapToInt(Decoration::getSlotsNeeded).sum();
+            List<Equipment> equipments = equipmentNode.getEquipments();
+            for (Equipment equipment : equipments) {
+                if (equipment.getSlotsUsed() == 0 && equipment.getSlots() == slotsNeeded) {
+                    equipment.addAllDecorations(decorations);
+                }
+            }
+        }
+    }
+
+    public List<GeneratedArmorSet> findAValidCharmWithArmorSkill(EquipmentList equipmentList, List<ActivatedSkill> desiredSkills, int currentProgress) {
         List<MissingSkill> skillToMatchCharm = new ArrayList<>();
         List<GeneratedArmorSet> generatedArmorSets = new ArrayList<>();
-        for (EquipmentNode equipmentNode : equipmentList.getEquipmentNodes()){
+        for (int i = 0; i < equipmentList.size(); ++i) {
+            EquipmentNode equipmentNode = equipmentList.getEquipmentNodes().get(i);
             // find any skill that has not meet the desired skills yet.
-            if (!SkillUtil.containsDesiredSkills(desiredSkills, equipmentNode.getActivatedSkills())){
+            for (SkillTable skillTable : equipmentNode.getSkillTables()) {
+                Map<String, Integer> currentSkillTable = SkillActivationChart.add(skillTable.getSkillTable(), equipmentNode.getSkillTable());
+                List<ActivatedSkill> currentActivatedSkill = SkillActivationChart.getActivatedSkills(currentSkillTable);
 
-                Map<String, Integer> missingSkill = SkillUtil.getMissingSkills(desiredSkills, equipmentNode.getSkillTable());
-                if (missingSkill.keySet().size() <= Constants.MAX_SLOTS + Constants.MAX_NUMBER_CHARM_SKILL) {
-                    skillToMatchCharm.add(new MissingSkill(missingSkill, equipmentNode));
+                if (SkillUtil.containsDesiredSkills(desiredSkills, currentActivatedSkill)) {
+                    equipmentNode.setActivatedSkills(currentActivatedSkill);
+                    equipmentNode.setSkillTable(currentSkillTable);
+                    // TODO place the decoration in to the armor!
+                    if (onSearchResultProgress != null) {
+                        EquipmentNode tempNode = new EquipmentNode(equipmentNode.getEquipments(), currentSkillTable);
+                        placeDecorations(tempNode, skillTable);
+                        GeneratedArmorSet generatedArmorSet = new GeneratedArmorSet(equipmentNode);
+                        onSearchResultProgress.onProgress(generatedArmorSet);
+                    }
+                } else {
+                    // TODO place the decoration in to the armor!
+                    Map<String, Integer> missingSkill = SkillUtil.getMissingSkills(desiredSkills, currentSkillTable);
+                    if (missingSkill.keySet().size() <= Constants.MAX_SLOTS + Constants.MAX_NUMBER_CHARM_SKILL) {
+                        EquipmentNode tempNode = new EquipmentNode(equipmentNode.getEquipments(), currentSkillTable);
+                        placeDecorations(tempNode, skillTable);
+                        skillToMatchCharm.add(new MissingSkill(missingSkill, tempNode));
+                    }
                 }
             }
         }
@@ -56,15 +90,17 @@ public class CharmSearch {
          * There is a lot of nested for loops, but that is alright.
          * Since most of he loops are bounded by a small constant.
          */
-        for (MissingSkill missingSkill : skillToMatchCharm) {
-
+        for (int missingSkillSetCounter = 0; missingSkillSetCounter < skillToMatchCharm.size(); ++missingSkillSetCounter) {
+            MissingSkill missingSkill = skillToMatchCharm.get(missingSkillSetCounter);
             if (generatedArmorSets.size() >= searchLimit) {
                 return generatedArmorSets;
             }
+
             // go thru the slots
-            SlotsLoop: for (int slotNumber = 1; slotNumber <= Constants.MAX_SLOTS; ++slotNumber) {
+            SlotsLoop:
+            for (int slotNumber = 1; slotNumber <= Constants.MAX_SLOTS; ++slotNumber) {
                 if (onSearchResultProgress != null) {
-                    onSearchResultProgress.onProgress(Math.round(currentProgress + (float)progress/maxProgress * maxRatio));
+                    onSearchResultProgress.onProgress(Math.round(currentProgress + (float) progress / maxProgress * maxRatio));
                 }
 
                 // Check if solution exist for 1...n slots
@@ -80,9 +116,9 @@ public class CharmSearch {
                     // See if we can get by with just slots.
                     Map<String, Integer> onlyDecorationCharm = SkillActivationChart.add(skillChartWithDecoration.getSkillChart(), missingSkill.equipmentNode.getSkillTable());
                     List<ActivatedSkill> activatedSkills = SkillActivationChart.getActivatedSkills(onlyDecorationCharm);
-                    if (SkillUtil.containsDesiredSkills(desiredSkills, activatedSkills)){
+                    if (SkillUtil.containsDesiredSkills(desiredSkills, activatedSkills)) {
 
-                        GeneratedCharm generatedCharm = new GeneratedCharm(StringConstants.ANY_CHARM_WITH_SLOTS+slotNumber, Collections.emptyList(), skillChartWithDecoration.getDecorations(), slotNumber);
+                        GeneratedCharm generatedCharm = new GeneratedCharm(StringConstants.ANY_CHARM_WITH_SLOTS + slotNumber, Collections.emptyList(), skillChartWithDecoration.getDecorations(), slotNumber);
                         GeneratedArmorSet generatedArmorSet = new GeneratedArmorSet(missingSkill.equipmentNode, generatedCharm, onlyDecorationCharm);
                         generatedArmorSets.add(generatedArmorSet);
                         if (onSearchResultProgress != null) {
@@ -91,14 +127,13 @@ public class CharmSearch {
                         break SlotsLoop;
                     }
 
-
                     HashMap<String, Integer> leftOverSkills = new HashMap<>(missingSkill.missingSkillsMap);
                     for (Decoration decoration : skillChartWithDecoration.getDecorations()) {
                         for (ArmorSkill armorSkill : decoration.getArmorSkills()) {
                             Integer points = leftOverSkills.get(armorSkill.kind);
                             if (points != null) {
                                 int leftOverPoints = points - armorSkill.points;
-                                if (leftOverPoints > 0 ) {
+                                if (leftOverPoints > 0) {
                                     leftOverSkills.put(armorSkill.kind, leftOverPoints);
                                 } else {
                                     leftOverSkills.remove(armorSkill.kind);
@@ -124,19 +159,18 @@ public class CharmSearch {
                         // Check if we only need one skill
                         if (charmsBySkills.size() == 1 && leftOverSkills.keySet().size() == 1) {
                             for (CharmData charmData : charmsBySkills.get(0)) {
-                               int pointsNeeded = leftOverSkills.get(charmData.getSkillkind());
-                               for (CharmData.CharmPoint charmPoint : charmData.getCharmPoints()) {
-                                   if (pointsNeeded < charmPoint.getMax()) {
-
-                                       GeneratedCharm.CharmSkill charmSkill = new GeneratedCharm.CharmSkill(charmData.getSkillkind(), pointsNeeded, charmPoint.getSkillPosition());
-                                       GeneratedCharm generatedCharm = buildGeneratedCharm(charmData.getCharmType(), skillChartWithDecoration.getDecorations(), slotNumber, charmSkill);
-                                       GeneratedArmorSet generatedArmorSet = buildGeneratedArmorSet(generatedCharm, missingSkill);
-                                       generatedArmorSets.add(generatedArmorSet);
-                                       if (onSearchResultProgress != null) {
-                                           onSearchResultProgress.onProgress(generatedArmorSet);
-                                       }
-                                   }
-                               }
+                                int pointsNeeded = leftOverSkills.get(charmData.getSkillkind());
+                                for (CharmData.CharmPoint charmPoint : charmData.getCharmPoints()) {
+                                    if (pointsNeeded < charmPoint.getMax()) {
+                                        GeneratedCharm.CharmSkill charmSkill = new GeneratedCharm.CharmSkill(charmData.getSkillkind(), pointsNeeded, charmPoint.getSkillPosition());
+                                        GeneratedCharm generatedCharm = buildGeneratedCharm(charmData.getCharmType(), skillChartWithDecoration.getDecorations(), slotNumber, charmSkill);
+                                        GeneratedArmorSet generatedArmorSet = buildGeneratedArmorSet(generatedCharm, missingSkill);
+                                        generatedArmorSets.add(generatedArmorSet);
+                                        if (onSearchResultProgress != null) {
+                                            onSearchResultProgress.onProgress(generatedArmorSet);
+                                        }
+                                    }
+                                }
                             }
                         }
                         // NOTE: If the game ever gave charm more than 2 skills, this will have to be changed.
@@ -196,7 +230,7 @@ public class CharmSearch {
         return new GeneratedArmorSet(missingSkill.equipmentNode, generatedCharm, totalSkillTable);
     }
 
-    private GeneratedCharm buildGeneratedCharm(String charmType, List<Decoration> decorations, int slotNumber, GeneratedCharm.CharmSkill... charmSkills){
+    private GeneratedCharm buildGeneratedCharm(String charmType, List<Decoration> decorations, int slotNumber, GeneratedCharm.CharmSkill... charmSkills) {
         List<GeneratedCharm.CharmSkill> charm = new ArrayList<>(2);
         charm.addAll(Arrays.asList(charmSkills));
         return new GeneratedCharm(charmType, charm, decorations, slotNumber);

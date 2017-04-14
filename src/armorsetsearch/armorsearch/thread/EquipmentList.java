@@ -2,6 +2,8 @@ package armorsetsearch.armorsearch.thread;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import models.Decoration;
 
 public class EquipmentList {
 
@@ -22,6 +24,10 @@ public class EquipmentList {
         equipmentNodes.add(equipmentNode);
     }
 
+    public void add(List<EquipmentNode> equipmentNodes) {
+        this.equipmentNodes.addAll(equipmentNodes);
+    }
+
     public void add(EquipmentList equipmentList) {
         equipmentNodes.addAll(equipmentList.equipmentNodes);
     }
@@ -32,5 +38,9 @@ public class EquipmentList {
 
     public List<EquipmentNode> getEquipmentNodes() {
         return equipmentNodes;
+    }
+
+    public void remove(int index){
+        equipmentNodes.remove(index);
     }
 }

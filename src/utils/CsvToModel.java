@@ -82,7 +82,7 @@ class CsvToModel {
             .setEquipmentType(equipmentType);
     }
 
-    public static SkillActivationRequirement csvSkillActivationRequirementRowToModel(String[] row) {
+    public static SkillActivationRequirement csvSkillActivationRequirementRowToModel(String[] row, int id) {
         String name = row[0];
         String kind = row[1];
         Integer pointsToActivate = tryParseInt(row[2]);
@@ -90,6 +90,7 @@ class CsvToModel {
 
         String displayText = row[5];
         return SkillActivationRequirement.Builder()
+            .setId(id)
             .setName(name)
             .setKind(kind)
             .setPointsNeededToActivate(pointsToActivate)
