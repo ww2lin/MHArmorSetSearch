@@ -1,6 +1,7 @@
 package ui;
 
 import armorsetsearch.ArmorSearchWrapper;
+import armorsetsearch.skillactivation.SkillActivationRequirement;
 import com.sun.javafx.binding.StringConstant;
 import com.sun.tools.javac.code.Attribute;
 import constants.Constants;
@@ -94,7 +95,6 @@ public class MonsterHunterArmorSearcher extends JFrame {
 
         add(container, BorderLayout.WEST);
 
-
         pack();
 
         setIdleState();
@@ -106,6 +106,19 @@ public class MonsterHunterArmorSearcher extends JFrame {
     }
 
     private void setupListeners() {
+        //// For testing purposes.
+        //int[] ids = new int[]{83, 84, 145, 146, 149};
+        //
+        //for (int i : ids) {
+        //    for (SkillActivationRequirement skillActivationRequirement : armorSearchWrapper.getPositiveSkillList()) {
+        //        if (skillActivationRequirement.getId() == i) {
+        //            List<SkillActivationRequirement> skillActivationRequirements = new ArrayList<>();
+        //            skillActivationRequirements.add(skillActivationRequirement);
+        //            desiredArmorSkillPanel.add(skillActivationRequirements);
+        //        }
+        //    }
+        //}
+
         addDesireSkillButton.addActionListener(e -> {
             desiredArmorSkillPanel.add(searchArmorSkillPanel.getSelectedValues());
         });

@@ -59,6 +59,7 @@ public class CsvReader {
         try {
             Map<String, List<SkillActivationRequirement>> skillActivationChart = new LinkedHashMap<>();
             reader = new CSVReader(new FileReader(path));
+            int id = 0;
             String[] nextLine;
 
             // skip over the header
@@ -67,7 +68,7 @@ public class CsvReader {
             // go over the CSV file line by line.
             while ((nextLine = reader.readNext()) != null) {
                 // nextLine[] is an array of values from the line
-                SkillActivationRequirement skillActivationRequirement = CsvToModel.csvSkillActivationRequirementRowToModel(nextLine);
+                SkillActivationRequirement skillActivationRequirement = CsvToModel.csvSkillActivationRequirementRowToModel(nextLine, id++);
 
                 // Check to see if this kind of skill already exists, if so append it to the same list
                 String kind = skillActivationRequirement.getKind();

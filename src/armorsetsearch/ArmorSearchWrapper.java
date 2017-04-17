@@ -1,6 +1,7 @@
 package armorsetsearch;
 
 import armorsetsearch.armorsearch.ArmorSearch;
+import armorsetsearch.armorsearch.thread.EquipmentList;
 import armorsetsearch.charmsearch.CharmSearch;
 import armorsetsearch.decorationsearch.DecorationSearch;
 import armorsetsearch.filter.ArmorFilter;
@@ -24,6 +25,7 @@ import armorsetsearch.skillactivation.ActivatedSkill;
 import armorsetsearch.skillactivation.SkillActivationChart;
 import armorsetsearch.skillactivation.SkillActivationRequirement;
 import utils.CsvReader;
+import utils.StopWatch;
 
 public class ArmorSearchWrapper {
 
@@ -51,6 +53,7 @@ public class ArmorSearchWrapper {
     private List<ArmorFilter> armorFilters;
     private ArmorSearch armorSearch;
     private CharmSearch charmSearch;
+    private DecorationSearch decorationSearch;
 
     private int weapSlot = 0;
 
@@ -108,22 +111,25 @@ public class ArmorSearchWrapper {
         desiredSkills.forEach(skillActivationRequirement -> {
             activatedSkills.add(new ActivatedSkill(skillActivationRequirement));
         });
-
-        DecorationSearch decorationSearch = new DecorationSearch(activatedSkills, decorationLookupTable);
-
+        StopWatch stopWatch = new StopWatch();
+        decorationSearch = new DecorationSearch(onSearchResultProgress, activatedSkills, decorationLookupTable);
+        stopWatch.printMsgAndResetTime("Finished decoration setup");
         charmSearch = new CharmSearch(uniqueSetSearchLimit, onSearchResultProgress, charmLookupTable, decorationSearch);
+        stopWatch.printMsgAndResetTime("Finished charm setup");
+        armorSearch = new ArmorSearch(weapSlot, armorSkillCacheTable, uniqueSetSearchLimit, onSearchResultProgress);
+        stopWatch.printMsgAndResetTime("Finished armor setup");
 
+        System.out.println("Starting Armor Search.");
+        EquipmentList equipmentList = armorSearch.findArmorSetWith(activatedSkills);
+        stopWatch.printMsgAndResetTime("Finished Armor Search");
+        System.out.println("Starting Decoration Search.");
+        equipmentList = decorationSearch.buildEquipmentWithDecorationSkillTable(equipmentList, activatedSkills);
+        stopWatch.printMsgAndResetTime("Finished Decoration Search");
+        System.out.println("Starting Charm Search.");
+        List<GeneratedArmorSet> generatedArmorSets = charmSearch.findAValidCharmWithArmorSkill(equipmentList, activatedSkills, 50);
+        stopWatch.printMsgAndResetTime("Finished Charm Search");
 
-        armorSearch = new ArmorSearch(weapSlot,
-                                      armorSkillCacheTable,
-                                      armorSetFilters,
-                                      uniqueSetSearchLimit,
-                                      decorationSearch,
-                                      charmSearch,
-                                      onSearchResultProgress);
-
-
-        return armorSearch.findArmorSetWith(activatedSkills);
+        return generatedArmorSets;
     }
 
     public void setGender(Gender gender) {

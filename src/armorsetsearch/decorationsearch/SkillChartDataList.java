@@ -2,6 +2,7 @@ package armorsetsearch.decorationsearch;
 
 import java.util.ArrayList;
 import java.util.List;
+import models.Decoration;
 
 class SkillChartDataList {
     private List<SkillChartWithDecoration> skillChartWithDecorations = new ArrayList<>();
@@ -29,11 +30,21 @@ class SkillChartDataList {
         return skillChartWithDecorations;
     }
 
+    public void setSkillChartWithDecorations(List<SkillChartWithDecoration> skillChartWithDecorations) {
+        this.skillChartWithDecorations = skillChartWithDecorations;
+    }
+
+    public int size(){
+        return skillChartWithDecorations.size();
+    }
+
     public static SkillChartDataList cartesianProduct(SkillChartDataList list1, SkillChartDataList list2) {
         SkillChartDataList skillChartDataList = new SkillChartDataList();
-        for (SkillChartWithDecoration skillChartWithDecoration1 : list1.skillChartWithDecorations) {
-            for (SkillChartWithDecoration skillChartWithDecoration2 : list2.skillChartWithDecorations) {
-                SkillChartWithDecoration newSkillChart = SkillChartWithDecoration.add(skillChartWithDecoration1, skillChartWithDecoration2);
+        for (int i = 0; i < list1.skillChartWithDecorations.size(); ++i) {
+            SkillChartWithDecoration decoration1 = list1.get(i);
+            for (int j = i; j < list2.size(); ++j) {
+                SkillChartWithDecoration decoration2 = list2.get(j);
+                SkillChartWithDecoration newSkillChart = SkillChartWithDecoration.add(decoration1, decoration2);
                 skillChartDataList.add(newSkillChart);
             }
         }

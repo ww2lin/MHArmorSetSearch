@@ -3,6 +3,7 @@ package armorsetsearch.skillactivation;
 import models.ClassType;
 
 public class SkillActivationRequirement {
+    private int id;
     private String name;
     private String kind;
     private int pointsNeededToActivate;
@@ -17,6 +18,15 @@ public class SkillActivationRequirement {
 
     public static SkillActivationRequirement Builder() {
         return new SkillActivationRequirement();
+    }
+
+    public SkillActivationRequirement setId(int id) {
+        this.id = id;
+        return this;
+    }
+
+    public int getId() {
+        return id;
     }
 
     public SkillActivationRequirement setName(String name) {
@@ -76,11 +86,13 @@ public class SkillActivationRequirement {
     @Override
     public String toString() {
         return "SkillActivationRequirement{" +
-            "name='" + name + '\'' +
+            "id=" + id +
+            ", name='" + name + '\'' +
             ", kind='" + kind + '\'' +
             ", pointsNeededToActivate=" + pointsNeededToActivate +
             ", classType=" + classType +
             ", isNegativeSkill=" + isNegativeSkill +
+            ", displayText='" + displayText + '\'' +
             '}';
     }
 
@@ -95,27 +107,11 @@ public class SkillActivationRequirement {
 
         SkillActivationRequirement that = (SkillActivationRequirement) o;
 
-        //if (pointsNeededToActivate != that.pointsNeededToActivate) {
-        //    return false;
-        //}
-        if (isNegativeSkill != that.isNegativeSkill) {
-            return false;
-        }
-        //if (!name.equals(that.name)) {
-        //    return false;
-        //}
-        if (!kind.equals(that.kind)) {
-            return false;
-        }
-        return classType == that.classType;
+        return id == that.id;
     }
 
-    @Override public int hashCode() {
-        //int result = name.hashCode();
-        int result = kind.hashCode();
-        //result = 31 * result + pointsNeededToActivate;
-        result = 31 * result + classType.hashCode();
-        result = 31 * result + (isNegativeSkill ? 1 : 0);
-        return result;
+    @Override
+    public int hashCode() {
+        return id;
     }
 }

@@ -55,7 +55,13 @@ public class ArmorSkillPanel extends JPanel{
 
     public void add(List<SkillActivationRequirement> skillActivationRequirements){
         skillActivationRequirements.forEach(skillActivationRequirement -> {
-            if (!modelList.contains(skillActivationRequirement)){
+            boolean hasSameKindSkill = false;
+            for (SkillActivationRequirement activationRequirement : modelList) {
+                if (skillActivationRequirement.getKind().equalsIgnoreCase(activationRequirement.getKind())) {
+                    hasSameKindSkill = true;
+                }
+            }
+            if (!hasSameKindSkill) {
                 modelList.add(skillActivationRequirement);
             }
         });

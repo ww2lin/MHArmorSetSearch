@@ -9,6 +9,7 @@ import models.ArmorSkill;
 import models.ClassType;
 import models.Decoration;
 import models.Equipment;
+import models.EquipmentType;
 import models.GeneratedCharm;
 
 public class SkillActivationChart {
@@ -47,10 +48,10 @@ public class SkillActivationChart {
         newChart.putAll(chart1);
         for (Map.Entry<String, Integer> chartData : chart2.entrySet()) {
             Integer points = newChart.get(chartData.getKey());
-            if (points == null){
+            if (points == null) {
                 points = 0;
             }
-            points+=chartData.getValue();
+            points += chartData.getValue();
             newChart.put(chartData.getKey(), points);
         }
         return newChart;
@@ -73,16 +74,34 @@ public class SkillActivationChart {
         return currentEquipmentSkillChart;
     }
 
+    public static Map<String, Integer> getActivatedSkillChart(List<Equipment> equipments, int maxIndex, int skillMultiplier) {
+        Map<String, Integer> currentEquipmentSkillChart = new HashMap<>();
+        for (int i = 0; i <= maxIndex ; ++i) {
+            Equipment equipment = equipments.get(i);
+            int multiplier = equipment.getEquipmentType() == EquipmentType.BODY ? skillMultiplier : 1;
+            updateSkillChartByArmorSkill(currentEquipmentSkillChart, equipment.getArmorSkills(), multiplier);
+            updateSkillChartByDecoration(currentEquipmentSkillChart, equipment.getDecorations(), multiplier);
+        }
+        return currentEquipmentSkillChart;
+    }
+
+    public static Map<String, Integer> getActivatedSkillChart(Map<String, Integer> skillTable, Map<Decoration, Integer> decorations) {
+        Map<String, Integer> currentEquipmentSkillChart = new HashMap<>(skillTable);
+        updateSkillChartByDecoration(currentEquipmentSkillChart, decorations, 1);
+        return currentEquipmentSkillChart;
+    }
+
     /**
      * refactor this later to remove duplicated code.
+     *
      * @param decoration
      * @return
      */
-    public static Map<String, Integer> getSkillChart(Decoration decoration){
+    public static Map<String, Integer> getSkillChart(Decoration decoration) {
         Map<String, Integer> currentEquipmentSkillChart = new HashMap<>();
-        for (ArmorSkill armorSkill : decoration.getArmorSkills()){
+        for (ArmorSkill armorSkill : decoration.getArmorSkills()) {
             Integer sum = currentEquipmentSkillChart.get(armorSkill.kind);
-            if (sum == null){
+            if (sum == null) {
                 // if the current skill kind don't exist, assign it to 0
                 sum = 0;
             }
@@ -94,54 +113,66 @@ public class SkillActivationChart {
         return currentEquipmentSkillChart;
     }
 
-    public static Map<String, Integer> getSkillChart(GeneratedCharm generatedCharm, int charmSkillMultiplier){
+    public static Map<String, Integer> getSkillChart(GeneratedCharm generatedCharm, int charmSkillMultiplier) {
         Map<String, Integer> currentCharmSkillChart = new HashMap<>();
         updateSkillChartByCharmSkill(currentCharmSkillChart, generatedCharm, charmSkillMultiplier);
         updateSkillChartByDecoration(currentCharmSkillChart, generatedCharm.getDecorations(), charmSkillMultiplier);
         return currentCharmSkillChart;
     }
 
-    public static void updateSkillChartByArmorSkill(Map<String, Integer> currentEquipmentSkillChart, Set<ArmorSkill> armorSkills, int skillMultiplier){
-        for (ArmorSkill armorSkill : armorSkills){
+    public static void updateSkillChartByArmorSkill(Map<String, Integer> currentEquipmentSkillChart, Set<ArmorSkill> armorSkills, int skillMultiplier) {
+        for (ArmorSkill armorSkill : armorSkills) {
             // accumulate the skill point by skill kind
             Integer sum = currentEquipmentSkillChart.get(armorSkill.kind);
-            if (sum == null){
+            if (sum == null) {
                 // if the current skill kind don't exist, assign it to 0
                 sum = 0;
             }
 
-            sum += armorSkill.points;
-            sum *= skillMultiplier;
+            sum += (armorSkill.points * skillMultiplier);
             currentEquipmentSkillChart.put(armorSkill.kind, sum);
         }
     }
 
-    public static void updateSkillChartByDecoration(Map<String, Integer> currentEquipmentSkillChart, Map<Decoration, Integer> decorations, int skillMuliplier){
+    public static void updateSkillChartByDecoration(Map<String, Integer> currentEquipmentSkillChart, List<Decoration> decorations, int skillMuliplier) {
         // loop over the decorations
-        for (Map.Entry<Decoration, Integer> decorationSet: decorations.entrySet()) {
+        Map<Decoration, Integer> decorationIntegerMap = new HashMap<>();
+        for (Decoration decoration : decorations) {
+            Integer frequencyCount = decorationIntegerMap.get(decoration);
+            if (frequencyCount == null) {
+                frequencyCount = 0;
+            }
+            frequencyCount +=1;
+            decorationIntegerMap.put(decoration, frequencyCount);
+        }
+        updateSkillChartByDecoration(currentEquipmentSkillChart, decorationIntegerMap, skillMuliplier);
+    }
+
+    public static void updateSkillChartByDecoration(Map<String, Integer> currentEquipmentSkillChart, Map<Decoration, Integer> decorations, int skillMuliplier) {
+        // loop over the decorations
+        for (Map.Entry<Decoration, Integer> decorationSet : decorations.entrySet()) {
             Decoration decoration = decorationSet.getKey();
             Integer frequencyCount = decorationSet.getValue();
 
-            for (ArmorSkill armorSkill : decoration.getArmorSkills()){
+            for (ArmorSkill armorSkill : decoration.getArmorSkills()) {
                 Integer sum = currentEquipmentSkillChart.get(armorSkill.kind);
-                if (sum == null){
+                if (sum == null) {
                     // if the current skill kind don't exist, assign it to 0
                     sum = 0;
                 }
 
                 // Times the armor skill by the number of the same jewels
-                sum += (armorSkill.points * frequencyCount);
-                sum *= skillMuliplier;
+                sum += (armorSkill.points * frequencyCount * skillMuliplier);
                 currentEquipmentSkillChart.put(armorSkill.kind, sum);
             }
         }
     }
 
-    public static void updateSkillChartByCharmSkill(Map<String, Integer> currentEquipmentSkillChart, GeneratedCharm generatedCharm, int charmMultiplier){
-        for (GeneratedCharm.CharmSkill charmSkill : generatedCharm.getCharmSkills()){
+    public static void updateSkillChartByCharmSkill(Map<String, Integer> currentEquipmentSkillChart, GeneratedCharm generatedCharm, int charmMultiplier) {
+        for (GeneratedCharm.CharmSkill charmSkill : generatedCharm.getCharmSkills()) {
             // accumulate the skill point by skill kind
             Integer sum = currentEquipmentSkillChart.get(charmSkill.getSkillKind());
-            if (sum == null){
+            if (sum == null) {
                 // if the current skill kind don't exist, assign it to 0
                 sum = 0;
             }
@@ -151,6 +182,9 @@ public class SkillActivationChart {
         }
     }
 
+    public static List<ActivatedSkill> getActivatedSkills(Equipment equipment) {
+        return getActivatedSkills(getActivatedSkillChart(equipment));
+    }
     /**
      * check to see which skill is activated.
      * @param currentEquipmentSkillChart

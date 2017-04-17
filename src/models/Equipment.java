@@ -260,6 +260,11 @@ public class Equipment {
         return this;
     }
 
+    public void removeAllDecorations(){
+        decorations.clear();
+        slotsUsed = 0;
+    }
+
     public void removeDecoration(Decoration decoration){
         Integer frequency = decorations.get(decoration);
         if (frequency == null || frequency <= 0){
