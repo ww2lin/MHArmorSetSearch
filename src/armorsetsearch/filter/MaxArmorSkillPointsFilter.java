@@ -1,5 +1,6 @@
 package armorsetsearch.filter;
 
+import armorsetsearch.skillactivation.ActivatedSkill;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,9 +29,11 @@ import models.Equipment;
 public class MaxArmorSkillPointsFilter implements ArmorFilter{
 
     private String skillKind;
+    private List<ActivatedSkill> desiredSkills;
 
-    public MaxArmorSkillPointsFilter(String skillKind) {
+    public MaxArmorSkillPointsFilter(String skillKind, List<ActivatedSkill> desiredSkills) {
         this.skillKind = skillKind;
+        this.desiredSkills = desiredSkills;
     }
 
     @Override
@@ -46,7 +49,6 @@ public class MaxArmorSkillPointsFilter implements ArmorFilter{
 
         // Return the armor with the max points in skillkind or has more slots than the maxed skill point equipment
         List<Equipment> maxPointBySlotsEquipments = new ArrayList<>();
-
 
         for (Equipment equipment : equipmentList) {
             List<Equipment> equipments = slotsMap.get(equipment.getSlots());
@@ -98,8 +100,7 @@ public class MaxArmorSkillPointsFilter implements ArmorFilter{
 
         return results;
     }
-
-    public List<Equipment> filterByMaxValue(Equipment templateEquipment, List<Equipment> equipmentList){
+    private List<Equipment> filterByMaxValue(Equipment templateEquipment, List<Equipment> equipmentList){
         List<Equipment> equipments = new ArrayList<>();
         int maxSkillPoints = findSkillPoint(templateEquipment);
         boolean alreadyHasTorsoUp = false;
@@ -108,17 +109,19 @@ public class MaxArmorSkillPointsFilter implements ArmorFilter{
             int currentMaxSkill = findSkillPoint(equipment);
             if (equipment.getSlots() > templateEquipment.getSlots()) {
                 equipments.add(equipment);
-            } else if (currentMaxSkill >= maxSkillPoints && maxSkillPoints > 0){
+            } else if (!alreadyHasTorsoUp && equipment.isTorsoUp()) {
+                alreadyHasTorsoUp = true;
+                equipments.add(equipment);
+            //}
+            //else if (hasMoreThanOneDesireSkill(equipment)) {
+            //    equipments.add(equipment);
+            } else if (currentMaxSkill >= maxSkillPoints && maxSkillPoints > 0) {
                 // select base on rarity
                 if (equipment.getRarity() >= templateEquipment.getRarity()) {
                     equipments.add(equipment);
                 }
-            } else if (!alreadyHasTorsoUp && equipment.isTorsoUp()) {
-                alreadyHasTorsoUp = true;
-                equipments.add(equipment);
             }
         }
-        // Need to remember to add back the templatePiece
         return equipments;
     }
 
@@ -129,5 +132,28 @@ public class MaxArmorSkillPointsFilter implements ArmorFilter{
             }
         }
         return 0;
+    }
+
+    /**
+     * Given a equipment check if it contains more than one desired skill.
+     * @param equipment
+     * @return
+     */
+    private boolean hasMoreThanOneDesireSkill(Equipment equipment) {
+        int numberOfDesiredSkills = 0;
+        for (ArmorSkill armorSkill : equipment.getArmorSkills()) {
+            if (armorSkill.isPositive()) {
+
+                for (ActivatedSkill activatedSkill : desiredSkills) {
+                    if (armorSkill.isKind(activatedSkill.getKind())){
+                        if (++numberOfDesiredSkills > 1){
+                            return true;
+                        }
+                    }
+                }
+
+            }
+        }
+        return false;
     }
 }

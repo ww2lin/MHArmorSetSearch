@@ -30,12 +30,18 @@ public class CharmSearch {
     private OnSearchResultProgress onSearchResultProgress;
     private int searchLimit;
     private boolean stop = false;
+    private final float maxProgress;
+    private final float initProgress;
+    private List<GeneratedArmorSet> results;
 
-    public CharmSearch(int searchLimit, OnSearchResultProgress onSearchResultProgress, Map<String, List<CharmData>> charmLookupTable, DecorationSearch decorationSearch) {
+    public CharmSearch(List<GeneratedArmorSet> results, float initProgress, float maxProgress, int searchLimit, OnSearchResultProgress onSearchResultProgress, Map<String, List<CharmData>> charmLookupTable, DecorationSearch decorationSearch) {
+        this.results = results;
         this.searchLimit = searchLimit;
         this.onSearchResultProgress = onSearchResultProgress;
         this.charmLookupTable = charmLookupTable;
         this.decorationSearch = decorationSearch;
+        this.initProgress = initProgress;
+        this.maxProgress = maxProgress;
     }
 
     private void placeDecorations(EquipmentNode equipmentNode, SkillTable skillTable){
@@ -54,18 +60,25 @@ public class CharmSearch {
 
     public List<GeneratedArmorSet> findAValidCharmWithArmorSkill(EquipmentList equipmentList, List<ActivatedSkill> desiredSkills, int currentProgress) {
         List<MissingSkill> skillToMatchCharm = new ArrayList<>();
-        List<GeneratedArmorSet> generatedArmorSets = new ArrayList<>();
+
+        float increment = maxProgress/(2 * equipmentList.size());
+        int progress = 0;
+
         for (int i = 0; i < equipmentList.size(); ++i) {
             EquipmentNode equipmentNode = equipmentList.getEquipmentNodes().get(i);
             // find any skill that has not meet the desired skills yet.
             for (SkillTable skillTable : equipmentNode.getSkillTables()) {
+
+                if (stop || results.size() >= searchLimit) {
+                    return results;
+                }
+
                 Map<String, Integer> currentSkillTable = SkillActivationChart.add(skillTable.getSkillTable(), equipmentNode.getSkillTable());
                 List<ActivatedSkill> currentActivatedSkill = SkillActivationChart.getActivatedSkills(currentSkillTable);
 
                 if (SkillUtil.containsDesiredSkills(desiredSkills, currentActivatedSkill)) {
                     equipmentNode.setActivatedSkills(currentActivatedSkill);
                     equipmentNode.setSkillTable(currentSkillTable);
-                    // TODO place the decoration in to the armor!
                     if (onSearchResultProgress != null) {
                         EquipmentNode tempNode = new EquipmentNode(equipmentNode.getEquipments(), currentSkillTable);
                         placeDecorations(tempNode, skillTable);
@@ -73,7 +86,6 @@ public class CharmSearch {
                         onSearchResultProgress.onProgress(generatedArmorSet);
                     }
                 } else {
-                    // TODO place the decoration in to the armor!
                     Map<String, Integer> missingSkill = SkillUtil.getMissingSkills(desiredSkills, currentSkillTable);
                     if (missingSkill.keySet().size() <= Constants.MAX_SLOTS + Constants.MAX_NUMBER_CHARM_SKILL) {
                         EquipmentNode tempNode = new EquipmentNode(equipmentNode.getEquipments(), currentSkillTable);
@@ -82,25 +94,27 @@ public class CharmSearch {
                     }
                 }
             }
+            progress+=increment;
+            if (onSearchResultProgress != null) {
+                onSearchResultProgress.onProgress((int)initProgress+progress);
+            }
         }
-        int maxProgress = skillToMatchCharm.size() * Constants.MAX_SLOTS;
-        float maxRatio = Constants.MAX_PROGRESS_BAR - currentProgress;
-        int progress = 0;
+
         /*
          * There is a lot of nested for loops, but that is alright.
          * Since most of he loops are bounded by a small constant.
          */
         for (int missingSkillSetCounter = 0; missingSkillSetCounter < skillToMatchCharm.size(); ++missingSkillSetCounter) {
             MissingSkill missingSkill = skillToMatchCharm.get(missingSkillSetCounter);
-            if (generatedArmorSets.size() >= searchLimit) {
-                return generatedArmorSets;
+            if (results.size() >= searchLimit) {
+                return results;
             }
-
+            progress+=increment;
             // go thru the slots
             SlotsLoop:
             for (int slotNumber = 1; slotNumber <= Constants.MAX_SLOTS; ++slotNumber) {
                 if (onSearchResultProgress != null) {
-                    onSearchResultProgress.onProgress(Math.round(currentProgress + (float) progress / maxProgress * maxRatio));
+                    onSearchResultProgress.onProgress((int) initProgress + progress);
                 }
 
                 // Check if solution exist for 1...n slots
@@ -108,9 +122,8 @@ public class CharmSearch {
                 List<SkillChartWithDecoration> skillChartWithDecorationsToTry = decorationSearch.getSkillListBySlot(missingSkill.missingSkillsMap.keySet(), slotNumber);
 
                 for (SkillChartWithDecoration skillChartWithDecoration : skillChartWithDecorationsToTry) {
-                    ++progress;
                     if (stop) {
-                        return generatedArmorSets;
+                        return results;
                     }
 
                     // See if we can get by with just slots.
@@ -120,7 +133,7 @@ public class CharmSearch {
 
                         GeneratedCharm generatedCharm = new GeneratedCharm(StringConstants.ANY_CHARM_WITH_SLOTS + slotNumber, Collections.emptyList(), skillChartWithDecoration.getDecorations(), slotNumber);
                         GeneratedArmorSet generatedArmorSet = new GeneratedArmorSet(missingSkill.equipmentNode, generatedCharm, onlyDecorationCharm);
-                        generatedArmorSets.add(generatedArmorSet);
+                        results.add(generatedArmorSet);
                         if (onSearchResultProgress != null) {
                             onSearchResultProgress.onProgress(generatedArmorSet);
                         }
@@ -165,7 +178,7 @@ public class CharmSearch {
                                         GeneratedCharm.CharmSkill charmSkill = new GeneratedCharm.CharmSkill(charmData.getSkillkind(), pointsNeeded, charmPoint.getSkillPosition());
                                         GeneratedCharm generatedCharm = buildGeneratedCharm(charmData.getCharmType(), skillChartWithDecoration.getDecorations(), slotNumber, charmSkill);
                                         GeneratedArmorSet generatedArmorSet = buildGeneratedArmorSet(generatedCharm, missingSkill);
-                                        generatedArmorSets.add(generatedArmorSet);
+                                        results.add(generatedArmorSet);
                                         if (onSearchResultProgress != null) {
                                             onSearchResultProgress.onProgress(generatedArmorSet);
                                         }
@@ -199,7 +212,7 @@ public class CharmSearch {
                                                             GeneratedCharm generatedCharm = buildGeneratedCharm(charmData1.getCharmType(), skillChartWithDecoration.getDecorations(), slotNumber, charmSkill1, charmSkill2);
 
                                                             GeneratedArmorSet generatedArmorSet = buildGeneratedArmorSet(generatedCharm, missingSkill);
-                                                            generatedArmorSets.add(generatedArmorSet);
+                                                            results.add(generatedArmorSet);
 
                                                             if (onSearchResultProgress != null) {
                                                                 onSearchResultProgress.onProgress(generatedArmorSet);
@@ -219,7 +232,7 @@ public class CharmSearch {
                 }
             }
         }
-        return generatedArmorSets;
+        return results;
     }
 
     private GeneratedArmorSet buildGeneratedArmorSet(GeneratedCharm generatedCharm, MissingSkill missingSkill) {

@@ -6,6 +6,7 @@ import constants.Constants;
 import constants.StringConstants;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -32,16 +33,17 @@ public class ArmorSkillCacheTable {
     private List<ArmorFilter> armorFilters;
     private ClassType classType;
     private Gender gender;
+    private List<ActivatedSkill> desiredSkills;
     /**
      * Build a look up table by skill, for faster lookup time. E.g
      * headEquipmentCache: skillKind -> All head armor that has this skill.
      * This construction should be moved into the csv while generating the List of equipments
      */
-    //TODO fix torso up armors, and 3 slotted armors
-    public ArmorSkillCacheTable(SkillActivationChart skillActivationChart, AllEquipments allEquipment, List<ArmorFilter> armorFilters, ClassType classType, Gender gender) {
+    public ArmorSkillCacheTable(List<ActivatedSkill> desiredSkills, SkillActivationChart skillActivationChart, AllEquipments allEquipment, List<ArmorFilter> armorFilters, ClassType classType, Gender gender) {
         this.armorFilters = armorFilters;
         this.classType = classType;
         this.gender = gender;
+        this.desiredSkills = desiredSkills;
 
         Set<String> skillKinds = skillActivationChart.getSkillKind();
 
@@ -62,7 +64,7 @@ public class ArmorSkillCacheTable {
     }
 
     private void updateCacheBySkillKind(final List<Equipment> equipmentData, Map<String, List<Equipment>> currentCache, String skillKind){
-        MaxArmorSkillPointsFilter maxArmorSkillPointsFilter = new MaxArmorSkillPointsFilter(skillKind);
+        MaxArmorSkillPointsFilter maxArmorSkillPointsFilter = new MaxArmorSkillPointsFilter(skillKind, desiredSkills);
 
         List<Equipment> equipmentsByKind = currentCache.get(skillKind);
         if (equipmentsByKind == null){
@@ -121,6 +123,8 @@ public class ArmorSkillCacheTable {
     private List<Equipment> getEquipmentsWithDesiredSkills(EquipmentType equipmentType, List<ActivatedSkill> desiredSkills) {
         Map<String, List<Equipment>> cache = allEquipments.get(equipmentType);
 
+        // Make sure no duplicated equipment are selected.
+        Set<Integer> equipmentIds = new HashSet<>();
         // check to see if we need to sneak in charka armors.
         boolean containsThreeSlottedEquipment = false;
         List<Equipment> equipments = new ArrayList<>();
@@ -128,6 +132,12 @@ public class ArmorSkillCacheTable {
             List<Equipment> equipmentsWithDesiredSkills = cache.get(activatedSkill.getKind());
             if (equipmentsWithDesiredSkills != null) {
                 for (Equipment equipmentToAdd : equipmentsWithDesiredSkills) {
+                    if (equipmentIds.contains(equipmentToAdd.getId())) {
+                        continue;
+                    }
+
+                    equipmentIds.add(equipmentToAdd.getId());
+
                     if (equipmentToAdd.getSlots() == Constants.MAX_SLOTS) {
                         // Found atleast one armor that has 3 slots.
                         containsThreeSlottedEquipment = true;
