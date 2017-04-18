@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -26,16 +25,21 @@ public class DecorationSearch {
 
     private Map<Integer, List<Decoration>> slotToDecorationMap = new HashMap<>();
     private SkillChartDataList[] decorationSkillTable;
+    private Map<CombinationDecorationHashKey, SkillTables> decorationCombinationCache = new HashMap<>();
 
     private Map<Integer, Map<Integer, AllDecorationPossibleForGivenSlot>> slotsToAllCombinationSlot;
     private OnSearchResultProgress onSearchResultProgress;
+    private boolean stop = false;
+    private final float initProgress;
+    private final float maxProgress;
+    private final int uniqueSetSearchLimit;
 
-    public DecorationSearch(OnSearchResultProgress onSearchResultProgress, List<ActivatedSkill> desiredSkills, Map<String, List<Decoration>> decorationLookupTable) {
+    public DecorationSearch(float initProgress, float maxProgress, int uniqueSetSearchLimit, OnSearchResultProgress onSearchResultProgress, List<ActivatedSkill> desiredSkills, Map<String, List<Decoration>> decorationLookupTable) {
         this.onSearchResultProgress = onSearchResultProgress;
-        Set<String> wantedSkills = new HashSet<>();
-        for (ActivatedSkill activatedSkill : desiredSkills) {
-            wantedSkills.add(activatedSkill.getKind());
-        }
+        this.initProgress = initProgress;
+        this.maxProgress = maxProgress;
+        this.uniqueSetSearchLimit = uniqueSetSearchLimit;
+
         for (ActivatedSkill activatedSkill : desiredSkills) {
             List<Decoration> decorations = decorationLookupTable.get(activatedSkill.getKind());
             if (decorations != null) {
@@ -220,9 +224,10 @@ public class DecorationSearch {
         return true;
     }
 
-    private Map<CombinationDecorationHashKey, SkillTables> cache = new HashMap<>();
-
     public EquipmentList buildEquipmentWithDecorationSkillTable(EquipmentList equipmentList, List<ActivatedSkill> desiredSkills) {
+        float increment = maxProgress / equipmentList.size();
+        float progress = initProgress;
+
         for (int i = 0; i < equipmentList.size(); ++i) {
             EquipmentNode equipmentNode = equipmentList.getEquipmentNodes().get(i);
             List<Equipment> equipments = equipmentNode.getEquipments();
@@ -236,7 +241,7 @@ public class DecorationSearch {
                 }
             }
             CombinationDecorationHashKey combinationDecorationHashKey = new CombinationDecorationHashKey(slotCountByEquipment);
-            SkillTables skillTables = cache.get(combinationDecorationHashKey);
+            SkillTables skillTables = decorationCombinationCache.get(combinationDecorationHashKey);
             if (skillTables == null) {
                 // Use memorization to remember the problems that we already solved.
                 List<AllDecorationPossibleForGivenSlot> combinationDecorations = new ArrayList<>();
@@ -251,13 +256,13 @@ public class DecorationSearch {
                     }
                 }
                 skillTables = buildDecorationTable(differentSlotCount, combinationDecorations);
-                cache.put(combinationDecorationHashKey, skillTables);
+                decorationCombinationCache.put(combinationDecorationHashKey, skillTables);
             }
 
 
             SkillTables filteredTable = new SkillTables(skillTables);
 
-            for (int j = 0; j < filteredTable.size(); ++j) {
+            SkillTableLoop:for (int j = 0; j < filteredTable.size(); ++j) {
                 SkillTable skillTable = filteredTable.get(j);
 
                 Map<String, Integer> currentTable = SkillActivationChart.add(equipmentNode.getSkillTable(), skillTable.getSkillTable());
@@ -269,12 +274,23 @@ public class DecorationSearch {
                     if (sum >= Constants.MAX_CHARM_SKILL_POINT) {
                         filteredTable.remove(j);
                         --j;
-                        break;
+                        continue SkillTableLoop;
                     }
                 }
+
+                // See if we have found a set
             }
 
             equipmentNode.setSkillTables(skillTables);
+            progress+=increment;
+            if (onSearchResultProgress != null) {
+                onSearchResultProgress.onProgress((int)progress);
+            }
+
+            if (stop) {
+                return equipmentList;
+            }
+
         }
         return  equipmentList;
     }
@@ -308,6 +324,10 @@ public class DecorationSearch {
             table[i] = newTable;
         }
         return table[differentSlotCount];
+    }
+
+    public void stop() {
+        this.stop = true;
     }
 
     private class CombinationDecorationHashKey {

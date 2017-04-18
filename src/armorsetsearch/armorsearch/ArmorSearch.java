@@ -1,14 +1,10 @@
 package armorsetsearch.armorsearch;
 
 import armorsetsearch.ArmorSkillCacheTable;
-import armorsetsearch.charmsearch.CharmSearch;
-import armorsetsearch.decorationsearch.DecorationSearch;
-import armorsetsearch.filter.ArmorSetFilter;
 import armorsetsearch.armorsearch.thread.ArmorSearchWorkerThread;
 import armorsetsearch.armorsearch.thread.EquipmentList;
 import armorsetsearch.armorsearch.thread.EquipmentNode;
 import armorsetsearch.skillactivation.SkillActivationChart;
-import constants.Constants;
 import interfaces.OnSearchResultProgress;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,12 +31,18 @@ public class ArmorSearch {
     private boolean stop = false;
     private ArmorSearchWorkerThread[] workerThreads;
     private int weapSlots;
+    private final float initProgress;
+    private final float maxProgress;
+    private List<GeneratedArmorSet> results;
 
-    public ArmorSearch(int weapSlots, ArmorSkillCacheTable armorSkillCacheTable, int uniqueSetSearchLimit, OnSearchResultProgress onSearchResultProgress) {
+    public ArmorSearch(List<GeneratedArmorSet> results, float initProgress, float maxProgress, int weapSlots, ArmorSkillCacheTable armorSkillCacheTable, int uniqueSetSearchLimit, OnSearchResultProgress onSearchResultProgress) {
+        this.results = results;
         this.weapSlots = weapSlots;
         this.armorSkillCacheTable = armorSkillCacheTable;
         this.uniqueSetSearchLimit = uniqueSetSearchLimit;
         this.onSearchResultProgress = onSearchResultProgress;
+        this.initProgress = initProgress;
+        this.maxProgress = maxProgress;
     }
 
     /**
@@ -58,14 +60,12 @@ public class ArmorSearch {
      * @return
      */
     private EquipmentList searchArmor(List<ActivatedSkill> desiredSkills, Map<EquipmentType, List<Equipment>> equipmentsToSearch) {
-        // Do the body last since we need to know the previous skill point need to adjust for torso ups.
-        EquipmentType[] equipmentTypes;
+        boolean hasWepSlot = weapSlots > 0;
+        int size;
 
         // Check if we have slot for wep.
-        if (weapSlots == 0) {
-            equipmentTypes = new EquipmentType[]{EquipmentType.HEAD, EquipmentType.ARM, EquipmentType.WST, EquipmentType.LEG, EquipmentType.BODY};
-        } else {
-            equipmentTypes = new EquipmentType[]{EquipmentType.HEAD, EquipmentType.ARM, EquipmentType.WST, EquipmentType.LEG, EquipmentType.BODY, EquipmentType.WEP};
+        if (hasWepSlot) {
+            size = EquipmentType.values().length;
             // Smuggle in a weap with slots.
             Equipment wep = Equipment.Builder()
                 .setId(GENERATED_EQUIPMENT_ID)
@@ -73,18 +73,18 @@ public class ArmorSearch {
                 .setEquipmentType(EquipmentType.WEP)
                 .setSlots(weapSlots);
             equipmentsToSearch.put(EquipmentType.WEP, Collections.singletonList(wep));
+        } else {
+            size = EquipmentType.values().length - 1;
         }
 
         // Offset one for searching for charms.
-        int progressChuck = Constants.MAX_PROGRESS_BAR / (equipmentTypes.length + 1);
-        int progressBar = progressChuck;
+        int progressChuck = (int)maxProgress / size;
+        int progressBar = (int)initProgress + progressChuck;
 
-        List<GeneratedArmorSet> results = new ArrayList<>();
-        int size = equipmentTypes.length;
         EquipmentList[] table = new EquipmentList[size];
 
         // Base case.
-        EquipmentType currentType = equipmentTypes[0];
+        EquipmentType currentType = EquipmentType.values()[0];
         List<Equipment> equipments = equipmentsToSearch.get(currentType);
         EquipmentList currentEquipmentList = new EquipmentList();
         for (Equipment equipment : equipments) {
@@ -95,8 +95,13 @@ public class ArmorSearch {
 
         // iterative case
         for (int i = 1; i < size; ++i){
-            currentType = equipmentTypes[i];
+            currentType = EquipmentType.values()[i];
             equipments = equipmentsToSearch.get(currentType);
+
+            if (equipments.isEmpty()) {
+                // should only happen for wep.
+                continue;
+            }
 
             currentEquipmentList = new EquipmentList();
             // construct all the table for the i element first.
@@ -131,7 +136,7 @@ public class ArmorSearch {
                                                                maxPossiblePercentage,
                                                                onSearchResultProgress,
                                                                uniqueSetSearchLimit,
-                                                               equipmentTypes[i],
+                                                               EquipmentType.values()[i],
                                                                previousEquipmentList,
                                                                dataSet[j],
                                                                desiredSkills,
@@ -159,35 +164,15 @@ public class ArmorSearch {
             table[i-1] = null;
 
             System.out.println(i+"  "+table[i].size());
+
+            if (stop || results.size() >= uniqueSetSearchLimit) {
+                return table[i];
+            }
         }
 
         if (onSearchResultProgress != null) {
             onSearchResultProgress.onProgress(progressBar);
         }
-
-
-        // For testing.
-        //String[] test = new String[] {"グリードXRヘルム", "グリードXRアーム", "グリードXRフォールド", "グリードXRグリーヴ", "グリードXRメイル"};
-        //List<String> test1 = new ArrayList<>(Arrays.asList(test));
-
-        //List<EquipmentNode> equipmentNodes = table[size - 1].getEquipmentNodes();
-        //for (int i = 0; i < equipmentNodes.size(); ++i) {
-        //    EquipmentNode equipmentNode = equipmentNodes.get(i);
-        //    List<Equipment> equipments1 = equipmentNode.getEquipments();
-        //    boolean sameSet = true;
-        //    for (int j = 0; j < equipments1.size(); ++j) {
-        //        if (!test1.contains(equipments1.get(j).getName())) {
-        //            sameSet = false;
-        //            break;
-        //        }
-        //    }
-        //
-        //    if (sameSet) {
-        //        // same set found
-        //        System.out.println("some test "+i);
-        //        //return new EquipmentList(equipmentNode);
-        //    }
-        //}
 
         return table[size - 1];
     }
