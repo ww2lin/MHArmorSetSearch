@@ -1,12 +1,30 @@
 package armorsetsearch.skillactivation;
 
+import armorsetsearch.armorsearch.thread.EquipmentNode;
+import armorsetsearch.decorationsearch.DecorationSearch;
 import constants.Constants;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+import models.Decoration;
+import models.Equipment;
 
 public class SkillUtil {
+
+    public static EquipmentNode placeDecorations(EquipmentNode originalEquipmentNode, Map<String, Integer> skillTable, List<DecorationSearch.DecorationForOneEquipment> decorationForOneEquipments){
+        EquipmentNode equipmentNode = new EquipmentNode(originalEquipmentNode.getEquipments(), skillTable);
+        for (DecorationSearch.DecorationForOneEquipment decorationForOneEquipment : decorationForOneEquipments) {
+            List<Decoration> decorations = decorationForOneEquipment.getDecorations();
+            int slotsNeeded = decorations.stream().mapToInt(Decoration::getSlotsNeeded).sum();
+            List<Equipment> equipments = equipmentNode.getEquipments();
+            for (Equipment equipment : equipments) {
+                if (equipment.getSlotsUsed() == 0 && equipment.getSlots() == slotsNeeded) {
+                    equipment.addAllDecorations(decorations);
+                }
+            }
+        }
+        return equipmentNode;
+    }
 
     /**
      * check if the current armor set is a super set of the desired set
@@ -46,7 +64,7 @@ public class SkillUtil {
      * @return
      */
     public static boolean shouldDoSearch(List<SkillActivationRequirement> desiredSkills) {
-        if (desiredSkills.size() >= Constants.MAX_SKILL) {
+        if (desiredSkills.isEmpty() || desiredSkills.size() >= Constants.MAX_SKILL) {
             return false;
         }
 
