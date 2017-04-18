@@ -3,6 +3,7 @@ package armorsetsearch.armorsearch.thread;
 import armorsetsearch.decorationsearch.SkillTable;
 import armorsetsearch.decorationsearch.SkillTables;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import models.Decoration;
@@ -36,7 +37,7 @@ public class EquipmentNode {
             // Deep copy the equipment
             this.equipments.add(new Equipment(equipment));
         }
-        this.skillTable = skillTable;
+        this.skillTable = new HashMap<>(skillTable);
         activatedSkills =  SkillActivationChart.getActivatedSkills(skillTable);
         skillMultiplier = 0;
         for (Equipment equipment : equipments){

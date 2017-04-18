@@ -20,7 +20,6 @@ import java.util.Map;
 import models.ArmorSkill;
 import models.CharmData;
 import models.Decoration;
-import models.Equipment;
 import models.GeneratedArmorSet;
 import models.GeneratedCharm;
 
@@ -42,20 +41,6 @@ public class CharmSearch {
         this.decorationSearch = decorationSearch;
         this.initProgress = initProgress;
         this.maxProgress = maxProgress;
-    }
-
-    private void placeDecorations(EquipmentNode equipmentNode, SkillTable skillTable){
-        List<DecorationSearch.DecorationForOneEquipment> decorationForOneEquipments = skillTable.getDecorations();
-        for (DecorationSearch.DecorationForOneEquipment decorationForOneEquipment : decorationForOneEquipments) {
-            List<Decoration> decorations = decorationForOneEquipment.getDecorations();
-            int slotsNeeded = decorations.stream().mapToInt(Decoration::getSlotsNeeded).sum();
-            List<Equipment> equipments = equipmentNode.getEquipments();
-            for (Equipment equipment : equipments) {
-                if (equipment.getSlotsUsed() == 0 && equipment.getSlots() == slotsNeeded) {
-                    equipment.addAllDecorations(decorations);
-                }
-            }
-        }
     }
 
     public List<GeneratedArmorSet> findAValidCharmWithArmorSkill(EquipmentList equipmentList, List<ActivatedSkill> desiredSkills, int currentProgress) {
@@ -80,17 +65,16 @@ public class CharmSearch {
                     equipmentNode.setActivatedSkills(currentActivatedSkill);
                     equipmentNode.setSkillTable(currentSkillTable);
                     if (onSearchResultProgress != null) {
-                        EquipmentNode tempNode = new EquipmentNode(equipmentNode.getEquipments(), currentSkillTable);
-                        placeDecorations(tempNode, skillTable);
-                        GeneratedArmorSet generatedArmorSet = new GeneratedArmorSet(equipmentNode);
+                        EquipmentNode newNode = SkillUtil.placeDecorations(equipmentNode, currentSkillTable, skillTable.getDecorations());
+                        GeneratedArmorSet generatedArmorSet = new GeneratedArmorSet(newNode);
+                        results.add(generatedArmorSet);
                         onSearchResultProgress.onProgress(generatedArmorSet);
                     }
                 } else {
                     Map<String, Integer> missingSkill = SkillUtil.getMissingSkills(desiredSkills, currentSkillTable);
                     if (missingSkill.keySet().size() <= Constants.MAX_SLOTS + Constants.MAX_NUMBER_CHARM_SKILL) {
-                        EquipmentNode tempNode = new EquipmentNode(equipmentNode.getEquipments(), currentSkillTable);
-                        placeDecorations(tempNode, skillTable);
-                        skillToMatchCharm.add(new MissingSkill(missingSkill, tempNode));
+                        EquipmentNode newNode = SkillUtil.placeDecorations(equipmentNode, currentSkillTable, skillTable.getDecorations());
+                        skillToMatchCharm.add(new MissingSkill(missingSkill, newNode));
                     }
                 }
             }
@@ -106,7 +90,7 @@ public class CharmSearch {
          */
         for (int missingSkillSetCounter = 0; missingSkillSetCounter < skillToMatchCharm.size(); ++missingSkillSetCounter) {
             MissingSkill missingSkill = skillToMatchCharm.get(missingSkillSetCounter);
-            if (results.size() >= searchLimit) {
+            if (stop || results.size() >= searchLimit) {
                 return results;
             }
             progress+=increment;
@@ -122,7 +106,7 @@ public class CharmSearch {
                 List<SkillChartWithDecoration> skillChartWithDecorationsToTry = decorationSearch.getSkillListBySlot(missingSkill.missingSkillsMap.keySet(), slotNumber);
 
                 for (SkillChartWithDecoration skillChartWithDecoration : skillChartWithDecorationsToTry) {
-                    if (stop) {
+                    if (stop || results.size() >= searchLimit) {
                         return results;
                     }
 

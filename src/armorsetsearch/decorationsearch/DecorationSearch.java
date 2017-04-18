@@ -19,6 +19,7 @@ import models.Equipment;
 import armorsetsearch.skillactivation.ActivatedSkill;
 import armorsetsearch.skillactivation.SkillActivationChart;
 import models.EquipmentType;
+import models.GeneratedArmorSet;
 import utils.StopWatch;
 
 public class DecorationSearch {
@@ -33,8 +34,10 @@ public class DecorationSearch {
     private final float initProgress;
     private final float maxProgress;
     private final int uniqueSetSearchLimit;
+    private List<GeneratedArmorSet> results;
 
-    public DecorationSearch(float initProgress, float maxProgress, int uniqueSetSearchLimit, OnSearchResultProgress onSearchResultProgress, List<ActivatedSkill> desiredSkills, Map<String, List<Decoration>> decorationLookupTable) {
+    public DecorationSearch(List<GeneratedArmorSet> results, float initProgress, float maxProgress, int uniqueSetSearchLimit, OnSearchResultProgress onSearchResultProgress, List<ActivatedSkill> desiredSkills, Map<String, List<Decoration>> decorationLookupTable) {
+        this.results = results;
         this.onSearchResultProgress = onSearchResultProgress;
         this.initProgress = initProgress;
         this.maxProgress = maxProgress;
@@ -279,6 +282,14 @@ public class DecorationSearch {
                 }
 
                 // See if we have found a set
+                List<ActivatedSkill> activatedSkills = SkillActivationChart.getActivatedSkills(currentTable);
+                if (SkillUtil.containsDesiredSkills(desiredSkills, activatedSkills)) {
+                    EquipmentNode newNode = SkillUtil.placeDecorations(equipmentNode, currentTable, skillTable.getDecorations());
+                    GeneratedArmorSet generatedArmorSet = new GeneratedArmorSet(newNode);
+                    results.add(generatedArmorSet);
+                    onSearchResultProgress.onProgress(generatedArmorSet);
+                    break;
+                }
             }
 
             equipmentNode.setSkillTables(skillTables);
@@ -287,7 +298,7 @@ public class DecorationSearch {
                 onSearchResultProgress.onProgress((int)progress);
             }
 
-            if (stop) {
+            if (stop || results.size() > uniqueSetSearchLimit) {
                 return equipmentList;
             }
 

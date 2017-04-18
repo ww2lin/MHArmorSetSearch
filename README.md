@@ -2,7 +2,7 @@ Monster Hunter Armor Searcher
 
 Given a list search requirements, the program will try to find if there exist a possible set.
 
-![screenshot](imgs/img1.png)
+![screenshot](imgs/img.png)
 
 
 TODO:

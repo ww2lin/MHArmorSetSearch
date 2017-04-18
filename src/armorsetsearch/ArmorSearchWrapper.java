@@ -121,7 +121,7 @@ public class ArmorSearchWrapper {
         stopWatch.printMsgAndResetTime("Finished filtering");
 
         System.out.println("Building Decoration data");
-        decorationSearch = new DecorationSearch(progress, progressChunk, uniqueSetSearchLimit, onSearchResultProgress, activatedSkills, decorationLookupTable);
+        decorationSearch = new DecorationSearch(generatedArmorSets, progress, progressChunk, uniqueSetSearchLimit, onSearchResultProgress, activatedSkills, decorationLookupTable);
         stopWatch.printMsgAndResetTime("Finished decoration setup");
 
         progress+=progressChunk;
@@ -136,6 +136,9 @@ public class ArmorSearchWrapper {
         armorSearch = new ArmorSearch(generatedArmorSets, progress, progressChunk, weapSlot, armorSkillCacheTable, uniqueSetSearchLimit, onSearchResultProgress);
         stopWatch.printMsgAndResetTime("Finished armor setup");
 
+        /**
+         * Starting armor search
+         */
         System.out.println("Starting Armor Search.");
         EquipmentList equipmentList = armorSearch.findArmorSetWith(activatedSkills);
         stopWatch.printMsgAndResetTime("Finished Armor Search");
@@ -145,6 +148,8 @@ public class ArmorSearchWrapper {
         System.out.println("Starting Decoration Search.");
         equipmentList = decorationSearch.buildEquipmentWithDecorationSkillTable(equipmentList, activatedSkills);
         stopWatch.printMsgAndResetTime("Finished Decoration Search");
+
+
 
         System.out.println("Starting Charm Search.");
         charmSearch.findAValidCharmWithArmorSkill(equipmentList, activatedSkills, 50);
